@@ -123,5 +123,59 @@ namespace DacLib.Common
 			T obj = JsonConvert.DeserializeObject<T> (jsonStr);
 			return obj;
 		}
+
+//		/// <summary>
+//		/// 枚举转字符串
+//		/// </summary>
+//		/// <returns>The to string.</returns>
+//		/// <param name="em">Em.</param>
+//		/// <typeparam name="T">The 1st type parameter.</typeparam>
+//		public static string EnumToString<T> (T em)
+//		{
+//			return em.ToString ();
+//		}
+//
+//		/// <summary>
+//		/// 字符串转枚举
+//		/// </summary>
+//		/// <returns>The to enum.</returns>
+//		/// <param name="str">String.</param>
+//		/// <typeparam name="T">The 1st type parameter.</typeparam>
+//		public static T StringToEnum<T> (string str)
+//		{
+//			T em;
+//			try {
+//				em = (T)Enum.Parse (typeof(T), str);
+//			} catch (Exception e) {
+//				
+//			}
+//			return em;
+//		}
+//
+//		/// <summary>
+//		/// 枚举转整型
+//		/// </summary>
+//		/// <returns>The to int.</returns>
+//		/// <param name="em">Em.</param>
+//		/// <typeparam name="T">The 1st type parameter.</typeparam>
+//		public static int EnumToInt<T> (T em)
+//		{
+//			return (int)em;
+//		}
+//
+//		/// <summary>
+//		/// 整型转枚举
+//		/// </summary>
+//		/// <returns>The to enum.</returns>
+//		/// <param name="i">The index.</param>
+//		/// <typeparam name="T">The 1st type parameter.</typeparam>
+//		public static T IntToEnum<T> (int i)
+//		{
+//			T em;
+//			if (Enum.IsDefined (typeof(T), i)) {
+//				em = (T)i;
+//			}
+//			return em;
+//		}
 	}
 }
