@@ -4,9 +4,17 @@ using System.Collections.Generic;
 
 namespace DacLib.Hoxis
 {
-	public static class Hoxis_CoreHandler
+	/// <summary>
+	/// 负责游戏场景中的同步
+	/// </summary>
+	public static class Hoxis_SynDirector
 	{
-		private static Dictionary<string, Dictionary<int, Hoxis_Agent>> _hidToAgents = new Dictionary<string, Dictionary<int, Hoxis_Agent>> ();
+//		public static void Init (Hoxis_Agent host) {
+//			_hidToAgents = new Dictionary<string, Dictionary<int, Hoxis_Agent>> ();
+//		}
+
+
+		private static Dictionary<string, Dictionary<int, Hoxis_Agent>> _hidToAgents;
 
 		private static Hoxis_Agent GetAgent (Hoxis_ID hid) {
 			if (!_hidToAgents.ContainsKey (hid.group))
@@ -19,10 +27,6 @@ namespace DacLib.Hoxis
 			Hoxis_Agent agent = dict [hid.id];
 			return agent;
 		}
-
-
-
-
 
 
 
