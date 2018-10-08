@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DacLib.Common;
 
-namespace DacLib.U3D.Control
+namespace DacLib.U3D.Controller
 {
 	/// <summary>
 	/// 键位设置
