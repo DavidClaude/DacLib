@@ -9,7 +9,7 @@ namespace DacLib.Hoxis
 		/// <summary>
 		/// Hoxis类型
 		/// </summary>
-		public HoxisType hoxisType {get; private set;}
+		public AgentType agentType {get; private set;}
 
 		public Hoxis_ID hoxisId { get; private set;}
 
@@ -27,9 +27,9 @@ namespace DacLib.Hoxis
 		/// </summary>
 		/// <param name="tp"> Hoxis类型 </param>
 		/// <param name="id"> Hoxis编号 </param>
-		public void CoFunc (HoxisType hoxisTypeArg, Hoxis_ID hoxisIdArg)
+		public void CoFunc (AgentType agentTypeArg, Hoxis_ID hoxisIdArg)
 		{
-			hoxisType = hoxisTypeArg;
+			agentType = agentTypeArg;
 			hoxisId = hoxisIdArg;
 		}
 	

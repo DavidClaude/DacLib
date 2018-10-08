@@ -106,7 +106,7 @@ namespace DacLib.Common
 		/// <returns>The to json.</returns>
 		/// <param name="obj">Object.</param>
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		public static string ObjectToJson<T> (T obj)
+		public static string ObjectToJson (object obj)
 		{
 			string s = JsonConvert.SerializeObject (obj);
 			return s;

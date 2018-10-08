@@ -22,9 +22,9 @@ namespace DacLib.Hoxis
 			Dictionary<int, Hoxis_Agent> dict = _hidToAgents [hid.group];
 			if (dict == null)
 				return null;
-			if (!dict.ContainsKey (hid.id))
+			if (!dict.ContainsKey (hid.index))
 				return null;
-			Hoxis_Agent agent = dict [hid.id];
+			Hoxis_Agent agent = dict [hid.index];
 			return agent;
 		}
 
@@ -36,11 +36,11 @@ namespace DacLib.Hoxis
 	public class Hoxis_ID
 	{
 		public string group { get;}
-		public int id { get;}
+		public int index { get;}
 		public Hoxis_ID (string groupArg, int idArg)
 		{
 			group = groupArg;
-			id = idArg;
+			index = idArg;
 		}
 	}
 

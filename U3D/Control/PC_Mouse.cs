@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace DacLib.U3D.Settings
+namespace DacLib.U3D.Control
 {
-	public class Input_Windows
+	public class PC_Mouse
 	{
 
 	}
