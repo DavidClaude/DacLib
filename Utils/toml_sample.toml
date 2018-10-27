@@ -1,0 +1,8 @@
+[Global]
+time = 1
+weather = hot
+
+[Character]
+gender = male
+hoxis = true
+speed = 3.2

@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DacLib.Common
+namespace DacLib.Utils
 {
 	public enum CalcMode
 	{
@@ -119,7 +119,7 @@ namespace DacLib.Common
 		/// </summary>
 		/// <value>The value.</value>
 		public float val { get; private set; }
-		
+
 		/// <summary>
 		/// 初始值
 		/// </summary>
@@ -181,6 +181,28 @@ namespace DacLib.Common
 		public void Init ()
 		{
 			Set (orig);
+		}
+	}
+
+	/// <summary>
+	/// 返回信息
+	/// </summary>
+	public class Ret
+	{
+		public int code { get; }
+
+		public string desc { get; }
+
+		public Ret ()
+		{
+			code = 0;
+			desc = "";
+		}
+
+		public Ret (int codeArg, string descArg)
+		{
+			code = codeArg;
+			desc = descArg;
 		}
 	}
 }

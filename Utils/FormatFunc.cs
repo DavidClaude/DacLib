@@ -3,9 +3,10 @@ using System.Text;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace DacLib.Common
+namespace DacLib.Utils
 {
 	/// <summary>
 	/// 格式转换相关的静态方法库
@@ -124,58 +125,52 @@ namespace DacLib.Common
 			return obj;
 		}
 
-//		/// <summary>
-//		/// 枚举转字符串
-//		/// </summary>
-//		/// <returns>The to string.</returns>
-//		/// <param name="em">Em.</param>
-//		/// <typeparam name="T">The 1st type parameter.</typeparam>
-//		public static string EnumToString<T> (T em)
-//		{
-//			return em.ToString ();
-//		}
-//
-//		/// <summary>
-//		/// 字符串转枚举
-//		/// </summary>
-//		/// <returns>The to enum.</returns>
-//		/// <param name="str">String.</param>
-//		/// <typeparam name="T">The 1st type parameter.</typeparam>
-//		public static T StringToEnum<T> (string str)
-//		{
-//			T em;
-//			try {
-//				em = (T)Enum.Parse (typeof(T), str);
-//			} catch (Exception e) {
-//				
-//			}
-//			return em;
-//		}
-//
-//		/// <summary>
-//		/// 枚举转整型
-//		/// </summary>
-//		/// <returns>The to int.</returns>
-//		/// <param name="em">Em.</param>
-//		/// <typeparam name="T">The 1st type parameter.</typeparam>
-//		public static int EnumToInt<T> (T em)
-//		{
-//			return (int)em;
-//		}
-//
-//		/// <summary>
-//		/// 整型转枚举
-//		/// </summary>
-//		/// <returns>The to enum.</returns>
-//		/// <param name="i">The index.</param>
-//		/// <typeparam name="T">The 1st type parameter.</typeparam>
-//		public static T IntToEnum<T> (int i)
-//		{
-//			T em;
-//			if (Enum.IsDefined (typeof(T), i)) {
-//				em = (T)i;
-//			}
-//			return em;
-//		}
+		/// <summary>
+		/// 是否正则匹配
+		/// </summary>
+		/// <returns><c>true</c>, if match was regexed, <c>false</c> otherwise.</returns>
+		/// <param name="input">Input.</param>
+		/// <param name="pattern">Pattern.</param>
+		public static bool RegexMatch (string input, string pattern)
+		{
+			Regex reg = new Regex (pattern);
+			Match match = reg.Match (input);
+			return match.Success;
+		}
+
+		/// <summary>
+		/// 获取括号间的字符串
+		/// 支持非括号的长度为2的字符串
+		/// </summary>
+		/// <returns>The string in brackets.</returns>
+		/// <param name="input">Input.</param>
+		/// <param name="brackets">Brackets.</param>
+		public static string GetStringInBrackets (string input, string brackets)
+		{
+			//如果brackets字符个数不为2
+			if (brackets.Length != 2)
+				return "";
+			int len = input.Length;
+			//如果input为""
+			if (len <= 0)
+				return "";
+			int beginIndex = -1;
+			int endIndex = -1;
+			for (int i = 0; i < len; i++) {
+				if (input [i] == brackets [0]) {
+					beginIndex = i;
+				}
+				if (input[i] == brackets[1]) {
+					endIndex = i;
+				}
+			}
+			//如果没有匹配到左括号或右括号
+			if (beginIndex == -1 || endIndex == -1)
+				return "";
+			//如果左括号索引大于等于右括号索引
+			if (beginIndex >= endIndex)
+				return "";
+			return input.Substring (beginIndex +1, endIndex - beginIndex - 1);
+		}
 	}
 }
