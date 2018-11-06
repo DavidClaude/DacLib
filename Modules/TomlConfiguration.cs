@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using DacLib.Utils;
 
-namespace DacLib.Utils
+namespace DacLib.Modules
 {
 	public class TomlConfiguration
 	{
@@ -19,7 +20,8 @@ namespace DacLib.Utils
 			ReadFile (path, out ret);
 		}
 
-		public TomlConfiguration (string path, out Ret ret) {
+		public TomlConfiguration (string path, out Ret ret)
+		{
 			ReadFile (path, out ret);
 		}
 
@@ -161,6 +163,60 @@ namespace DacLib.Utils
 			}
 			ret = new Ret ();
 			return _config [section] [key] == "true" ? true : false;
+		}
+
+		/// <summary>
+		/// 获取所有section
+		/// </summary>
+		/// <returns>The sections.</returns>
+		public string[] GetSections ()
+		{
+			int count = _config.Keys.Count;
+			string[] keys = new string[count];
+			int index = 0;
+			foreach (string sec in _config.Keys) {
+				keys [index] = sec;
+				index++;
+			}
+			return keys;
+		}
+
+		/// <summary>
+		/// 获取某section所有key
+		/// </summary>
+		/// <returns>The section keys.</returns>
+		/// <param name="section">Section.</param>
+		public string[] GetSectionKeys (string section)
+		{
+			if (!_config.ContainsKey (section))
+				return null;
+			int count = _config [section].Keys.Count;
+			string[] sections = new string[count];
+			int index = 0;
+			foreach (string sec in _config[section].Keys) {
+				sections [index] = sec;
+				index++;
+			}
+			return sections;
+		}
+
+		/// <summary>
+		/// 获取某section所有value
+		/// </summary>
+		/// <returns>The section values.</returns>
+		/// <param name="section">Section.</param>
+		public string[] GetSectionValues (string section)
+		{
+			if (!_config.ContainsKey (section))
+				return null;
+			int count = _config [section].Values.Count;
+			string[] values = new string[count];
+			int index = 0;
+			foreach (string sec in _config[section].Values) {
+				values [index] = sec;
+				index++;
+			}
+			return values;
 		}
 	}
 }
