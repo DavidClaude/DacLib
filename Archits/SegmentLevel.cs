@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DacLib.Modules
+namespace DacLib.Archits
 {
 	public class SegmentLevel
 	{

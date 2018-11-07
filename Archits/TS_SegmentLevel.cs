@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using DacLib.Modules;
+using DacLib.Archits;
 
 public class TS_SegmentLevel : MonoBehaviour {
 	SegmentLevel sl = new SegmentLevel (5);

@@ -3,7 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using DacLib.Utils;
 
-namespace DacLib.Modules
+namespace DacLib.Archits
 {
 	public class TomlConfiguration
 	{
