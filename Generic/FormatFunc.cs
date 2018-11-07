@@ -6,7 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace DacLib.Utils
+namespace DacLib.Generic
 {
 	/// <summary>
 	/// 格式转换相关的静态方法库

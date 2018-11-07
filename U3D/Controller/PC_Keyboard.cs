@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using DacLib.Utils;
+using DacLib.Generic;
 
 namespace DacLib.U3D.Controller
 {

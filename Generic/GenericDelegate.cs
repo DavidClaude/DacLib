@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DacLib.Utils
+namespace DacLib.Generic
 {
 	public delegate void NoneForVoid_Handler ();
 	public delegate void IntForVoid_Handler (int i);

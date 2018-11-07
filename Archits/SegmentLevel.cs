@@ -7,7 +7,7 @@ namespace DacLib.Archits
 		/// <summary>
 		/// 级别改变事件
 		/// </summary>
-		public event DacLib.Utils.IntForVoid_Handler onLevelChange {
+		public event DacLib.Generic.IntForVoid_Handler onLevelChange {
 			add {
 				_onLevelChange += value;
 			}
@@ -15,7 +15,7 @@ namespace DacLib.Archits
 				_onLevelChange -= value;
 			}
 		}
-		private event DacLib.Utils.IntForVoid_Handler _onLevelChange;
+		private event DacLib.Generic.IntForVoid_Handler _onLevelChange;
 
 
 		/// <summary>

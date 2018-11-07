@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DacLib.Utils
+namespace DacLib.Generic
 {
 	public enum CalcMode
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using DacLib.Utils;
+using DacLib.Generic;
 
 namespace DacLib.Archits
 {
@@ -42,8 +42,8 @@ namespace DacLib.Archits
 			string[] lines = File.ReadAllLines (path);
 			foreach (string line in lines) {
 				string lineTrim = line.Trim ();
-				if (DacLib.Utils.FormatFunc.RegexMatch (lineTrim, @"^\[.+\]$")) {
-					string section = DacLib.Utils.FormatFunc.GetStringInBrackets (lineTrim, "[]");
+				if (DacLib.Generic.FormatFunc.RegexMatch (lineTrim, @"^\[.+\]$")) {
+					string section = DacLib.Generic.FormatFunc.GetStringInBrackets (lineTrim, "[]");
 					_config.Add (section, new Dictionary<string, string> ());
 					curSec = section;
 					continue;

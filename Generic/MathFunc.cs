@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DacLib.Utils
+namespace DacLib.Generic
 {
 	/// <summary>
 	/// 数学相关的静态方法库
