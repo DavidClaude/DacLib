@@ -50,6 +50,17 @@ namespace DacLib.Codex
         }
 
         /// <summary>
+        /// 进度(整体)
+        /// </summary>
+        public float rate
+        {
+            get
+            {
+                return degree / max;
+            }
+        }
+
+        /// <summary>
         /// 进度(当前级别中)
         /// </summary>
         public float localRate
@@ -60,6 +71,17 @@ namespace DacLib.Codex
                 if (level > 0)
                     start = _thresholds[level - 1];
                 return (degree - start) / (_thresholds[level] - start);
+            }
+        }
+
+        /// <summary>
+        /// 最大阈值
+        /// </summary>
+        public float max
+        {
+            get
+            {
+                return _thresholds[count - 1];
             }
         }
 
@@ -103,7 +125,6 @@ namespace DacLib.Codex
             if (val == 0)
                 return;
             degree += val;
-            float max = _thresholds[count-1];
             if (degree > max)
             {
                 degree = max;
