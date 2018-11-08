@@ -1,15 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DacLib.Generic;
 
-namespace DacLib.U3D.Codex
+namespace DacLib.U3D.Archits
 {
-	public delegate void PoolHandler ();
-
-	public class GOElem : MonoBehaviour
+	public class GOPoolElem : MonoBehaviour
 	{
-		public event PoolHandler onRequest;
-		public event PoolHandler onCollect;
+		public event NoneForVoid_Handler onRequest;
+		public event NoneForVoid_Handler onCollect;
 
 		public void OnRequest ()
 		{

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using DacLib.Archits;
+using DacLib.Codex;
 using DacLib.Generic;
 
 public class TS_Toml : MonoBehaviour
@@ -13,7 +13,7 @@ public class TS_Toml : MonoBehaviour
 	void Start ()
 	{
 		Ret ret;
-		TomlConfiguration tc = new TomlConfiguration (Application.dataPath + "/CSCodes/DacLib/Modules/toml_sample.toml", out ret);
+		TomlConfiguration tc = new TomlConfiguration (Application.dataPath + "/DacLib/Codex/TSP_Toml.toml", out ret);
 		if (ret.code == 0) {
 			foreach (string sec in tc.GetSections()) {
 				Debug.Log (sec);
