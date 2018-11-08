@@ -34,9 +34,9 @@
 
 ● 命名空间在规范作用范围内严格按照目录结构划分，其余可根据需求自由设置
 
-## 三、编码规范
+## 三、编码命名规范
 
-属性使用get;set访问器封装，首字母小写，遵循驼峰命名，如：
+● 属性使用get;set访问器封装，使用首字母小写的驼峰式命名规则，如：
 
 ```c#
 public string itemName {get;}
@@ -54,9 +54,40 @@ private int _currentIndex = 0;
 public string GetDesc () {}
 ```
 
+● 委托使用GenericDelegates提供的格式化委托类型，个别特殊定制的签名，由使用方自行定义
 
+● 事件使用"onXxx"形式，并使用"OnXxx"方法封装，如：
 
+```c#
+public event NoneForVoid_Handler onHPDepleted;
+public void OnHPDepleted ()
+{
+    if (onHPDepleted == null)
+    	return;
+    onHPDepleted();
+}
+```
 
+● 构造方法中参数使用变量名+Arg的形式，如：
 
+```c#
+public string name {get;}
+public Item (string nameArg)
+{
+    name = nameArg;
+}
+```
 
+● 方法中的参数尽量使用具有意义的单词，如"data"
 
+● 临时变量使用单词简写，如"dis"
+
+● 循环中的临时变量使用单个字母，如：
+
+```c#
+foreach (string s in layers) {}
+```
+
+## 四、编码逻辑规范
+
+● 

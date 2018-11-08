@@ -4,19 +4,10 @@ namespace DacLib.Codex
 {
 	public class SegmentLevel
 	{
-		/// <summary>
-		/// 级别改变事件
-		/// </summary>
-		public event DacLib.Generic.IntForVoid_Handler onLevelChange {
-			add {
-				_onLevelChange += value;
-			}
-			remove {
-				_onLevelChange -= value;
-			}
-		}
-		private event DacLib.Generic.IntForVoid_Handler _onLevelChange;
-
+        /// <summary>
+        /// 级别改变事件
+        /// </summary>
+        public event DacLib.Generic.IntForVoid_Handler onLevelChange;
 
 		/// <summary>
 		/// 程度值
@@ -90,9 +81,9 @@ namespace DacLib.Codex
 		}
 
 		private void OnLevelChange (int level){
-			if (_onLevelChange == null)
+			if (onLevelChange == null)
 				return;
-			_onLevelChange (level);
+			onLevelChange (level);
 		}
 	}
 }
