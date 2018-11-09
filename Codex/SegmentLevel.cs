@@ -5,10 +5,10 @@ namespace DacLib.Codex
 {
     public class SegmentLevel
     {
-        public const int ERROR_LEVLE_OUT_OF_RANGE = 1;
-        public const int ERROR_THRESHOLD_IS_LESS_EQUAL_THAN_ZERO = 2;
-        public const int ERROR_THRESHOLD_IS_LESS_THAN_PRE = 3;
-        public const int ERROR_THRESHOLD_IS_MORE_THAN_NEXT = 4;
+        public const int ERROR_LEVEL_OUT_OF_RANGE = 1;
+        public const int ERROR_COUNT_IS_0 = 2;
+        public const int WARNING_THRESHOLD_IS_LESS_EQUAL_0 = 3;
+        public const int WARNING_THRESHOLD_IS_LESS_EQUAL_PRE = 4;
 
         /// <summary>
         /// 级别改变事件
@@ -104,15 +104,41 @@ namespace DacLib.Codex
         {
             if (level < 0 || level >= count)
             {
-                ret = new Ret(ERROR_LEVLE_OUT_OF_RANGE, "Level:" + level + " is out of range");
+                ret = new Ret(ERROR_LEVEL_OUT_OF_RANGE, "Level:" + level + " is out of range");
                 return;
             }
-            if (val <= 0)
-            {
-                ret = new Ret(ERROR_THRESHOLD_IS_LESS_EQUAL_THAN_ZERO, "Threshold:" + val + " is less or equal than 0");
-                return;
-            }
+            //if (val <= 0)
+            //{
+            //    ret = new Ret(WARNING_THRESHOLD_IS_LESS_EQUAL_THAN_0, "Threshold:" + val + " is less or equal than 0");
+            //    return;
+            //}
             _thresholds[level] = val;
+            ret = Ret.ok;
+        }
+
+        /// <summary>
+        /// 检查阈值
+        /// 阈值数量、是否有0或负值、是否非递增
+        /// </summary>
+        /// <param name="ret"></param>
+        public void CheckThresholds(out Ret ret)
+        {
+            if (count == 0) {
+                ret = new Ret (ERROR_COUNT_IS_0, "Thresholds count is 0");
+                return;
+            }
+            for (int i = 0; i < count; i++) {
+                if (_thresholds[i] <= 0) {
+                    ret = new Ret(WARNING_THRESHOLD_IS_LESS_EQUAL_0, "Level:" + i + " threshold is less than or equal to 0");
+                    return;
+                }
+                if ( i != 0) {
+                    if (_thresholds[i] <= _thresholds[i - 1]) {
+                        ret = new Ret(WARNING_THRESHOLD_IS_LESS_EQUAL_PRE, "Level:" + i + " threshold is less than or equal to the previous one");
+                        return;
+                    }
+                }
+            }
             ret = Ret.ok;
         }
 
