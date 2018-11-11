@@ -13,7 +13,7 @@ public class TS_Toml : MonoBehaviour
 	void Start ()
 	{
 		Ret ret;
-		TomlConfiguration tc = new TomlConfiguration (Application.dataPath + "/DacLib/Codex/SAMPLE_Toml.toml", out ret);
+		TomlConfiguration tc = new TomlConfiguration (Application.dataPath + "/DacLib/Codex/sample_toml.toml", out ret);
 		if (ret.code == 0) {
 			foreach (string sec in tc.GetSections()) {
 				Debug.Log (sec);

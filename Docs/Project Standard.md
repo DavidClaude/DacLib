@@ -106,6 +106,8 @@ foreach (string s in layers) {}
 
 ● 错误码以常量形式定义于相关类中，统一使用"RET"前缀
 
+● 描述使用一般英文陈述，字符串格式应为"File:sample_toml.toml doesn't exist"
+
 ```c#
 public class RetClass
 {
