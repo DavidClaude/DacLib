@@ -27,9 +27,9 @@ namespace DacLib.U3D.Controller
 
     public class InputLayer
     {
-        public const int ERROR_CMD_EXITS = 1;
-        public const int ERROR_NO_CMD = 2;
-        public const int INFO_AVAILABLE_CMD = 3;
+        public const int RET_CMD_EXITS = 1;
+        public const int RET_NO_CMD = 2;
+        public const int RET_AVAILABLE_CMD = 3;
 
         private Dictionary<string, KeyCode> _commands;
 
@@ -55,7 +55,7 @@ namespace DacLib.U3D.Controller
         {
             if (ContainCmd(cmd))
             {
-                ret = new Ret(RetLevel.Warning, ERROR_CMD_EXITS, "Cmd:" + cmd + " already exits");
+                ret = new Ret(RetLevel.Warning, RET_CMD_EXITS, "Cmd:" + cmd + " already exits");
                 return;
             }
             _commands.Add(cmd, code);
@@ -75,7 +75,7 @@ namespace DacLib.U3D.Controller
                 _commands[cmd] = code;
                 ret = Ret.ok;
             }
-            ret = new Ret(RetLevel.Warning, ERROR_NO_CMD, "Cmd:" + cmd + " doesn't exit");
+            ret = new Ret(RetLevel.Warning, RET_NO_CMD, "Cmd:" + cmd + " doesn't exit");
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace DacLib.U3D.Controller
                 _commands[cmd] = KeyCode.None;
                 ret = Ret.ok;
             }
-            ret = new Ret(RetLevel.Warning, ERROR_NO_CMD, "Cmd:" + cmd + " doesn't exit");
+            ret = new Ret(RetLevel.Warning, RET_NO_CMD, "Cmd:" + cmd + " doesn't exit");
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace DacLib.U3D.Controller
                     return cmd;
                 }
             }
-            ret = new Ret(RetLevel.Info, INFO_AVAILABLE_CMD, "Key:" + code + " is available");
+            ret = new Ret(RetLevel.Info, RET_AVAILABLE_CMD, "Key:" + code + " is available");
             return "";
         }
 
