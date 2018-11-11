@@ -12,9 +12,11 @@
 
 ● 测试脚本使用"TS_Xxx"形式，可删除
 
-● 作为测试用例的非代码文件使用"TSP_Xxx"形式，可删除
+● 作为测试用例的非代码文件使用"SAMPLE_Xxx"形式，可删除
 
 ● Archits中的文件，采用统一前缀方式命名，如GameObjectPool系统中的GOPool(主体)和GOPoolElem
+
+● 核心框架中的文件，采用统一前缀加下划线方式命名，如Hoxis框架中的Hoxis_Client、Hoxis_Agent
 
 ## 二、文件层级规范
 
@@ -88,6 +90,34 @@ public Item (string nameArg)
 foreach (string s in layers) {}
 ```
 
-## 四、编码逻辑规范
+## 四、编码设计规范
 
-● 
+### 错误处理
+
+● 对于期望返回结构化结果的方法，添加out Ret ret参数
+
+● 结果码以常量形式定义于相关类中，分为"ERROR"、"WARNING"、"INFO"三个级别
+
+​	--ERROR：错误，可能导致运行崩溃
+
+​	--WARNING：警告，不符合使用要求但不影响运行
+
+​	--INFO：信息，符合使用要求且不影响运行，使用者希望获取自定义信息
+
+```c#
+public class RetSample
+{
+    public const int ERROR_NO_FILE = 1;
+    public const int WARNING_FILE_NOT_USED = 2;
+    public const int INFO_FILE_NAME = 3;
+    
+    public void ReadFile (string path, out Ret ret)
+    {
+        //if error: no file
+        ret = new Ret (ERROR_NO_FILE, "File:" + path + " doesn't exist");
+        //if sucess
+        ret = Ret.ok;
+    }
+}
+```
+

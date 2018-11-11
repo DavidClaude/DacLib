@@ -55,7 +55,7 @@ namespace DacLib.U3D.Controller
         {
             if (ContainCmd(cmd))
             {
-                ret = new Ret(ERROR_CMD_EXITS, "Cmd:" + cmd + " already exits");
+                ret = new Ret(RetLevel.Warning, ERROR_CMD_EXITS, "Cmd:" + cmd + " already exits");
                 return;
             }
             _commands.Add(cmd, code);
@@ -75,7 +75,7 @@ namespace DacLib.U3D.Controller
                 _commands[cmd] = code;
                 ret = Ret.ok;
             }
-            ret = new Ret(ERROR_NO_CMD, "Cmd:" + cmd + " doesn't exit");
+            ret = new Ret(RetLevel.Warning, ERROR_NO_CMD, "Cmd:" + cmd + " doesn't exit");
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace DacLib.U3D.Controller
                 _commands[cmd] = KeyCode.None;
                 ret = Ret.ok;
             }
-            ret = new Ret(ERROR_NO_CMD, "Cmd:" + cmd + " doesn't exit");
+            ret = new Ret(RetLevel.Warning, ERROR_NO_CMD, "Cmd:" + cmd + " doesn't exit");
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace DacLib.U3D.Controller
                     return cmd;
                 }
             }
-            ret = new Ret(INFO_AVAILABLE_CMD, "Key:" + code + " is available");
+            ret = new Ret(RetLevel.Info, INFO_AVAILABLE_CMD, "Key:" + code + " is available");
             return "";
         }
 

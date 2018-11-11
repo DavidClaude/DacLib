@@ -32,12 +32,12 @@ namespace DacLib.Codex
             string[] strs = path.Split('.');
             if (strs[strs.Length - 1] != "toml")
             {
-                ret = new Ret(ERROR_NOT_TOML, "File:" + path + " isn't .toml");
+                ret = new Ret(RetLevel.Error, ERROR_NOT_TOML, "File:" + path + " isn't .toml");
             }
             //文件是否存在
             if (!File.Exists(path))
             {
-                ret = new Ret(ERROR_NO_FILE, "File:" + path + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_FILE, "File:" + path + " doesn't exist");
             }
             //将.toml读入config
             string curSec = "";
@@ -78,12 +78,12 @@ namespace DacLib.Codex
         {
             if (!_config.ContainsKey(section))
             {
-                ret = new Ret(ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
                 return "";
             }
             if (!_config[section].ContainsKey(key))
             {
-                ret = new Ret(ERROR_NO_KEY, "Key:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_KEY, "Key:" + section + " doesn't exist");
                 return "";
             }
             ret = Ret.ok;
@@ -107,12 +107,12 @@ namespace DacLib.Codex
         {
             if (!_config.ContainsKey(section))
             {
-                ret = new Ret(ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
                 return 0;
             }
             if (!_config[section].ContainsKey(key))
             {
-                ret = new Ret(ERROR_NO_KEY, "Key:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_KEY, "Key:" + section + " doesn't exist");
                 return 0;
             }
             ret = Ret.ok;
@@ -136,12 +136,12 @@ namespace DacLib.Codex
         {
             if (!_config.ContainsKey(section))
             {
-                ret = new Ret(ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
                 return 0f;
             }
             if (!_config[section].ContainsKey(key))
             {
-                ret = new Ret(ERROR_NO_KEY, "Key:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_KEY, "Key:" + section + " doesn't exist");
                 return 0f;
             }
             ret = Ret.ok;
@@ -165,12 +165,12 @@ namespace DacLib.Codex
         {
             if (!_config.ContainsKey(section))
             {
-                ret = new Ret(ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_SECTION, "Section:" + section + " doesn't exist");
                 return false;
             }
             if (!_config[section].ContainsKey(key))
             {
-                ret = new Ret(ERROR_NO_KEY, "Key:" + section + " doesn't exist");
+                ret = new Ret(RetLevel.Error, ERROR_NO_KEY, "Key:" + section + " doesn't exist");
                 return false;
             }
             ret = Ret.ok;

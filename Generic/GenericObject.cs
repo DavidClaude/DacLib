@@ -192,24 +192,23 @@ namespace DacLib.Generic
     /// </summary>
     public class Ret
     {
-        public static Ret ok {
-            get {
-                return new Ret(0, "");
+        public static Ret ok
+        {
+            get
+            {
+                return new Ret(RetLevel.Info, 0, "");
             }
         }
+
+        public RetLevel level { get; }
 
         public int code { get; }
 
         public string desc { get; }
 
-        public Ret()
+        public Ret(RetLevel levelArg, int codeArg, string descArg)
         {
-            code = 0;
-            desc = "";
-        }
-
-        public Ret(int codeArg, string descArg)
-        {
+            level = levelArg;
             code = codeArg;
             desc = descArg;
         }
