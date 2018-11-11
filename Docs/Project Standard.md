@@ -129,3 +129,6 @@ public class RetClass
 }
 ```
 
+### 代码依赖关系
+
+● Generic为基本库，其文件允许相互引用
