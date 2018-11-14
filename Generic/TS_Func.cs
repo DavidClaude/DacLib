@@ -7,8 +7,8 @@ public class TS_Func : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        string s = "this is a test string.";
-        string fin = FormatFunc.StringReplace(s, "--SOS--", " ", "s");
+        //string s = "this is a test string.";
+        //string fin = FormatFunc.StringReplace(s, "--SOS--", " ", "s");
         
 	}
 	
