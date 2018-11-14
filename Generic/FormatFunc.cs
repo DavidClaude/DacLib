@@ -47,11 +47,7 @@ namespace DacLib.Generic
         public static string StringAppend(string str, params string[] strs)
         {
             StringBuilder sb = new StringBuilder(str);
-            int len = strs.Length;
-            for (int i = 0; i < len; i++)
-            {
-                sb.Append(strs[i]);
-            }
+            foreach (string s in strs) { sb.Append(s); }
             return sb.ToString();
         }
 
@@ -77,7 +73,8 @@ namespace DacLib.Generic
         public static string StringReplace(string str, string desStr, params string[] srcStrs)
         {
             string s = str;
-            foreach (string ss in srcStrs) {
+            foreach (string ss in srcStrs)
+            {
                 s = s.Replace(ss, desStr);
             }
             return s;

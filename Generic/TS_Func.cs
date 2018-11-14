@@ -9,7 +9,7 @@ public class TS_Func : MonoBehaviour {
 	void Start () {
         string s = "this is a test string.";
         string fin = FormatFunc.StringReplace(s, "--SOS--", " ", "s");
-        Debug.Log(fin);
+        
 	}
 	
 	// Update is called once per frame
