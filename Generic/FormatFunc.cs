@@ -82,6 +82,17 @@ namespace DacLib.Generic
             }
             return s;
         }
+                 
+        /// <summary>
+        /// 获取数组最后一个元素
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        public static T LastOfArray<T>(T[] array)
+        {
+            return array[array.Length - 1];
+        }
 
         /// <summary>
         /// 对象实例转二进制文件

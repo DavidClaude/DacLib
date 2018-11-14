@@ -29,8 +29,9 @@ namespace DacLib.Codex
         {
             _config = new Dictionary<string, Dictionary<string, string>>();
             //是否为.toml文件
-            string[] strs = path.Split('.');
-            if (strs[strs.Length - 1] != "toml")
+            string[] paths = FormatFunc.StringSplit(path, '/');
+            string[] strs = FormatFunc.StringSplit(FormatFunc.LastOfArray<string>(paths), '.');
+            if (FormatFunc.LastOfArray<string>(strs) != "toml")
             {
                 ret = new Ret(RetLevel.Error, RET_NOT_TOML, "File:" + path + " isn't .toml");
             }
