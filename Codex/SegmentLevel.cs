@@ -148,12 +148,14 @@ namespace DacLib.Codex
         /// <param name="val">Value.</param>
         public void Extend(float val)
         {
-            if (val == 0)
-                return;
             degree += val;
             if (degree > max)
             {
                 degree = max;
+            }
+            if (degree < 0)
+            {
+                degree = 0;
             }
             if (level != _lastLevel)
             {
