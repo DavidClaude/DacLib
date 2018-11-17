@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace DacLib.Hoxis
+namespace DacLib.Hoxis.Client
 {
 	public class HoxisAgent : MonoBehaviour
 	{
-		/// <summary>
+   		/// <summary>
 		/// Hoxis类型
 		/// </summary>
 		public HoxisAgentType hoxiAagentType {get; private set;}

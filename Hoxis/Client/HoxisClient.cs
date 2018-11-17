@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DacLib.Hoxis
+namespace DacLib.Hoxis.Client
 {
 	public static class HoxisClient
 	{

@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DacLib.Hoxis
+namespace DacLib.Hoxis.Client
 {
 	/// <summary>
 	/// 负责游戏场景中的同步
@@ -32,18 +32,4 @@ namespace DacLib.Hoxis
 
 		//具体调用方法的功能需使用链接的方式，解耦
 	}
-
-	public class HoxisID
-	{
-		public string group { get;}
-		public int index { get;}
-		public HoxisID (string groupArg, int idArg)
-		{
-			group = groupArg;
-			index = idArg;
-		}
-	}
-
-
-
 }
