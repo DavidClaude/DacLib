@@ -4,18 +4,18 @@ using UnityEngine;
 
 namespace DacLib.Hoxis
 {
-	public class Hoxis_Agent : MonoBehaviour
+	public class HoxisAgent : MonoBehaviour
 	{
 		/// <summary>
 		/// Hoxis类型
 		/// </summary>
-		public AgentType agentType {get; private set;}
+		public HoxisAgentType hoxiAagentType {get; private set;}
 
 		/// <summary>
 		/// Hoxis编号
 		/// </summary>
 		/// <value>The hoxis identifier.</value>
-		public Hoxis_ID hoxisId { get; private set;}
+		public HoxisID hoxisId { get; private set;}
 
 		/// <summary>
 		/// 自动同步
@@ -36,9 +36,9 @@ namespace DacLib.Hoxis
 		/// </summary>
 		/// <param name="tp"> Hoxis类型 </param>
 		/// <param name="id"> Hoxis编号 </param>
-		public void CoFunc (AgentType agentTypeArg, Hoxis_ID hoxisIdArg, bool autoSynArg = true)
+		public void CoFunc (HoxisAgentType agentTypeArg, HoxisID hoxisIdArg, bool autoSynArg = true)
 		{
-			agentType = agentTypeArg;
+            hoxiAagentType = agentTypeArg;
 			hoxisId = hoxisIdArg;
 			autoSyn = autoSynArg;
 		}
@@ -50,7 +50,7 @@ namespace DacLib.Hoxis
 		}
 	}
 
-	public enum AgentType {
+	public enum HoxisAgentType {
 		None = 0,
 		Host = 1,
 		Proxy = 2,

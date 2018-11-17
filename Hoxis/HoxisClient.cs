@@ -2,7 +2,7 @@
 
 namespace DacLib.Hoxis
 {
-	public static class Hoxis_Client
+	public static class HoxisClient
 	{
 		
 	}

@@ -190,7 +190,7 @@ namespace DacLib.Generic
     /// <summary>
     /// 返回信息
     /// </summary>
-    public class Ret
+    public struct Ret
     {
         public static Ret ok
         {

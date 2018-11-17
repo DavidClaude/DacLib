@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using DacLib.Generic;
 
 namespace DacLib.U3D.Generic
 {
@@ -19,6 +20,7 @@ namespace DacLib.U3D.Generic
             }
             return new Vector3(vec.x, 0, vec.z).normalized;
         }
+        
     }
 }
 
