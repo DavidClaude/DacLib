@@ -81,7 +81,7 @@ namespace DacLib.Generic
             }
             return s;
         }
-                 
+
         /// <summary>
         /// 获取数组最后一个元素
         /// </summary>
@@ -159,10 +159,41 @@ namespace DacLib.Generic
         /// <returns></returns>
         public static Dictionary<string, object> JsonToTable(string json)
         {
+            if (json == "")
+            {
+                return new Dictionary<string, object>();
+            }
             Dictionary<string, object> table = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
             return table;
         }
-        
+
+        /// <summary>
+        /// Json拼接
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="kvs"></param>
+        /// <returns></returns>
+        public static string JsonAppend(string json, out Ret ret, params KV[] kvs)
+        {
+            Dictionary<string, object> table = JsonToTable(json);
+            if (table == null)
+            {
+                ret = new Ret(RetLevel.Error, 1, "Json:" + json + " with illegal format");
+                return "";
+            }
+            foreach (KV kv in kvs)
+            {
+                table.Add(kv.key, kv.val);
+            }
+            ret = Ret.ok;
+            return ObjectToJson(table);
+        }
+
+        public static string JsonAppend(string json, params KV[] kvs)
+        {
+            Ret ret;
+            return JsonAppend(json, out ret, kvs);
+        }
 
         /// <summary>
         /// 是否正则匹配

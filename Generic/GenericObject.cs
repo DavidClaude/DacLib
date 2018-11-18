@@ -10,29 +10,12 @@ namespace DacLib.Generic
         Percentage
     }
 
-    public class Property
+    public class Property : IJsonable
     {
         /// <summary>
         /// 属性当前值
         /// </summary>
-        public float val
-        {
-            get
-            {
-                float c = 0f;
-                foreach (float v in _constTraces.Values)
-                {
-                    c += v;
-                }
-                float p = 0f;
-                foreach (float v in _percTraces.Values)
-                {
-                    p += v;
-                }
-                float fin = orig + orig * p + c;
-                return MathFunc.Clamp(fin, min, max);
-            }
-        }
+        public float val { get; private set; }
 
         /// <summary>
         /// 初始值
@@ -60,6 +43,7 @@ namespace DacLib.Generic
             orig = origArg;
             min = minArg;
             max = maxArg;
+            OnUpdate();
         }
 
         /// <summary>
@@ -85,6 +69,7 @@ namespace DacLib.Generic
                     }
                     break;
             }
+            OnUpdate();
         }
 
         /// <summary>
@@ -101,6 +86,7 @@ namespace DacLib.Generic
             {
                 _percTraces.Remove(name);
             }
+            OnUpdate();
         }
 
         /// <summary>
@@ -110,11 +96,44 @@ namespace DacLib.Generic
         {
             _constTraces = new Dictionary<string, float>();
             _percTraces = new Dictionary<string, float>();
+            OnUpdate();
+        }
+
+        private void OnUpdate()
+        {
+            float c = 0f;
+            foreach (float v in _constTraces.Values)
+            {
+                c += v;
+            }
+            float p = 0f;
+            foreach (float v in _percTraces.Values)
+            {
+                p += v;
+            }
+            float fin = orig + orig * p + c;
+            val = MathFunc.Clamp(fin, min, max);
+        }
+
+        string IJsonable.ToJson()
+        {
+            return FormatFunc.JsonAppend("",
+                new KV { key = "_constTraces", val = _constTraces },
+                new KV { key = "_percTraces", val = _percTraces }
+                );
+        }
+
+        void IJsonable.LoadJson(string json)
+        {
+            Dictionary<string, object> table = FormatFunc.JsonToTable(json);
+            _constTraces = FormatFunc.JsonToObject<Dictionary<string, float>>(table["_constTraces"].ToString());
+            _percTraces = FormatFunc.JsonToObject<Dictionary<string, float>>(table["_percTraces"].ToString());
+            OnUpdate();
         }
     }
 
 
-    public class Indicator
+    public class Indicator:IJsonable
     {
         /// <summary>
         /// 属性(当前)值
@@ -146,7 +165,7 @@ namespace DacLib.Generic
             min = minArg;
             max = maxArg;
 
-            Set(orig);
+            val = MathFunc.Clamp(orig, min, max);
         }
 
         /// <summary>
@@ -183,7 +202,18 @@ namespace DacLib.Generic
         /// </summary>
         public void Init()
         {
-            Set(orig);
+            val = MathFunc.Clamp(orig, min, max);
+        }
+
+        string IJsonable.ToJson()
+        {
+            return FormatFunc.JsonAppend("", new KV { key = "val", val = val });
+        }
+
+        void IJsonable.LoadJson(string json)
+        {
+            Dictionary<string, object> table = FormatFunc.JsonToTable(json);
+            val = MathFunc.Clamp(float.Parse(table["val"].ToString()), min, max);
         }
     }
 
@@ -206,5 +236,14 @@ namespace DacLib.Generic
             code = codeArg;
             desc = descArg;
         }
+    }
+
+    /// <summary>
+    /// 通用键值对
+    /// </summary>
+    public struct KV
+    {
+        public string key;
+        public object val;
     }
 }
