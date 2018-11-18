@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using DacLib.Hoxis;
 
 public class TS_Func : MonoBehaviour
 {
@@ -41,22 +42,46 @@ public class TS_Func : MonoBehaviour
         //(pn as IJsonable).LoadJson(json);
         //Debug.Log("New json ToJson:" + (pn as IJsonable).ToJson());
         //Debug.Log("New val is " + pn.val);
+        //Indicator ind = new Indicator(50f);
+        //ind.Change(15f);
+        //Debug.Log("Val is " + ind.val);
+        //string json = (ind as IJsonable).ToJson();
+        //Debug.Log("ToJson:" + json);
+        //Indicator indn = new Indicator(50f);
+        //(indn as IJsonable).LoadJson(json);
+        //Debug.Log("New json ToJson:" + (indn as IJsonable).ToJson());
+        //Debug.Log("New val is " + indn.val);
 
-        Indicator ind = new Indicator(50f);
-        ind.Change(15f);
-        Debug.Log("Val is " + ind.val);
-        string json = (ind as IJsonable).ToJson();
-        Debug.Log("ToJson:" + json);
-        Indicator indn = new Indicator(50f);
-        (indn as IJsonable).LoadJson(json);
-        Debug.Log("New json ToJson:" + (indn as IJsonable).ToJson());
-        Debug.Log("New val is " + indn.val);
+        //HoxisProtocol测试
+        Dictionary<string, ProtocolHandler> actions = new Dictionary<string, ProtocolHandler>();
+        actions.Add("move", Move);
+        actions.Add("attack", Attack);
+
+        HoxisProtocol proto = new HoxisProtocol
+        {
+            type = "syn",
+            rcvr = "1",
+            method = "move",
+            args = new Dictionary<string, object>() { { "speed", 3.0f }, { "id", 24 } },
+            desc = "test"
+        };
+        string method = proto.method;
+        actions[method](proto);
+
     }
 
     // Update is called once per frame
     void Update()
     {
 
+    }
+
+    public void Move(HoxisProtocol proto) {
+        Debug.Log("Move: " + (float)proto.args["speed"]);
+    }
+
+    public void Attack(HoxisProtocol proto) {
+        Debug.Log("Attack: " + (int)proto.args["id"]);
     }
 }
 
