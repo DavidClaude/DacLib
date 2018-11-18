@@ -192,13 +192,7 @@ namespace DacLib.Generic
     /// </summary>
     public struct Ret
     {
-        public static Ret ok
-        {
-            get
-            {
-                return new Ret(RetLevel.Info, 0, "");
-            }
-        }
+        public static readonly Ret ok = new Ret(RetLevel.Info, 0, "");
 
         public RetLevel level { get; }
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Runtime.Serialization;
@@ -134,8 +136,8 @@ namespace DacLib.Generic
         /// <typeparam name="T">The 1st type parameter.</typeparam>
         public static string ObjectToJson(object obj)
         {
-            string s = JsonConvert.SerializeObject(obj);
-            return s;
+            string json = JsonConvert.SerializeObject(obj);
+            return json;
         }
 
         /// <summary>
@@ -144,11 +146,23 @@ namespace DacLib.Generic
         /// <returns>The to object.</returns>
         /// <param name="jsonStr">Json string.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public static T JsonToObject<T>(string jsonStr)
+        public static T JsonToObject<T>(string json)
         {
-            T obj = JsonConvert.DeserializeObject<T>(jsonStr);
+            T obj = JsonConvert.DeserializeObject<T>(json);
             return obj;
         }
+
+        /// <summary>
+        /// Json转Table(Dictionary<string,object>)
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static Dictionary<string, object> JsonToTable(string json)
+        {
+            Dictionary<string, object> table = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            return table;
+        }
+        
 
         /// <summary>
         /// 是否正则匹配

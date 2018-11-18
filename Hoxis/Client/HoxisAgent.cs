@@ -9,7 +9,7 @@ namespace DacLib.Hoxis.Client
    		/// <summary>
 		/// Hoxis类型
 		/// </summary>
-		public HoxisAgentType hoxiAagentType {get; private set;}
+		public HoxisType hoxisType {get; private set;}
 
 		/// <summary>
 		/// Hoxis编号
@@ -24,6 +24,12 @@ namespace DacLib.Hoxis.Client
 		/// <value><c>true</c> if auto syn; otherwise, <c>false</c>.</value>
 		public bool autoSyn { get; set;}
 
+        /// <summary>
+        /// 是否为Host
+        /// 该GameObject是否为Player
+        /// </summary>
+        public bool isPlayer { get; private set; }
+
 		// Use this for initialization
 		void Start ()
 		{
@@ -36,11 +42,12 @@ namespace DacLib.Hoxis.Client
 		/// </summary>
 		/// <param name="tp"> Hoxis类型 </param>
 		/// <param name="id"> Hoxis编号 </param>
-		public void CoFunc (HoxisAgentType agentTypeArg, HoxisID hoxisIdArg, bool autoSynArg = true)
+		public void CoFunc (HoxisType hoxisTypeArg, HoxisID hoxisIdArg, bool autoSynArg = true)
 		{
-            hoxiAagentType = agentTypeArg;
+            hoxisType = hoxisTypeArg;
 			hoxisId = hoxisIdArg;
 			autoSyn = autoSynArg;
+            isPlayer = (hoxisType == HoxisType.Host ? true : false);
 		}
 	
 		// Update is called once per frame
@@ -50,10 +57,10 @@ namespace DacLib.Hoxis.Client
 		}
 	}
 
-	public enum HoxisAgentType {
+	public enum HoxisType {
 		None = 0,
 		Host = 1,
-		Proxy = 2,
-		Immortal = 3
+		Proxied = 2,
+        Perpetual = 3
 	}
 }
