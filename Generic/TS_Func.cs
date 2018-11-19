@@ -52,36 +52,55 @@ public class TS_Func : MonoBehaviour
         //Debug.Log("New json ToJson:" + (indn as IJsonable).ToJson());
         //Debug.Log("New val is " + indn.val);
 
-        //HoxisProtocol测试
+        //HoxisProtocol测试    
+        HoxisProtocol proto = new HoxisProtocol
+        {
+            type = ProtocolType.Synchronization,
+            rcvr = new HoxisProtocolReceiver {
+                type = ReceiverType.MultiPlayers,
+                id = new HoxisID("survivor",24),              
+            },
+            sndr = new HoxisProtocolSender {
+                id = new HoxisID("survivor",23),
+                back = true,
+            },
+            action = new HoxisProtocolAction {
+                mthd = "move",
+                args = new Dictionary<string, object>() {
+                    { "speed",5f},
+                }
+            },
+            desc = "test",
+        };
+        string json = FormatFunc.ObjectToJson(proto);
+        Debug.Log("Protocol: " + json);
+        HoxisProtocol rcvProto = FormatFunc.JsonToObject<HoxisProtocol>(json);
+        Debug.Log("Receive protocol: " + FormatFunc.ObjectToJson(rcvProto));
+
         Dictionary<string, ProtocolHandler> actions = new Dictionary<string, ProtocolHandler>();
         actions.Add("move", Move);
         actions.Add("attack", Attack);
 
-        HoxisProtocol proto = new HoxisProtocol
-        {
-            type = "syn",
-            rcvr = "1",
-            method = "move",
-            args = new Dictionary<string, object>() { { "speed", 3.0f }, { "id", 24 } },
-            desc = "test"
-        };
-        string method = proto.method;
-        actions[method](proto);
+        string mthd = rcvProto.action.mthd;
+        Debug.Log("Method: " + mthd);
+
+        actions[mthd](rcvProto);
 
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        
     }
 
     public void Move(HoxisProtocol proto) {
-        Debug.Log("Move: " + (float)proto.args["speed"]);
+
+        
     }
 
     public void Attack(HoxisProtocol proto) {
-        Debug.Log("Attack: " + (int)proto.args["id"]);
+        Debug.Log((int)proto.action.args["id"]);
     }
 }
 
