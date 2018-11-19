@@ -11,6 +11,8 @@ using DacLib.Hoxis;
 public class TS_Func : MonoBehaviour
 {
 
+    //private static Dictionary<string, ProtocolHandler> actionTable;
+
     // Use this for initialization
     void Start()
     {
