@@ -178,7 +178,7 @@ namespace DacLib.Generic
             Dictionary<string, object> table = JsonToTable(json);
             if (table == null)
             {
-                ret = new Ret(RetLevel.Error, 1, "Json:" + json + " with illegal format");
+                ret = new Ret(LogLevel.Error, 1, "Json:" + json + " with illegal format");
                 return "";
             }
             foreach (KV kv in kvs)

@@ -2,7 +2,7 @@
 
 namespace DacLib.Generic
 {
-    public enum RetLevel {
+    public enum LogLevel {
         Info = 0,
         Warning = 1,
         Error = 2

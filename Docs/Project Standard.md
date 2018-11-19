@@ -41,22 +41,22 @@
 ● 属性使用get;set访问器封装，使用首字母小写的驼峰式命名规则，如：
 
 ```c#
-public string itemName {get;}
+public string charaName {get;}
 ```
 
 字段以"_"为前缀，首字母小写，遵循驼峰命名，可做初始化，如：
 
 ```c#
-private int _currentIndex = 0;
+private int _curIndex = 0;
 ```
 
 函数首字母大写，遵循驼峰命名，如：
 
 ```c#
-public string GetDesc () {}
+public string GetIndex () {}
 ```
 
-● 委托使用GenericDelegates提供的格式化委托类型，个别特殊定制的签名，由使用方自行定义
+● 委托使用GenericDelegate提供的格式化委托类型，个别特殊定制的签名，由使用方自行定义
 
 ● 事件使用"onXxx"形式，并使用"OnXxx"方法封装，如：
 
@@ -92,6 +92,55 @@ foreach (string s in layers) {}
 
 ## 四、编码设计规范
 
+###DacLib
+
+● Generic为基本库，其文件允许相互引用
+
+### 关键字使用策略
+
+#### [class或struct]
+
+● 具有属性、方法的能够独立完成单元功能的对象使用class定义，引用类型能够避免不必要的复制
+
+● 仅将若干类型集合起来便于使用的对象使用struct定义，可理解为基本类型的扩展，如：
+
+```c#
+public struct KV
+{
+    public string key;
+    public string val;
+}
+```
+
+#### [访问权限]
+
+● class属性使用{get;set;}封装，一般使用简写，若需要进行处理再展开方法域
+
+● struct字段不使用封装，便于序列化与反序列化，对于只读字段使用readonly修饰
+
+● class的只读属性在构造方法中赋值，struct若要对只读字段赋值，必须提供构造方法，否则可以使用初始化赋值
+
+```c#
+public KV field = new KV
+{
+    key = "key",
+    val = "value"
+}
+```
+
+#### [常量、静态量]
+
+● 基本类型常量使用const修饰，引用型静态量使用static readonly修饰，进行初始化赋值
+
+● struct须定义"nil"表示无效值(因为struct类型不能为null)，使用"ok"表示正常值，如：
+
+```c#
+//无效的HoxisID
+public static readonly HoxisID nil = new HoxisID("", -1);
+//正确的返回结果
+public static readonly Ret ok = new Ret(LogLevel.Info, 0, "");
+```
+
 ### 错误处理
 
 ● 对于期望返回结构化结果的方法，添加out Ret ret参数
@@ -119,7 +168,7 @@ public class RetClass
     {
         //if error: no file
         ret = new Ret (
-            RetLevel.Error,
+            LogLevel.Error,
             ERROR_NO_FILE,
             "File:" + path + " doesn't exist"
         );
@@ -128,7 +177,3 @@ public class RetClass
     }
 }
 ```
-
-### 代码依赖关系
-
-● Generic为基本库，其文件允许相互引用

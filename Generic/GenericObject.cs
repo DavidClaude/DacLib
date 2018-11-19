@@ -220,17 +220,13 @@ namespace DacLib.Generic
     /// <summary>
     /// 返回信息
     /// </summary>
-    public struct Ret
+    public class Ret
     {
-        public static readonly Ret ok = new Ret(RetLevel.Info, 0, "");
-
-        public RetLevel level { get; }
-
-        public int code { get; }
-
-        public string desc { get; }
-
-        public Ret(RetLevel levelArg, int codeArg, string descArg)
+        public static readonly Ret ok = new Ret(LogLevel.Info, 0, "");
+        public readonly LogLevel level;
+        public readonly int code;
+        public readonly string desc;
+        public Ret(LogLevel levelArg, int codeArg, string descArg)
         {
             level = levelArg;
             code = codeArg;

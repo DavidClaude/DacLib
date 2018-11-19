@@ -104,7 +104,7 @@ namespace DacLib.Codex
         {
             if (level < 0 || level >= count)
             {
-                ret = new Ret(RetLevel.Error, RET_LEVEL_OUT_OF_RANGE, "Level:" + level + " is out of range");
+                ret = new Ret(LogLevel.Error, RET_LEVEL_OUT_OF_RANGE, "Level:" + level + " is out of range");
                 return;
             }
             //if (val <= 0)
@@ -124,17 +124,17 @@ namespace DacLib.Codex
         public void CheckThresholds(out Ret ret)
         {
             if (count == 0) {
-                ret = new Ret (RetLevel.Error, RET_COUNT_IS_0, "Thresholds count is 0");
+                ret = new Ret (LogLevel.Error, RET_COUNT_IS_0, "Thresholds count is 0");
                 return;
             }
             for (int i = 0; i < count; i++) {
                 if (_thresholds[i] <= 0) {
-                    ret = new Ret(RetLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_0, "Level:" + i + " threshold is less than or equal to 0");
+                    ret = new Ret(LogLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_0, "Level:" + i + " threshold is less than or equal to 0");
                     return;
                 }
                 if ( i != 0) {
                     if (_thresholds[i] <= _thresholds[i - 1]) {
-                        ret = new Ret(RetLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_PRE, "Level:" + i + " threshold is less than or equal to the previous one");
+                        ret = new Ret(LogLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_PRE, "Level:" + i + " threshold is less than or equal to the previous one");
                         return;
                     }
                 }

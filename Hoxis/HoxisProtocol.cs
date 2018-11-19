@@ -35,6 +35,6 @@ namespace DacLib.Hoxis
     {
         public static readonly HoxisProtocolAction nil = new HoxisProtocolAction { mthd = "", args = null };
         public string mthd;
-        public Dictionary<string, object> args;
+        public Dictionary<string, string> args;
     }
 }

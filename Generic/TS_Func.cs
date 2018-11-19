@@ -56,18 +56,21 @@ public class TS_Func : MonoBehaviour
         HoxisProtocol proto = new HoxisProtocol
         {
             type = ProtocolType.Synchronization,
-            rcvr = new HoxisProtocolReceiver {
+            rcvr = new HoxisProtocolReceiver
+            {
                 type = ReceiverType.MultiPlayers,
-                id = new HoxisID("survivor",24),              
+                id = new HoxisID("survivor", 24),
             },
-            sndr = new HoxisProtocolSender {
-                id = new HoxisID("survivor",23),
+            sndr = new HoxisProtocolSender
+            {
+                id = new HoxisID("soldier", 1),
                 back = true,
             },
-            action = new HoxisProtocolAction {
+            action = new HoxisProtocolAction
+            {
                 mthd = "move",
-                args = new Dictionary<string, object>() {
-                    { "speed",5f},
+                args = new Dictionary<string, string>() {
+                    { "speed","5.564346464314793131544987"},
                 }
             },
             desc = "test",
@@ -85,7 +88,6 @@ public class TS_Func : MonoBehaviour
         Debug.Log("Method: " + mthd);
 
         actions[mthd](rcvProto);
-
     }
 
     // Update is called once per frame
@@ -95,12 +97,14 @@ public class TS_Func : MonoBehaviour
     }
 
     public void Move(HoxisProtocol proto) {
+        float speedFloat = float.Parse(proto.action.args["speed"]);
+        Debug.Log("Move: " + speedFloat);
 
-        
     }
 
     public void Attack(HoxisProtocol proto) {
-        Debug.Log((int)proto.action.args["id"]);
+        int idInt = int.Parse(proto.action.args["id"]);
+        Debug.Log("Attack: " + idInt);
     }
 }
 
