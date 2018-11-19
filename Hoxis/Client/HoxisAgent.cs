@@ -15,7 +15,7 @@ namespace DacLib.Hoxis.Client
 		/// Hoxis编号
 		/// </summary>
 		/// <value>The hoxis identifier.</value>
-		public HoxisID hoxisId { get; private set;}
+		public HoxisID hoxisID { get; private set;}
 
 		/// <summary>
 		/// 自动同步
@@ -42,10 +42,10 @@ namespace DacLib.Hoxis.Client
 		/// </summary>
 		/// <param name="tp"> Hoxis类型 </param>
 		/// <param name="id"> Hoxis编号 </param>
-		public void CoFunc (HoxisType hoxisTypeArg, HoxisID hoxisIdArg, bool autoSynArg = true)
+		public void CoFunc (HoxisType hoxisTypeArg, HoxisID hoxisIDArg, bool autoSynArg = true)
 		{
             hoxisType = hoxisTypeArg;
-			hoxisId = hoxisIdArg;
+			hoxisID = hoxisIDArg;
 			autoSyn = autoSynArg;
             isPlayer = (hoxisType == HoxisType.Host ? true : false);
 		}

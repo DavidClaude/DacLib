@@ -27,9 +27,9 @@ namespace DacLib.U3D.Controller
 
     public class InputLayer
     {
-        public const int RET_CMD_EXITS = 1;
-        public const int RET_NO_CMD = 2;
-        public const int RET_AVAILABLE_CMD = 3;
+        public const ushort RET_CMD_EXITS = 1;
+        public const ushort RET_NO_CMD = 2;
+        public const ushort RET_AVAILABLE_CMD = 3;
 
         private Dictionary<string, KeyCode> _commands;
 

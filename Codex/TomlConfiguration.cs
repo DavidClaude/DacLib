@@ -7,10 +7,10 @@ namespace DacLib.Codex
 {
     public class TomlConfiguration
     {
-        public const int RET_NOT_TOML = 1;
-        public const int RET_NO_FILE = 2;
-        public const int RET_NO_SECTION = 3;
-        public const int RET_NO_KEY = 4;
+        public const ushort RET_NOT_TOML = 1;
+        public const ushort RET_NO_FILE = 2;
+        public const ushort RET_NO_SECTION = 3;
+        public const ushort RET_NO_KEY = 4;
 
         private Dictionary<string, Dictionary<string, string>> _config;
 
@@ -28,19 +28,19 @@ namespace DacLib.Codex
         public void ReadFile(string path, out Ret ret)
         {
             _config = new Dictionary<string, Dictionary<string, string>>();
-            //是否为.toml文件
+            //Is toml file ?
             string[] paths = FormatFunc.StringSplit(path, '/');
             string[] strs = FormatFunc.StringSplit(FormatFunc.LastOfArray<string>(paths), '.');
             if (FormatFunc.LastOfArray<string>(strs) != "toml")
             {
                 ret = new Ret(LogLevel.Error, RET_NOT_TOML, "File:" + path + " isn't .toml");
             }
-            //文件是否存在
+            //Does file exist ?
             if (!File.Exists(path))
             {
                 ret = new Ret(LogLevel.Error, RET_NO_FILE, "File:" + path + " doesn't exist");
             }
-            //将.toml读入config
+            //push toml to config
             string curSec = "";
             string[] lines = File.ReadAllLines(path);
             foreach (string line in lines)
@@ -64,7 +64,7 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// 获取字符串配置
+        /// Get config of string type
         /// </summary>
         /// <returns>The string.</returns>
         /// <param name="section">Section.</param>
@@ -92,7 +92,7 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// 获取整型配置
+        /// Get config of int type
         /// </summary>
         /// <returns>The int.</returns>
         /// <param name="section">Section.</param>
@@ -121,7 +121,7 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// 获取浮点型配置
+        /// Get config of float type
         /// </summary>
         /// <returns>The float.</returns>
         /// <param name="section">Section.</param>
@@ -150,7 +150,7 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// 获取布尔型配置
+        /// Get config of bool type
         /// </summary>
         /// <returns><c>true</c>, if bool was gotten, <c>false</c> otherwise.</returns>
         /// <param name="section">Section.</param>
@@ -179,7 +179,7 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// 获取所有section
+        /// Get all sections
         /// </summary>
         /// <returns>The sections.</returns>
         public string[] GetSections()
@@ -196,7 +196,7 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// 获取某section所有key
+        /// Get all keys of given section
         /// </summary>
         /// <returns>The section keys.</returns>
         /// <param name="section">Section.</param>
@@ -216,7 +216,7 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// 获取某section所有value
+        /// Get all values of given section
         /// </summary>
         /// <returns>The section values.</returns>
         /// <param name="section">Section.</param>

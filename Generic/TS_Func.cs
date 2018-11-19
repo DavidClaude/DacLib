@@ -55,41 +55,60 @@ public class TS_Func : MonoBehaviour
         //Debug.Log("New val is " + indn.val);
 
         //HoxisProtocol测试    
-        HoxisProtocol proto = new HoxisProtocol
-        {
-            type = ProtocolType.Synchronization,
-            rcvr = new HoxisProtocolReceiver
-            {
-                type = ReceiverType.MultiPlayers,
-                id = new HoxisID("survivor", 24),
-            },
-            sndr = new HoxisProtocolSender
-            {
-                id = new HoxisID("soldier", 1),
-                back = true,
-            },
-            action = new HoxisProtocolAction
-            {
-                mthd = "move",
-                args = new Dictionary<string, string>() {
-                    { "speed","5.564346464314793131544987"},
-                }
-            },
-            desc = "test",
+        //HoxisProtocol proto = new HoxisProtocol
+        //{
+        //    type = ProtocolType.Synchronization,
+        //    rcvr = new HoxisProtocolReceiver
+        //    {
+        //        type = ReceiverType.Cluster,
+        //        id = new HoxisID("survivor", 24),
+        //    },
+        //    sndr = new HoxisProtocolSender
+        //    {
+        //        id = new HoxisID("soldier", 1),
+        //        back = true,
+        //    },
+        //    action = new HoxisProtocolAction
+        //    {
+        //        mthd = "move",
+        //        args = new Dictionary<string, string>() {
+        //            { "speed","5.564346464314793131544987"},
+        //        }
+        //    },
+        //    desc = "test",
+        //};
+        //string json = FormatFunc.ObjectToJson(proto);
+        //Debug.Log("Protocol: " + json);
+        //HoxisProtocol rcvProto = FormatFunc.JsonToObject<HoxisProtocol>(json);
+        //Debug.Log("Receive protocol: " + FormatFunc.ObjectToJson(rcvProto));
+
+        //Dictionary<string, ProtocolHandler> actions = new Dictionary<string, ProtocolHandler>();
+        //actions.Add("move", Move);
+        //actions.Add("attack", Attack);
+
+        //string mthd = rcvProto.action.mthd;
+        //Debug.Log("Method: " + mthd);
+        //Debug.Log("Type: " + rcvProto.type);
+
+        //actions[mthd](rcvProto.action.args);
+
+        //字典中struct等价测试
+        HoxisID id0 = new HoxisID { group = "g1", id = 0 };
+        HoxisID id1 = new HoxisID { group = "g1", id = 1 };
+        HoxisID id2 = new HoxisID { group = "g1", id = 2 };
+        HoxisID id3 = new HoxisID { group = "g2", id = 0 };
+        HoxisID id4 = new HoxisID { group = "g2", id = 1 };
+
+        Dictionary<HoxisID, string> hidTable = new Dictionary<HoxisID, string>() {
+            { id0, "id0"},
+            { id1, "id1"},
+            { id2, "id2"},
+            { id3, "id3"},
+            { id4, "id4"}
         };
-        string json = FormatFunc.ObjectToJson(proto);
-        Debug.Log("Protocol: " + json);
-        HoxisProtocol rcvProto = FormatFunc.JsonToObject<HoxisProtocol>(json);
-        Debug.Log("Receive protocol: " + FormatFunc.ObjectToJson(rcvProto));
+        HoxisID id = new HoxisID { group = "g3", id = 2 };
+        Debug.Log((hidTable.ContainsKey(id) ? true : false));
 
-        Dictionary<string, ProtocolHandler> actions = new Dictionary<string, ProtocolHandler>();
-        actions.Add("move", Move);
-        actions.Add("attack", Attack);
-
-        string mthd = rcvProto.action.mthd;
-        Debug.Log("Method: " + mthd);
-
-        actions[mthd](rcvProto.action.args);
     }
 
     // Update is called once per frame
@@ -99,8 +118,8 @@ public class TS_Func : MonoBehaviour
     }
 
     public void Move(Dictionary<string,string> args) {
-        float speedFloat = float.Parse(args["speed"]);
-        Debug.Log("Move: " + speedFloat);
+        double speed = double.Parse(args["speed"]);
+        Debug.Log("Move: " + speed);
 
     }
 

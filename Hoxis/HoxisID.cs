@@ -1,15 +1,17 @@
-﻿namespace DacLib.Hoxis
+﻿using System;
+
+namespace DacLib.Hoxis
 {
     public struct HoxisID
     {
-        public static readonly HoxisID nil = new HoxisID("", -1);
+        public static readonly HoxisID nil = new HoxisID("", 0);
 
         public string group;
-        public int index;
-        public HoxisID(string groupArg, int idArg)
+        public ushort id;
+        public HoxisID(string groupArg, ushort idArg)
         {
             group = groupArg;
-            index = idArg;
+            id = idArg;
         }
     }
 }

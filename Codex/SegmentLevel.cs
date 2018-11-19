@@ -5,10 +5,10 @@ namespace DacLib.Codex
 {
     public class SegmentLevel
     {
-        public const int RET_LEVEL_OUT_OF_RANGE = 1;
-        public const int RET_COUNT_IS_0 = 2;
-        public const int RET_THRESHOLD_IS_LESS_EQUAL_0 = 3;
-        public const int RET_THRESHOLD_IS_LESS_EQUAL_PRE = 4;
+        public const ushort RET_LEVEL_OUT_OF_RANGE = 1;
+        public const ushort RET_COUNT_IS_0 = 2;
+        public const ushort RET_THRESHOLD_IS_LESS_EQUAL_0 = 3;
+        public const ushort RET_THRESHOLD_IS_LESS_EQUAL_PRE = 4;
 
         /// <summary>
         /// 级别改变事件

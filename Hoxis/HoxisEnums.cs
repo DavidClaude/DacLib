@@ -11,8 +11,8 @@ namespace DacLib.Hoxis {
     public enum ReceiverType {
         None = 0,
         Server = 1,
-        MultiPlayers = 2,
-        TeamPlayers = 3,
+        Cluster = 2,
+        Team = 3,
         Player = 4
     }
     public enum HoxisType
