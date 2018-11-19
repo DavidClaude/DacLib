@@ -89,7 +89,7 @@ public class TS_Func : MonoBehaviour
         string mthd = rcvProto.action.mthd;
         Debug.Log("Method: " + mthd);
 
-        actions[mthd](rcvProto);
+        actions[mthd](rcvProto.action.args);
     }
 
     // Update is called once per frame
@@ -98,14 +98,14 @@ public class TS_Func : MonoBehaviour
         
     }
 
-    public void Move(HoxisProtocol proto) {
-        float speedFloat = float.Parse(proto.action.args["speed"]);
+    public void Move(Dictionary<string,string> args) {
+        float speedFloat = float.Parse(args["speed"]);
         Debug.Log("Move: " + speedFloat);
 
     }
 
-    public void Attack(HoxisProtocol proto) {
-        int idInt = int.Parse(proto.action.args["id"]);
+    public void Attack(Dictionary<string, string> args) {
+        int idInt = int.Parse(args["id"]);
         Debug.Log("Attack: " + idInt);
     }
 }

@@ -56,11 +56,4 @@ namespace DacLib.Hoxis.Client
 		
 		}
 	}
-
-	public enum HoxisType {
-		None = 0,
-		Host = 1,
-		Proxied = 2,
-        Perpetual = 3
-	}
 }

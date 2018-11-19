@@ -15,6 +15,13 @@ namespace DacLib.Hoxis {
         TeamPlayers = 3,
         Player = 4
     }
+    public enum HoxisType
+    {
+        None = 0,
+        Host = 1,
+        Proxied = 2,
+        Perpetual = 3
+    }
 }
 
 

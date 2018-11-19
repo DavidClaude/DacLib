@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace DacLib.Hoxis {
-    public delegate void ProtocolHandler(HoxisProtocol proto);
+    public delegate void ProtocolHandler(Dictionary<string,string> args);
 }
 
 
