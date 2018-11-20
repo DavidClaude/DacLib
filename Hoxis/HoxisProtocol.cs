@@ -15,7 +15,7 @@ namespace DacLib.Hoxis
         };
 
         public ProtocolType type;
-        public string handle;   // No use when it's Syn type
+        public string handle;   // No use when in Syn type
         public HoxisProtocolReceiver rcvr;
         public HoxisProtocolSender sndr;
         public HoxisProtocolAction action;
@@ -23,16 +23,16 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolReceiver
     {
-        public static readonly HoxisProtocolReceiver nil = new HoxisProtocolReceiver { type = ReceiverType.None, id = HoxisID.nil };
+        public static readonly HoxisProtocolReceiver nil = new HoxisProtocolReceiver { type = ReceiverType.None, hid = HoxisID.nil };
 
         public ReceiverType type;
-        public HoxisID id;
+        public HoxisID hid;
     }
     public struct HoxisProtocolSender
     {
-        public static readonly HoxisProtocolSender nil = new HoxisProtocolSender { id = HoxisID.nil, loopback = true };
+        public static readonly HoxisProtocolSender nil = new HoxisProtocolSender { hid = HoxisID.nil, loopback = true };
 
-        public HoxisID id;
+        public HoxisID hid;
         public bool loopback;
     }
     public struct HoxisProtocolAction

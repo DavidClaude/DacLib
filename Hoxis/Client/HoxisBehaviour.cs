@@ -11,34 +11,21 @@ namespace DacLib.Hoxis.Client
     public class HoxisBehaviour : MonoBehaviour
     {
         /// <summary>
-        /// Action reflection table
-        /// Be shared by all HoxisBehaviour instances, derived classes of this class must register their own methods for reflection
+        /// Action reflected table
+        /// Derived classes of this class must register for their own methods
         /// </summary>
-        protected static Dictionary<string, ProtocolHandler> behavTable = new Dictionary<string, ProtocolHandler>();
+        protected Dictionary<string, ActionHandler> behavTable = new Dictionary<string, ActionHandler>();
 
-        /// <summary>
-        /// Trigger the behaviour
-        /// Called by HoxisAgent
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="proto"></param>
-        public void BehavTrigger(string method, Dictionary<string, string> args)
+        public void Act(string method, Dictionary<string, string> args)
         {
             if (!behavTable.ContainsKey(method))
                 return;
-            if (args == null) {
-                behavTable[method](new Dictionary<string, string>());
-            }
+            if (args == null) { behavTable[method](new Dictionary<string, string>()); }
             behavTable[method](args);
         }
-        public void BehavTrigger(HoxisProtocol proto)
-        {
-            BehavTrigger(proto.action.method, proto.action.args);
-        }
-        public void BehavTrigger(string method)
-        {
-            BehavTrigger(method, null);
-        }
+        public void Act(string method) { Act(method, null); }
+        public void Act(HoxisProtocolAction action) { Act(action.method, action.args); }
+        public void Act(HoxisProtocol proto) { Act(proto.action.method, proto.action.args); }
     }
 }
 

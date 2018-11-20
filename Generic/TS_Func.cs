@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using DacLib.Hoxis;
+using DacLib.Hoxis.Client;
 
 public class TS_Func : MonoBehaviour
 {
@@ -118,6 +119,12 @@ public class TS_Func : MonoBehaviour
         //Ret ret;
         //var proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
         //Debug.Log(ret.desc);
+
+        //actionTable测试
+        //GameObject.Find("GameObject0").GetComponent<HoxisBehaviour>().behavTable["move"](new Dictionary<string, string>());
+        //GameObject.Find("GameObject1").GetComponent<HoxisBehaviour>().behavTable["move"](new Dictionary<string, string>());
+
+        
     }
 
     public void Move(Dictionary<string, string> args)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -69,6 +68,170 @@ namespace DacLib.Generic
             string s = str;
             foreach (string ss in srcStrs) { s = s.Replace(ss, desStr); }
             return s;
+        }
+
+        /// <summary>
+        /// String to int
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static int StringToInt(string str, out Ret ret)
+        {
+            int i = 0;
+            try { i = int.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for int\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to unit
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static uint StringToUint(string str, out Ret ret){
+            uint i = 0;
+            try { i = uint.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for uint\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to sbyte
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static sbyte StringToSbyte(string str, out Ret ret)
+        {
+            sbyte i = 0;
+            try { i = sbyte.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for sbyte\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to byte
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static byte StringToByte(string str, out Ret ret)
+        {
+            byte i = 0;
+            try { i = byte.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for byte\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to short
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static short StringToShort(string str, out Ret ret)
+        {
+            short i = 0;
+            try { i = short.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for short\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to ushort
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static ushort StringToUshort(string str, out Ret ret)
+        {
+            ushort i = 0;
+            try { i = ushort.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for ushort\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to long
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static long StringToLong(string str, out Ret ret)
+        {
+            long i = 0;
+            try { i = long.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for long\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to ulong
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static ulong StringToUlong(string str, out Ret ret)
+        {
+            ulong i = 0;
+            try { i = ulong.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for ulong\n" + e.Message); }
+            ret = Ret.ok;
+            return i;
+        }
+
+        /// <summary>
+        /// String to float
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static float StringToFloat(string str, out Ret ret)
+        {
+            float f = 0;
+            try { f = float.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for float\n" + e.Message); }
+            ret = Ret.ok;
+            return f;
+        }
+
+        /// <summary>
+        /// String to double
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static double StringToDouble(string str, out Ret ret)
+        {
+            double d = 0;
+            try { d = double.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for double\n" + e.Message); }
+            ret = Ret.ok;
+            return d;
+        }
+
+        /// <summary>
+        /// String to bool
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public static bool StringToBool(string str, out Ret ret)
+        {
+            bool b = false;
+            try { b = bool.Parse(str); }
+            catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for bool\n" + e.Message); }
+            ret = Ret.ok;
+            return b;
         }
 
         /// <summary>

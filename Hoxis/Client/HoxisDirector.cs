@@ -110,17 +110,33 @@ namespace DacLib.Hoxis.Client
 
         public static void ProtocolDataEntry(byte[] data)
         {
-            string json = FormatFunc.BytesToString(data);  
+            string json = FormatFunc.BytesToString(data);
             Ret ret;
             HoxisProtocol proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
             if (ret.code != 0)
+                // todo LOG
                 return;
-
+            switch (proto.type) {
+                case ProtocolType.Synchronization:
+                    SynChannelEntry(proto);
+                    break;
+                case ProtocolType.Request:
+                    ReqChannelEntry(proto);
+                    break;
+                case ProtocolType.Response:
+                    RespChannelEntry(proto);
+                    break;
+            }
         }
 
         public static void SynChannelEntry(HoxisProtocol proto)
         {
-
+            HoxisID hid = proto.sndr.hid;
+            Ret ret;
+            HoxisAgent agent = GetAgent(hid, out ret);
+            if (ret.code != 0)
+                return;
+            agent.CallBehaviour(proto.action);
         }
 
         public static void ReqChannelEntry(HoxisProtocol proto)
