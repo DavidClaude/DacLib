@@ -109,27 +109,33 @@ public class TS_Func : MonoBehaviour
         //HoxisID id = new HoxisID { group = "g3", id = 2 };
         //Debug.Log((hidTable.ContainsKey(id) ? true : false));
 
+        //无穷大测试
+        //Debug.Log((-1346413131354645.456433514f > float.NegativeInfinity ? true : false));
+        //Debug.Log(MathFunc.Min(13f, 4.8f, 31.314f, -10f, 50f, -24.4f, 100f, -33.464f));
+
+        //try&catch测试
+        //string json = "fsfagageagag";
+        //Ret ret;
+        //var proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
+        //Debug.Log(ret.desc);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Move(Dictionary<string, string> args)
     {
-        
-    }
-
-    public void Move(Dictionary<string,string> args) {
         double speed = double.Parse(args["speed"]);
         Debug.Log("Move: " + speed);
 
     }
 
-    public void Attack(Dictionary<string, string> args) {
+    public void Attack(Dictionary<string, string> args)
+    {
         int idInt = int.Parse(args["id"]);
         Debug.Log("Attack: " + idInt);
     }
 }
 
-public class MyInfo {
+public class MyInfo
+{
     public string name;
     public int age;
     public float ability;

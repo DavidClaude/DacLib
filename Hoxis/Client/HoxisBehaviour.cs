@@ -33,7 +33,7 @@ namespace DacLib.Hoxis.Client
         }
         public void BehavTrigger(HoxisProtocol proto)
         {
-            BehavTrigger(proto.action.mthd, proto.action.args);
+            BehavTrigger(proto.action.method, proto.action.args);
         }
         public void BehavTrigger(string method)
         {

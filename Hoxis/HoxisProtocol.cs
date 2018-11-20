@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 
 namespace DacLib.Hoxis
@@ -13,7 +13,9 @@ namespace DacLib.Hoxis
             action = HoxisProtocolAction.nil,
             desc = ""
         };
+
         public ProtocolType type;
+        public string handle;   // No use when it's Syn type
         public HoxisProtocolReceiver rcvr;
         public HoxisProtocolSender sndr;
         public HoxisProtocolAction action;
@@ -22,19 +24,22 @@ namespace DacLib.Hoxis
     public struct HoxisProtocolReceiver
     {
         public static readonly HoxisProtocolReceiver nil = new HoxisProtocolReceiver { type = ReceiverType.None, id = HoxisID.nil };
+
         public ReceiverType type;
         public HoxisID id;
     }
     public struct HoxisProtocolSender
     {
-        public static readonly HoxisProtocolSender nil = new HoxisProtocolSender { id = HoxisID.nil, back = true };
+        public static readonly HoxisProtocolSender nil = new HoxisProtocolSender { id = HoxisID.nil, loopback = true };
+
         public HoxisID id;
-        public bool back;
+        public bool loopback;
     }
     public struct HoxisProtocolAction
     {
-        public static readonly HoxisProtocolAction nil = new HoxisProtocolAction { mthd = "", args = null };
-        public string mthd;
+        public static readonly HoxisProtocolAction nil = new HoxisProtocolAction { method = "", args = null };
+
+        public string method;
         public Dictionary<string, string> args;
     }
 }

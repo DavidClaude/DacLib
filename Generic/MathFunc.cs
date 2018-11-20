@@ -14,19 +14,9 @@ namespace DacLib.Generic
         /// <param name="vals">Vals.</param>
         public static float Min(params float[] vals)
         {
-            float m = 0;
+            float m = float.PositiveInfinity;
             int len = vals.Length;
-            for (int i = 0; i < len; i++)
-            {
-                if (i == 0)
-                {
-                    m = vals[i];
-                }
-                if (vals[i] < m)
-                {
-                    m = vals[i];
-                }
-            }
+            for (int i = 0; i < len; i++) { if (vals[i] < m) { m = vals[i]; } }
             return m;
         }
 
@@ -36,19 +26,9 @@ namespace DacLib.Generic
         /// <param name="vals">Vals.</param>
         public static float Max(params float[] vals)
         {
-            float m = 0;
+            float m = float.NegativeInfinity;
             int len = vals.Length;
-            for (int i = 0; i < len; i++)
-            {
-                if (i == 0)
-                {
-                    m = vals[i];
-                }
-                if (vals[i] > m)
-                {
-                    m = vals[i];
-                }
-            }
+            for (int i = 0; i < len; i++) { if (vals[i] > m) { m = vals[i]; } }
             return m;
         }
 
@@ -61,14 +41,8 @@ namespace DacLib.Generic
         public static float Clamp(float val, float min, float max)
         {
             float v = val;
-            if (val < min)
-            {
-                v = min;
-            }
-            else if (val > max)
-            {
-                v = max;
-            }
+            if (val < min) { v = min; }
+            else if (val > max) { v = max; }
             return v;
         }
 
@@ -82,17 +56,9 @@ namespace DacLib.Generic
             if (max - min != 360f)
                 return 0f;
             float angle = val;
-            if (angle >= max)
-            {
-                angle -= 360f;
-            }
-            else if (angle < min)
-            {
-                angle += 360f;
-            }
-            else {
-                return angle;
-            }
+            if (angle >= max) { angle -= 360f; }
+            else if (angle < min) { angle += 360f; }
+            else { return angle; }
             return ClampAngle(angle, min, max);
         }
     }

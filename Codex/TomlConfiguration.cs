@@ -65,29 +65,22 @@ namespace DacLib.Codex
         /// <summary>
         /// Get config of string type
         /// </summary>
-        /// <returns>The string.</returns>
-        /// <param name="section">Section.</param>
-        /// <param name="key">Key.</param>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public string GetString(string section, string key, out Ret ret)
+        {
+            if (!ContainItem(section, key, out ret))
+                return "";
+            ret = Ret.ok;
+            return _config[section][key];
+        }
+
         public string GetString(string section, string key)
         {
             Ret ret;
             return GetString(section, key, out ret);
-        }
-
-        public string GetString(string section, string key, out Ret ret)
-        {
-            if (!_config.ContainsKey(section))
-            {
-                ret = new Ret(LogLevel.Error, RET_NO_SECTION, "Section:" + section + " doesn't exist");
-                return "";
-            }
-            if (!_config[section].ContainsKey(key))
-            {
-                ret = new Ret(LogLevel.Error, RET_NO_KEY, "Key:" + section + " doesn't exist");
-                return "";
-            }
-            ret = Ret.ok;
-            return _config[section][key];
         }
 
         /// <summary>
@@ -97,26 +90,18 @@ namespace DacLib.Codex
         /// <param name="section">Section.</param>
         /// <param name="key">Key.</param>
         /// <param name="ret">Ret.</param>
+        public int GetInt(string section, string key, out Ret ret)
+        {
+            if (!ContainItem(section, key, out ret))
+                return 0;
+            ret = Ret.ok;
+            return int.Parse(_config[section][key]);
+        }
+
         public int GetInt(string section, string key)
         {
             Ret ret;
             return GetInt(section, key, out ret);
-        }
-
-        public int GetInt(string section, string key, out Ret ret)
-        {
-            if (!_config.ContainsKey(section))
-            {
-                ret = new Ret(LogLevel.Error, RET_NO_SECTION, "Section:" + section + " doesn't exist");
-                return 0;
-            }
-            if (!_config[section].ContainsKey(key))
-            {
-                ret = new Ret(LogLevel.Error, RET_NO_KEY, "Key:" + section + " doesn't exist");
-                return 0;
-            }
-            ret = Ret.ok;
-            return int.Parse(_config[section][key]);
         }
 
         /// <summary>
@@ -126,26 +111,18 @@ namespace DacLib.Codex
         /// <param name="section">Section.</param>
         /// <param name="key">Key.</param>
         /// <param name="ret">Ret.</param>
+        public float GetFloat(string section, string key, out Ret ret)
+        {
+            if (!ContainItem(section, key, out ret))
+                return 0f;
+            ret = Ret.ok;
+            return float.Parse(_config[section][key]);
+        }
+
         public float GetFloat(string section, string key)
         {
             Ret ret;
             return GetFloat(section, key, out ret);
-        }
-
-        public float GetFloat(string section, string key, out Ret ret)
-        {
-            if (!_config.ContainsKey(section))
-            {
-                ret = new Ret(LogLevel.Error, RET_NO_SECTION, "Section:" + section + " doesn't exist");
-                return 0f;
-            }
-            if (!_config[section].ContainsKey(key))
-            {
-                ret = new Ret(LogLevel.Error, RET_NO_KEY, "Key:" + section + " doesn't exist");
-                return 0f;
-            }
-            ret = Ret.ok;
-            return float.Parse(_config[section][key]);
         }
 
         /// <summary>
@@ -155,13 +132,28 @@ namespace DacLib.Codex
         /// <param name="section">Section.</param>
         /// <param name="key">Key.</param>
         /// <param name="ret">Ret.</param>
+        public bool GetBool(string section, string key, out Ret ret)
+        {
+            if (!ContainItem(section, key, out ret))
+                return false;
+            ret = Ret.ok;
+            return _config[section][key] == "true" ? true : false;
+        }
+
         public bool GetBool(string section, string key)
         {
             Ret ret;
             return GetBool(section, key, out ret);
         }
 
-        public bool GetBool(string section, string key, out Ret ret)
+        /// <summary>
+        /// Does toml contain the given item ?
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public bool ContainItem(string section, string key, out Ret ret)
         {
             if (!_config.ContainsKey(section))
             {
@@ -174,7 +166,13 @@ namespace DacLib.Codex
                 return false;
             }
             ret = Ret.ok;
-            return _config[section][key] == "true" ? true : false;
+            return true;
+        }
+
+        public bool ContainItem(string section, string key)
+        {
+            Ret ret;
+            return ContainItem(section, key, out ret);
         }
 
         /// <summary>

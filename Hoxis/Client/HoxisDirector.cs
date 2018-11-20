@@ -102,6 +102,37 @@ namespace DacLib.Hoxis.Client
             return _agentSearcher[id];
         }
 
+        public static HoxisAgent GetAgent(HoxisID id)
+        {
+            Ret ret;
+            return GetAgent(id, out ret);
+        }
+
+        public static void ProtocolDataEntry(byte[] data)
+        {
+            string json = FormatFunc.BytesToString(data);  
+            Ret ret;
+            HoxisProtocol proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
+            if (ret.code != 0)
+                return;
+
+        }
+
+        public static void SynChannelEntry(HoxisProtocol proto)
+        {
+
+        }
+
+        public static void ReqChannelEntry(HoxisProtocol proto)
+        {
+
+        }
+
+        public static void RespChannelEntry(HoxisProtocol proto)
+        {
+
+        }
+
         //具体调用方法的功能需使用链接的方式，解耦
     }
 }

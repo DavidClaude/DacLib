@@ -11,37 +11,29 @@ using Newtonsoft.Json;
 namespace DacLib.Generic
 {
     /// <summary>
-    /// 格式转换相关的静态方法库
+    /// Static functions library for converting format
     /// </summary>
     public static class FormatFunc
     {
         /// <summary>
-        /// 字节流转字符串
+        /// Bytes to string
         /// </summary>
-        /// <returns>The to string.</returns>
-        /// <param name="data">Data.</param>
-        public static string BytesToString(byte[] data)
-        {
-            return BytesToString(data, 0, data.Length);
-        }
-
-        public static string BytesToString(byte[] data, int index, int count)
-        {
-            return Encoding.UTF8.GetString(data, index, count);
-        }
+        /// <param name="data"></param>
+        /// <param name="index"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static string BytesToString(byte[] data, int index, int count) { return Encoding.UTF8.GetString(data, index, count); }
+        public static string BytesToString(byte[] data) { return BytesToString(data, 0, data.Length); }
 
         /// <summary>
-        /// 字符串转字节流
+        /// String to bytes
         /// </summary>
         /// <returns>The to bytes.</returns>
         /// <param name="msg">Message.</param>
-        public static byte[] StringToBytes(string str)
-        {
-            return Encoding.UTF8.GetBytes(str);
-        }
+        public static byte[] StringToBytes(string str) { return Encoding.UTF8.GetBytes(str); }
 
         /// <summary>
-        /// 字符串拼接
+        /// String appended
         /// </summary>
         /// <returns>The append.</returns>
         /// <param name="desStr">DES string.</param>
@@ -54,7 +46,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 字符串分隔
+        /// String split
         /// </summary>
         /// <returns>The split.</returns>
         /// <param name="str">String.</param>
@@ -66,7 +58,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 字符串替换/剔除
+        /// String replaced
         /// </summary>
         /// <param name="str"></param>
         /// <param name="desStr"></param>
@@ -75,26 +67,20 @@ namespace DacLib.Generic
         public static string StringReplace(string str, string desStr, params string[] srcStrs)
         {
             string s = str;
-            foreach (string ss in srcStrs)
-            {
-                s = s.Replace(ss, desStr);
-            }
+            foreach (string ss in srcStrs) { s = s.Replace(ss, desStr); }
             return s;
         }
 
         /// <summary>
-        /// 获取数组最后一个元素
+        /// Get the last elem of T type array
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="array"></param>
         /// <returns></returns>
-        public static T LastOfArray<T>(T[] array)
-        {
-            return array[array.Length - 1];
-        }
+        public static T LastOfArray<T>(T[] array) { return array[array.Length - 1]; }
 
         /// <summary>
-        /// 对象实例转二进制文件
+        /// Object to binaries
         /// </summary>
         /// <param name="obj">Object.</param>
         /// <param name="path">Path.</param>
@@ -111,7 +97,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 二进制文件转对象实例
+        /// Binaries to object
         /// </summary>
         /// <returns>The to object.</returns>
         /// <param name="path">Path.</param>
@@ -129,46 +115,53 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 对象实例转Json
+        /// Object to json string
         /// </summary>
         /// <returns>The to json.</returns>
         /// <param name="obj">Object.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public static string ObjectToJson(object obj)
-        {
-            string json = JsonConvert.SerializeObject(obj);
-            return json;
-        }
+        public static string ObjectToJson(object obj) { return JsonConvert.SerializeObject(obj); }
 
         /// <summary>
-        /// Json转对象实例
+        /// Json string to object
         /// </summary>
         /// <returns>The to object.</returns>
         /// <param name="jsonStr">Json string.</param>
         /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public static T JsonToObject<T>(string json)
+        public static T JsonToObject<T>(string json, out Ret ret)
         {
-            T obj = JsonConvert.DeserializeObject<T>(json);
+            T obj;
+            try { obj = JsonConvert.DeserializeObject<T>(json); }
+            catch (Exception e)
+            {
+                ret = new Ret(LogLevel.Error, 1, "Json:" + json + " with illegal format\n" + e.Message);
+                return default(T);
+            }
+            ret = Ret.ok;
             return obj;
         }
 
+        public static T JsonToObject<T>(string json)
+        {
+            Ret ret;
+            return JsonToObject<T>(json, out ret);
+        }
+
         /// <summary>
-        /// Json转Table(Dictionary<string,object>)
+        /// Json to Dictionary<string,object>
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
         public static Dictionary<string, object> JsonToTable(string json)
         {
             if (json == "")
-            {
                 return new Dictionary<string, object>();
-            }
             Dictionary<string, object> table = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
             return table;
         }
 
         /// <summary>
-        /// Json拼接
+        /// Json appended
         /// </summary>
         /// <param name="json"></param>
         /// <param name="kvs"></param>
@@ -181,10 +174,7 @@ namespace DacLib.Generic
                 ret = new Ret(LogLevel.Error, 1, "Json:" + json + " with illegal format");
                 return "";
             }
-            foreach (KV kv in kvs)
-            {
-                table.Add(kv.key, kv.val);
-            }
+            foreach (KV kv in kvs) { table.Add(kv.key, kv.val); }
             ret = Ret.ok;
             return ObjectToJson(table);
         }
@@ -196,7 +186,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 是否正则匹配
+        /// Does input match ?
         /// </summary>
         /// <returns><c>true</c>, if match was regexed, <c>false</c> otherwise.</returns>
         /// <param name="input">Input.</param>
@@ -209,8 +199,8 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 获取括号间的字符串
-        /// 支持非括号的长度为2的字符串
+        /// Get string in brackets
+        /// The brackets must be string whose length is 2
         /// </summary>
         /// <returns>The string in brackets.</returns>
         /// <param name="input">Input.</param>
@@ -228,14 +218,8 @@ namespace DacLib.Generic
             int endIndex = -1;
             for (int i = 0; i < len; i++)
             {
-                if (input[i] == brackets[0])
-                {
-                    beginIndex = i;
-                }
-                if (input[i] == brackets[1])
-                {
-                    endIndex = i;
-                }
+                if (input[i] == brackets[0]) { beginIndex = i; }
+                if (input[i] == brackets[1]) { endIndex = i; }
             }
             //如果没有匹配到左括号或右括号
             if (beginIndex == -1 || endIndex == -1)

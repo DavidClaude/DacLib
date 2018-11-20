@@ -177,3 +177,21 @@ public class RetClass
     }
 }
 ```
+
+● 对于编译器可能报错的代码段，使用try&catch包装，并结合Ret使用，Ret描述中将错误信息加上，遵循“调用方不需try&catch，仅关心Ret”的原则
+
+```c#
+public void Try(string str, out Ret ret)
+{
+    try {
+        //...
+    }
+    catch (Exception e)
+    {
+        ret = new Ret(LogLevel.Error, 1,"...\n" + e.Message);	//捕获错误时，Ret报错并返回
+        return;
+    }
+    ret = Ret.ok;	//正常结束时，Ret为ok
+}
+```
+
