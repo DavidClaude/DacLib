@@ -16,9 +16,11 @@ namespace DacLib.Hoxis.Client
     /// </summary>
     public static class HoxisDirector
     {
-        public const ushort RET_HID_EXISTS = 1;
-        public const ushort RET_NO_UNOCCUPIED_HID = 2;
-        public const ushort RET_NO_HID = 3;
+        #region ret codes
+        public const byte RET_HID_EXISTS = 1;
+        public const byte RET_NO_UNOCCUPIED_HID = 2;
+        public const byte RET_NO_HID = 3;
+        #endregion
 
         private static Dictionary<HoxisID, HoxisAgent> _agentSearcher = new Dictionary<HoxisID, HoxisAgent>();
 
@@ -44,7 +46,7 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         /// <param name="id"></param>
         /// <param name="ret"></param>
-        public static void Repeal(HoxisID id, out Ret ret)
+        public static void Remove(HoxisID id, out Ret ret)
         {
             if (!_agentSearcher.ContainsKey(id))
             {
@@ -55,10 +57,10 @@ namespace DacLib.Hoxis.Client
             ret = Ret.ok;
         }
 
-        public static void Repeal(HoxisAgent agent, out Ret ret)
+        public static void Remove(HoxisAgent agent, out Ret ret)
         {
             HoxisID hid = agent.hoxisID;
-            Repeal(hid, out ret);
+            Remove(hid, out ret);
         }
 
         /// <summary>
@@ -71,7 +73,7 @@ namespace DacLib.Hoxis.Client
         public static ushort GetUnoccupiedID(string group, out Ret ret)
         {
             int len = _agentSearcher.Count;
-            for (ushort i = 0; i < 65535; i++)
+            for (ushort i = 0; i <= ushort.MaxValue; i++)
             {
                 HoxisID hid = new HoxisID(group, i);
                 if (_agentSearcher.ContainsKey(hid))
@@ -79,7 +81,7 @@ namespace DacLib.Hoxis.Client
                 ret = Ret.ok;
                 return i;
             }
-            ret = new Ret(LogLevel.Warning, RET_NO_UNOCCUPIED_HID, "No occupied id, there must be an error");
+            ret = new Ret(LogLevel.Warning, RET_NO_UNOCCUPIED_HID, "Can't figure out occupied id, there must be an error");
             return 0;
         }
 
@@ -89,9 +91,10 @@ namespace DacLib.Hoxis.Client
         /// <param name="id"></param>
         /// <param name="ret"></param>
         /// <returns></returns>
-        public static HoxisAgent Search(HoxisID id,out Ret ret)
+        public static HoxisAgent GetAgent(HoxisID id, out Ret ret)
         {
-            if (!_agentSearcher.ContainsKey(id)) {
+            if (!_agentSearcher.ContainsKey(id))
+            {
                 ret = new Ret(LogLevel.Warning, RET_NO_HID, "HoxisID:" + id.group + "," + id.id + " doesn't exist");
                 return null;
             }

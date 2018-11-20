@@ -5,10 +5,12 @@ namespace DacLib.Codex
 {
     public class SegmentLevel
     {
-        public const ushort RET_LEVEL_OUT_OF_RANGE = 1;
-        public const ushort RET_COUNT_IS_0 = 2;
-        public const ushort RET_THRESHOLD_IS_LESS_EQUAL_0 = 3;
-        public const ushort RET_THRESHOLD_IS_LESS_EQUAL_PRE = 4;
+        #region ret codes
+        public const byte RET_LEVEL_OUT_OF_RANGE = 1;
+        public const byte RET_COUNT_IS_0 = 2;
+        public const byte RET_THRESHOLD_IS_LESS_EQUAL_0 = 3;
+        public const byte RET_THRESHOLD_IS_LESS_EQUAL_PRE = 4;
+        #endregion
 
         /// <summary>
         /// 级别改变事件
@@ -24,13 +26,7 @@ namespace DacLib.Codex
         /// <summary>
         /// 级别数
         /// </summary>
-        public int count
-        {
-            get
-            {
-                return _thresholds.Length;
-            }
-        }
+        public int count { get; }
 
         /// <summary>
         /// 级别
@@ -52,13 +48,7 @@ namespace DacLib.Codex
         /// <summary>
         /// 进度(整体)
         /// </summary>
-        public float rate
-        {
-            get
-            {
-                return degree / max;
-            }
-        }
+        public float rate { get { return degree / max; } }
 
         /// <summary>
         /// 进度(当前级别中)
@@ -77,21 +67,16 @@ namespace DacLib.Codex
         /// <summary>
         /// 最大阈值
         /// </summary>
-        public float max
-        {
-            get
-            {
-                return _thresholds[count - 1];
-            }
-        }
+        public float max { get { return _thresholds[count - 1]; } }
 
         private float[] _thresholds;
         private int _lastLevel;
 
         public SegmentLevel(int countArg)
         {
+            count = countArg;
             degree = 0;
-            _thresholds = new float[countArg];
+            _thresholds = new float[count];
             _lastLevel = level;
         }
 
@@ -107,11 +92,6 @@ namespace DacLib.Codex
                 ret = new Ret(LogLevel.Error, RET_LEVEL_OUT_OF_RANGE, "Level:" + level + " is out of range");
                 return;
             }
-            //if (val <= 0)
-            //{
-            //    ret = new Ret(WARNING_THRESHOLD_IS_LESS_EQUAL_THAN_0, "Threshold:" + val + " is less or equal than 0");
-            //    return;
-            //}
             _thresholds[level] = val;
             ret = Ret.ok;
         }
@@ -132,7 +112,7 @@ namespace DacLib.Codex
                     ret = new Ret(LogLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_0, "Level:" + i + " threshold is less than or equal to 0");
                     return;
                 }
-                if ( i != 0) {
+                if ( i > 0) {
                     if (_thresholds[i] <= _thresholds[i - 1]) {
                         ret = new Ret(LogLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_PRE, "Level:" + i + " threshold is less than or equal to the previous one");
                         return;
@@ -148,15 +128,9 @@ namespace DacLib.Codex
         /// <param name="val">Value.</param>
         public void Extend(float val)
         {
+            
             degree += val;
-            if (degree > max)
-            {
-                degree = max;
-            }
-            if (degree < 0)
-            {
-                degree = 0;
-            }
+            degree = MathFunc.Clamp(degree, 0, max);
             if (level != _lastLevel)
             {
                 onLevelChange(level);

@@ -7,10 +7,12 @@ namespace DacLib.Codex
 {
     public class TomlConfiguration
     {
-        public const ushort RET_NOT_TOML = 1;
-        public const ushort RET_NO_FILE = 2;
-        public const ushort RET_NO_SECTION = 3;
-        public const ushort RET_NO_KEY = 4;
+        #region ret codes
+        public const byte RET_NOT_TOML = 1;
+        public const byte RET_NO_FILE = 2;
+        public const byte RET_NO_SECTION = 3;
+        public const byte RET_NO_KEY = 4;
+        #endregion
 
         private Dictionary<string, Dictionary<string, string>> _config;
 
@@ -20,27 +22,24 @@ namespace DacLib.Codex
             ReadFile(path, out ret);
         }
 
-        public TomlConfiguration(string path, out Ret ret)
-        {
-            ReadFile(path, out ret);
-        }
+        public TomlConfiguration(string path, out Ret ret) { ReadFile(path, out ret); }
 
         public void ReadFile(string path, out Ret ret)
         {
             _config = new Dictionary<string, Dictionary<string, string>>();
-            //Is toml file ?
+            // Is toml file ?
             string[] paths = FormatFunc.StringSplit(path, '/');
             string[] strs = FormatFunc.StringSplit(FormatFunc.LastOfArray<string>(paths), '.');
             if (FormatFunc.LastOfArray<string>(strs) != "toml")
             {
                 ret = new Ret(LogLevel.Error, RET_NOT_TOML, "File:" + path + " isn't .toml");
             }
-            //Does file exist ?
+            // Does file exist ?
             if (!File.Exists(path))
             {
                 ret = new Ret(LogLevel.Error, RET_NO_FILE, "File:" + path + " doesn't exist");
             }
-            //push toml to config
+            // Push toml to config
             string curSec = "";
             string[] lines = File.ReadAllLines(path);
             foreach (string line in lines)

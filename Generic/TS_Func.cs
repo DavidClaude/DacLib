@@ -93,21 +93,21 @@ public class TS_Func : MonoBehaviour
         //actions[mthd](rcvProto.action.args);
 
         //字典中struct等价测试
-        HoxisID id0 = new HoxisID { group = "g1", id = 0 };
-        HoxisID id1 = new HoxisID { group = "g1", id = 1 };
-        HoxisID id2 = new HoxisID { group = "g1", id = 2 };
-        HoxisID id3 = new HoxisID { group = "g2", id = 0 };
-        HoxisID id4 = new HoxisID { group = "g2", id = 1 };
+        //HoxisID id0 = new HoxisID { group = "g1", id = 0 };
+        //HoxisID id1 = new HoxisID { group = "g1", id = 1 };
+        //HoxisID id2 = new HoxisID { group = "g1", id = 2 };
+        //HoxisID id3 = new HoxisID { group = "g2", id = 0 };
+        //HoxisID id4 = new HoxisID { group = "g2", id = 1 };
 
-        Dictionary<HoxisID, string> hidTable = new Dictionary<HoxisID, string>() {
-            { id0, "id0"},
-            { id1, "id1"},
-            { id2, "id2"},
-            { id3, "id3"},
-            { id4, "id4"}
-        };
-        HoxisID id = new HoxisID { group = "g3", id = 2 };
-        Debug.Log((hidTable.ContainsKey(id) ? true : false));
+        //Dictionary<HoxisID, string> hidTable = new Dictionary<HoxisID, string>() {
+        //    { id0, "id0"},
+        //    { id1, "id1"},
+        //    { id2, "id2"},
+        //    { id3, "id3"},
+        //    { id4, "id4"}
+        //};
+        //HoxisID id = new HoxisID { group = "g3", id = 2 };
+        //Debug.Log((hidTable.ContainsKey(id) ? true : false));
 
     }
 

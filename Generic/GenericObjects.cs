@@ -224,9 +224,9 @@ namespace DacLib.Generic
     {
         public static readonly Ret ok = new Ret(LogLevel.Info, 0, "");
         public readonly LogLevel level;
-        public readonly ushort code;
+        public readonly byte code;
         public readonly string desc;
-        public Ret(LogLevel levelArg, ushort codeArg, string descArg)
+        public Ret(LogLevel levelArg, byte codeArg, string descArg)
         {
             level = levelArg;
             code = codeArg;
