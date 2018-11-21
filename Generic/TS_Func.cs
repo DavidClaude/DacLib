@@ -124,9 +124,11 @@ public class TS_Func : MonoBehaviour
 
         //actionTable测试
         //GameObject.Find("GameObject0").GetComponent<HoxisBehaviour>().behavTable["move"](new Dictionary<string, string>());
-        //GameObject.Find("GameObject1").GetComponent<HoxisBehaviour>().behavTable["move"](new Dictionary<string, string>());
+        //GameObject.Find("GameObject1").GetComponent<HoxisBehaviour>().behavTable["move"](new Dictionary<string, string>());        
+    }
 
-        
+    void Update()
+    {
     }
 
     public void Move(Dictionary<string, string> args)
@@ -153,5 +155,30 @@ public class MyInfo
         name = nameArg;
         age = ageArg;
         ability = abilityArg;
+    }
+}
+
+public class Guest : IReceivable
+{
+    string name;
+
+    public Guest(string nameArg)
+    {
+        name = nameArg;
+    }
+
+    public void OnService()
+    {
+        Debug.Log(name + ": I'm on service");
+    }
+
+    public void OnServiceStart()
+    {
+        Debug.Log(name + ": I have started");
+    }
+
+    public void OnServiceStop()
+    {
+        Debug.Log(name + ": I have been stopped");
     }
 }

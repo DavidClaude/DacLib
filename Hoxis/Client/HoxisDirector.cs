@@ -108,6 +108,11 @@ namespace DacLib.Hoxis.Client
             return GetAgent(id, out ret);
         }
 
+        /// <summary>
+        /// The entrance of bytes
+        /// Called by HoxisClient
+        /// </summary>
+        /// <param name="data"></param>
         public static void ProtocolDataEntry(byte[] data)
         {
             string json = FormatFunc.BytesToString(data);
@@ -141,7 +146,7 @@ namespace DacLib.Hoxis.Client
 
         public static void ReqChannelEntry(HoxisProtocol proto)
         {
-
+            // todo
         }
 
         public static void RespChannelEntry(HoxisProtocol proto)

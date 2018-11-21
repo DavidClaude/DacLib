@@ -47,7 +47,7 @@ namespace DacLib.Hoxis {
     #region configurations
     public static class Configs
     {
-
+        public const int REQUEST_TIMEOUT = 2000;
     }
     #endregion
 }

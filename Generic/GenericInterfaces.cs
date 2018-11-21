@@ -4,7 +4,7 @@ namespace DacLib.Generic
 {
 
     /// <summary>
-    /// 可发送/接收Json数据接口
+    /// Enable to extract and load json data of its information and states
     /// </summary>
     public interface IJsonable
     {
@@ -12,6 +12,9 @@ namespace DacLib.Generic
         void LoadJson(string json);
     }
 
+    /// <summary>
+    /// Enable to be served by specific object, such as CriticalReception
+    /// </summary>
     public interface IReceivable
     {
         void OnServiceStart();
