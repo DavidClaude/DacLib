@@ -1,12 +1,21 @@
 ﻿using System;
 
-namespace DacLib.Generic {
+namespace DacLib.Generic
+{
 
     /// <summary>
     /// 可发送/接收Json数据接口
     /// </summary>
-    public interface IJsonable {
+    public interface IJsonable
+    {
         string ToJson();
         void LoadJson(string json);
+    }
+
+    public interface IReceivable
+    {
+        void OnServiceStart();
+        void OnService();
+        void OnServiceStop();
     }
 }

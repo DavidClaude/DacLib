@@ -6,10 +6,10 @@ namespace DacLib.Hoxis.Client
 {
 
     /// <summary>
-    /// The unique ScriptComponent of Protocol layer
+    /// The unique ScriptComponent of protocol-layer
     /// Major in:
     /// -Receive actions and reflect to behaviours
-    /// -Called by Controller layer to upgrade actions
+    /// -Called by control-layer to upgrade actions
     /// -Auto synchronize transforms, states regularly
     /// -If player, manage the proxy and perpetual agents by Distance-detection, request or release dealership
     /// </summary>
@@ -66,37 +66,11 @@ namespace DacLib.Hoxis.Client
 		    // todo autosyn, distance detection
 		}
 
+        /// <summary>
+        /// Call the behaviour-layer
+        /// </summary>
+        /// <param name="action"></param>
         public void CallBehaviour(HoxisProtocolAction action) { _behav.Act(action); }
         public void CallBehaviour(HoxisProtocol proto) { _behav.Act(proto); }
-
-
-        /// <summary>
-        /// Trigger the behaviour
-        /// Called by HoxisAgent
-        /// </summary>
-        /// <param name="method"></param>
-        /// <param name="proto"></param>
-        //public void BehavTrigger(string method, Dictionary<string, string> args)
-        //{
-        //    if (!.ContainsKey(method))
-        //        return;
-        //    if (args == null)
-        //    {
-        //        behavTable[method](new Dictionary<string, string>());
-        //    }
-        //    behavTable[method](args);
-        //}
-        //public void BehavTrigger(HoxisProtocol proto)
-        //{
-        //    BehavTrigger(proto.action.method, proto.action.args);
-        //}
-        //public void BehavTrigger(HoxisProtocolAction action)
-        //{
-        //    BehavTrigger(action.method, action.args);
-        //}
-        //public void BehavTrigger(string method)
-        //{
-        //    BehavTrigger(method, null);
-        //}
     }
 }
