@@ -12,6 +12,7 @@ namespace DacLib.Codex
         public const byte RET_NO_FILE = 2;
         public const byte RET_NO_SECTION = 3;
         public const byte RET_NO_KEY = 4;
+        public const byte RET_ILLEGAL_ITEM = 5;
         #endregion
 
         private Dictionary<string, Dictionary<string, string>> _config;
@@ -24,20 +25,27 @@ namespace DacLib.Codex
 
         public TomlConfiguration(string path, out Ret ret) { ReadFile(path, out ret); }
 
+        /// <summary>
+        /// Read the .toml file into _config
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="ret"></param>
         public void ReadFile(string path, out Ret ret)
         {
             _config = new Dictionary<string, Dictionary<string, string>>();
             // Is toml file ?
             string[] paths = FormatFunc.StringSplit(path, '/');
-            string[] strs = FormatFunc.StringSplit(FormatFunc.LastOfArray<string>(paths), '.');
-            if (FormatFunc.LastOfArray<string>(strs) != "toml")
+            string[] strs = FormatFunc.StringSplit(FormatFunc.LastOfArray(paths), '.');
+            if (FormatFunc.LastOfArray(strs) != "toml")
             {
                 ret = new Ret(LogLevel.Error, RET_NOT_TOML, "File:" + path + " isn't .toml");
+                return;
             }
             // Does file exist ?
             if (!File.Exists(path))
             {
                 ret = new Ret(LogLevel.Error, RET_NO_FILE, "File:" + path + " doesn't exist");
+                return;
             }
             // Push toml to config
             string curSec = "";
@@ -94,8 +102,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return 0;
-            ret = Ret.ok;
-            return int.Parse(_config[section][key]);
+            return FormatFunc.StringToInt(_config[section][key], out ret);
         }
 
         public int GetInt(string section, string key)
@@ -115,8 +122,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return 0f;
-            ret = Ret.ok;
-            return float.Parse(_config[section][key]);
+            return FormatFunc.StringToFloat(_config[section][key], out ret);
         }
 
         public float GetFloat(string section, string key)
@@ -136,8 +142,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return false;
-            ret = Ret.ok;
-            return _config[section][key] == "true" ? true : false;
+            return FormatFunc.StringToBool(_config[section][key], out ret);
         }
 
         public bool GetBool(string section, string key)

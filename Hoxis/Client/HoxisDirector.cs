@@ -11,7 +11,7 @@ namespace DacLib.Hoxis.Client
     /// -manage agents
     /// -search for a given agent or its gameObject
     /// -parse protocols from HoxisClient, then send them to correct agents
-    /// -wrapping a protocol
+    /// -wrapp and launch a protocol
     /// -etc.
     /// </summary>
     public static class HoxisDirector
@@ -109,19 +109,25 @@ namespace DacLib.Hoxis.Client
         }
 
         /// <summary>
-        /// The entrance of bytes
+        /// **WITHIN THREAD**
+        /// The entrance of protocol bytes
         /// Called by HoxisClient
         /// </summary>
         /// <param name="data"></param>
-        public static void ProtocolDataEntry(byte[] data)
+        public static void ProtocolEntry(byte[] data)
         {
             string json = FormatFunc.BytesToString(data);
+            UnityEngine.Debug.Log(json);
             Ret ret;
             HoxisProtocol proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
             if (ret.code != 0)
+            {
                 // todo LOG
+                UnityEngine.Debug.Log(ret.desc);
                 return;
-            switch (proto.type) {
+            }
+            switch (proto.type)
+            {
                 case ProtocolType.Synchronization:
                     SynChannelEntry(proto);
                     break;
@@ -134,26 +140,53 @@ namespace DacLib.Hoxis.Client
             }
         }
 
-        public static void SynChannelEntry(HoxisProtocol proto)
+        /// <summary>
+        /// The launcher of protocol
+        /// </summary>
+        /// <param name="proto"></param>
+        public static void ProtocolLaunch(HoxisProtocol proto)
+        {
+            
+        }
+
+        #region private functions
+
+        /// <summary>
+        /// **WITHIN THREAD**
+        /// The entrance of synchronization protocol
+        /// </summary>
+        /// <param name="proto"></param>
+        private static void SynChannelEntry(HoxisProtocol proto)
         {
             HoxisID hid = proto.sndr.hid;
             Ret ret;
             HoxisAgent agent = GetAgent(hid, out ret);
-            if (ret.code != 0)
-                return;
-            agent.CallBehaviour(proto.action);
+            UnityEngine.Debug.Log("GetAgent: " + ret.desc);
+            
+            agent.Push(proto.action);
         }
 
-        public static void ReqChannelEntry(HoxisProtocol proto)
+        /// <summary>
+        /// **WITHIN THREAD**
+        /// The entrance of request protocol
+        /// </summary>
+        /// <param name="proto"></param>
+        private static void ReqChannelEntry(HoxisProtocol proto)
         {
             // todo
         }
 
-        public static void RespChannelEntry(HoxisProtocol proto)
+        /// <summary>
+        /// **WITHIN THREAD**
+        /// The entrance of response protocol
+        /// Elimate the waiting state of request in reception
+        /// </summary>
+        /// <param name="proto"></param>
+        private static void RespChannelEntry(HoxisProtocol proto)
         {
 
         }
 
-        //具体调用方法的功能需使用链接的方式，解耦
+        #endregion
     }
 }

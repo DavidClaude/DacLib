@@ -91,7 +91,8 @@ namespace DacLib.Generic
         /// <param name="str"></param>
         /// <param name="ret"></param>
         /// <returns></returns>
-        public static uint StringToUint(string str, out Ret ret){
+        public static uint StringToUint(string str, out Ret ret)
+        {
             uint i = 0;
             try { i = uint.Parse(str); }
             catch (Exception e) { ret = new Ret(LogLevel.Error, 1, "String:" + str + " with illegal format for uint\n" + e.Message); }
@@ -329,7 +330,7 @@ namespace DacLib.Generic
         /// <param name="json"></param>
         /// <param name="kvs"></param>
         /// <returns></returns>
-        public static string JsonAppend(string json, out Ret ret, params KV[] kvs)
+        public static string JsonAppend(string json, out Ret ret, params KV<string, object>[] kvs)
         {
             Dictionary<string, object> table = JsonToTable(json);
             if (table == null)
@@ -337,12 +338,12 @@ namespace DacLib.Generic
                 ret = new Ret(LogLevel.Error, 1, "Json:" + json + " with illegal format");
                 return "";
             }
-            foreach (KV kv in kvs) { table.Add(kv.key, kv.val); }
+            foreach (KV<string, object> kv in kvs) { table.Add(kv.key, kv.val); }
             ret = Ret.ok;
             return ObjectToJson(table);
         }
 
-        public static string JsonAppend(string json, params KV[] kvs)
+        public static string JsonAppend(string json, params KV<string, object>[] kvs)
         {
             Ret ret;
             return JsonAppend(json, out ret, kvs);

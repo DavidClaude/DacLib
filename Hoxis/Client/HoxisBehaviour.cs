@@ -23,9 +23,11 @@ namespace DacLib.Hoxis.Client
         /// <param name="args"></param>
         public void Act(string method, Dictionary<string, string> args)
         {
+            Debug.Log("Act");
             if (!behavTable.ContainsKey(method))
                 return;
             if (args == null) { behavTable[method](new Dictionary<string, string>()); }
+            Debug.Log(method);
             behavTable[method](args);
         }
         public void Act(string method) { Act(method, null); }

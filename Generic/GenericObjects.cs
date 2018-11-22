@@ -118,8 +118,8 @@ namespace DacLib.Generic
         string IJsonable.ToJson()
         {
             return FormatFunc.JsonAppend("",
-                new KV { key = "_constTraces", val = _constTraces },
-                new KV { key = "_percTraces", val = _percTraces }
+                new KV<string,object> { key = "_constTraces", val = _constTraces },
+                new KV<string, object> { key = "_percTraces", val = _percTraces }
                 );
         }
 
@@ -207,7 +207,7 @@ namespace DacLib.Generic
 
         string IJsonable.ToJson()
         {
-            return FormatFunc.JsonAppend("", new KV { key = "val", val = val });
+            return FormatFunc.JsonAppend("", new KV<string, object> { key = "val", val = val });
         }
 
         void IJsonable.LoadJson(string json)
@@ -237,9 +237,9 @@ namespace DacLib.Generic
     /// <summary>
     /// 通用键值对
     /// </summary>
-    public struct KV
+    public struct KV<TK,TV>
     {
-        public string key;
-        public object val;
+        public TK key;
+        public TV val;
     }
 }

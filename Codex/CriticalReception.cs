@@ -24,8 +24,10 @@ namespace DacLib.Codex
         /// <summary>
         /// Get the remain count of unoccupied desks
         /// </summary>
-        public int remain {
-            get {
+        public int remain
+        {
+            get
+            {
                 int r = 0;
                 for (int i = 0; i < count; i++)
                 {
@@ -121,12 +123,10 @@ namespace DacLib.Codex
                 cycle = cycleArg;
                 _serviceThread = new Thread(() =>
                 {
-                    lock (guest) {
-                        while (true)
-                        {
-                            guest.OnService();
-                            Thread.Sleep(cycle);
-                        }
+                    while (true)
+                    {
+                        lock (guest) { guest.OnService(); }
+                        Thread.Sleep(cycle);
                     }
                 });
             }
@@ -150,7 +150,7 @@ namespace DacLib.Codex
             /// </summary>
             public void StopService()
             {
-                if (_serviceThread.IsAlive) { _serviceThread.Abort(); }  
+                if (_serviceThread.IsAlive) { _serviceThread.Abort(); }
                 guest.OnServiceStop();
                 guest = null;
                 isOccupied = false;

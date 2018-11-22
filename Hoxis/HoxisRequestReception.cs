@@ -9,7 +9,7 @@ namespace DacLib.Hoxis {
 
         public void OnService()
         {
-            
+            //UnityEngine.GameObject.Find("haha").GetComponent<UnityEngine.Collider>().isTrigger = false;
         }
 
         public void OnServiceStart()

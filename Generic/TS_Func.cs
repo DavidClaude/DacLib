@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Converters;
@@ -125,10 +125,59 @@ public class TS_Func : MonoBehaviour
         //actionTable测试
         //GameObject.Find("GameObject0").GetComponent<HoxisBehaviour>().behavTable["move"](new Dictionary<string, string>());
         //GameObject.Find("GameObject1").GetComponent<HoxisBehaviour>().behavTable["move"](new Dictionary<string, string>());        
+
+        //线程调用测试
+        //HoxisAgent agent = GameObject.Find("Soldier").GetComponent<HoxisAgent>();
+        //agent.CoFunc(HoxisType.Proxied, new HoxisID("soldier", 10), true);
+        //Ret ret;
+        //HoxisDirector.Register(agent, out ret);
+        //Debug.Log("Register: " + ret.desc);
+
+        //配置文件测试
+        Ret ret;
+        HoxisClient.InitConfig(out ret);
+        Debug.Log(HoxisClient.serverIP + HoxisClient.port);
+
     }
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            //线程调用测试
+            HoxisProtocol proto = new HoxisProtocol
+            {
+                type = ProtocolType.Synchronization,
+                rcvr = new HoxisProtocolReceiver
+                {
+                    type = ReceiverType.Cluster,
+                    hid = new HoxisID("survivor", 5),
+                },
+                sndr = new HoxisProtocolSender
+                {
+                    hid = new HoxisID("soldier", 10),
+                    loopback = true,
+                },
+                action = new HoxisProtocolAction
+                {
+                    method = "shoot",
+                    args = new Dictionary<string, string> {
+                    { "val","15"},
+                    { "src","weapon"},
+                },
+                },
+                desc = "thread test",
+            };
+            string json = FormatFunc.ObjectToJson(proto);
+            byte[] data = FormatFunc.StringToBytes(json);
+
+            Thread t = new Thread(() =>
+            {
+                    //Thread.Sleep(1000);
+                    HoxisDirector.ProtocolEntry(data);
+            });
+            t.Start();
+        }
     }
 
     public void Move(Dictionary<string, string> args)

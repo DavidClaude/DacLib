@@ -47,7 +47,9 @@ namespace DacLib.Hoxis {
     #region configurations
     public static class Configs
     {
-        public const int REQUEST_TIMEOUT = 2000;
+        public const int REQUEST_TIMEOUT = 2000;       
+        public const int ACTION_QUEUE_CAPACITY = 32;
+        public const short MAX_PROCESSING_QUANTITY_PER_FRAME = 5;
     }
     #endregion
 }
