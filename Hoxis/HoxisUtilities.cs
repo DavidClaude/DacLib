@@ -34,22 +34,14 @@ namespace DacLib.Hoxis {
 
     #endregion
 
-    #region constants
-    public static class Consts {
-
+    #region configurations(constants)
+    public static class Configs
+    {
+        public static string hoxisPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis/"; } }
     }
     #endregion
 
     #region interfaces
 
-    #endregion
-
-    #region configurations
-    public static class Configs
-    {
-        public const int REQUEST_TIMEOUT = 2000;       
-        public const int ACTION_QUEUE_CAPACITY = 32;
-        public const short MAX_PROCESSING_QUANTITY_PER_FRAME = 5;
-    }
     #endregion
 }

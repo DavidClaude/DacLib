@@ -9,22 +9,7 @@ namespace DacLib.Hoxis.Client
 {
     public static class HoxisClient
     {
-        /// <summary>
-        /// Event of initializing error
-        /// </summary>
-        public static event StringForVoid_Handler onInitError;
-
-        /// <summary>
-        /// **WITHIN THREAD**
-        /// Event of connecting success
-        /// </summary>
-        public static event NoneForVoid_Handler onConnected;
-
-        /// <summary>
-        /// **MAY WITHIN THREAD**
-        /// Event of connecting error
-        /// </summary>
-        public static event StringForVoid_Handler onConnectError;
+        public static TomlConfiguration config { get; private set; }
 
         /// <summary>
         /// IP of Hoxis server which is used for synchronization
@@ -44,37 +29,71 @@ namespace DacLib.Hoxis.Client
             get { return _socket.Connected; }
         }
 
+        /// <summary>
+        /// Event of initializing error
+        /// </summary>
+        public static event StringForVoid_Handler onInitError;
+
+        /// <summary>
+        /// **WITHIN THREAD**
+        /// Event of connecting success
+        /// </summary>
+        public static event NoneForVoid_Handler onConnected;
+
+        /// <summary>
+        /// **MAY WITHIN THREAD**
+        /// Event of connecting error
+        /// </summary>
+        public static event StringForVoid_Handler onConnectError;
+
         private static Socket _socket;
 
+        /// <summary>
+        /// Init the configuration, such as the ip, port, socket
+        /// </summary>
+        /// <param name="ret"></param>
         public static void InitConfig(out Ret ret)
         {
-            TomlConfiguration cfg = new TomlConfiguration(UnityEngine.Application.dataPath + "/DacLib/Hoxis/Client/client.toml", out ret);
+            config = new TomlConfiguration(Configs.hoxisPath + "Configs/hoxisclient.toml", out ret);
             if (ret.code != 0) { OnInitError(ret.desc); return; }
-            serverIP = cfg.GetString("socket", "server_ip", out ret);
+            serverIP = config.GetString("socket", "server_ip", out ret);
             if (ret.code != 0) { OnInitError(ret.desc); return; }
-            port = cfg.GetInt("socket", "port", out ret);
+            port = config.GetInt("socket", "port", out ret);
             if (ret.code != 0) { OnInitError(ret.desc); return; }
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
             ret = Ret.ok;
         }
 
+        /// <summary>
+        /// Connect to server
+        /// </summary>
         public static void Connect()
         {
             try
             {
-                IPAddress ipAddr = IPAddress.Parse(serverIP);
-                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
-                IPEndPoint ipEP = new IPEndPoint(ipAddr, port);
-                _socket.BeginConnect(ipEP, new AsyncCallback(ConnectCallback), _socket);
+                IPAddress addr = IPAddress.Parse(serverIP);
+                IPEndPoint ep = new IPEndPoint(addr, port);
+                _socket.BeginConnect(ep, new AsyncCallback(ConnectCb), _socket);
             }
             catch (SocketException e) { OnConnectError(e.Message); }
         }
 
-        public static void Send(byte[] data)
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void StartReceive()
         {
 
         }
 
-        //private static 
+        /// <summary>
+        /// Send protocol bytes to server
+        /// </summary>
+        /// <param name="data"></param>
+        public static void Send(byte[] data)
+        {
+
+        }
 
         #region private functions
 
@@ -101,7 +120,7 @@ namespace DacLib.Hoxis.Client
         /// Callback function of successful connecting event
         /// </summary>
         /// <param name="ar"></param>
-        private static void ConnectCallback(IAsyncResult ar)
+        private static void ConnectCb(IAsyncResult ar)
         {
             Socket s = (Socket)ar.AsyncState;
             try

@@ -1,0 +1,9 @@
+[socket]
+server_ip = 127.0.0.1
+port = 10086
+read_buffer_count = 1024
+
+[protocol]
+request_timeout = 2000
+action_queue_capacity = 32
+processing_quantity = 5

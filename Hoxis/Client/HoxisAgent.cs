@@ -41,12 +41,23 @@ namespace DacLib.Hoxis.Client
         public bool isPlayer { get; private set; }
 
         private HoxisBehaviour _behav;
-        private Queue<HoxisProtocolAction> _actionQueue = new Queue<HoxisProtocolAction>(Configs.ACTION_QUEUE_CAPACITY);
+        private Queue<HoxisProtocolAction> _actionQueue;
+        private short _processingQuantity;
 
         // Use this for initialization
         void Start()
         {
+            // Init the action queue by HoxisClient.config
+            int capacity;
+            Ret retCapacity;
+            capacity = HoxisClient.config.GetInt("protocol", "action_queue_capacity", out retCapacity);
+            if (retCapacity.code != 0) { capacity = 32; }
+            _actionQueue = new Queue<HoxisProtocolAction>(capacity);
 
+            // Init the processing quantity by HoxisClient.config
+            Ret retQuantity;
+            _processingQuantity = HoxisClient.config.GetShort("protocol", "processing_quantity", out retQuantity);
+            if (retQuantity.code != 0) { _processingQuantity = 5; }
         }
 
         /// <summary>
@@ -68,7 +79,7 @@ namespace DacLib.Hoxis.Client
         {
             // Process actions
             short c = 0;
-            while (c < Configs.MAX_PROCESSING_QUANTITY_PER_FRAME)
+            while (c < _processingQuantity)
             {
                 if (_actionQueue.Count <= 0)
                     break;

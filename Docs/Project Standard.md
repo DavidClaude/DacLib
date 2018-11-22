@@ -125,7 +125,7 @@ public struct KV
 ● class的只读属性在构造方法中赋值，struct若要对只读字段赋值，必须提供构造方法，否则可以使用初始化赋值
 
 ```c#
-public KV field = new KV
+public KV<string,string> field = new KV<string,string>
 {
     key = "key",
     val = "value"
@@ -140,7 +140,7 @@ public KV field = new KV
 
 ```c#
 //无效的HoxisID
-public static readonly HoxisID nil = new HoxisID("", -1);
+public static readonly HoxisID nil = new HoxisID("", 0);
 //正确的返回结果
 public static readonly Ret ok = new Ret(LogLevel.Info, 0, "");
 ```
@@ -206,3 +206,63 @@ public void Try(string str, out Ret ret)
 ● 运行于线程中的方法，使用*\*WITHIN THREAD**作为注释首行，用于提示：需注意进行临界资源lock操作
 
 ● 一般对大段常量定义、私有方法使用region折叠，region名为小写复数形式，如"private functions"
+
+### 成员顺序
+
+● 变量：
+
+常量 -> 只读字段 -> 静态量 -> 公共属性(简写) -> 公共属性(完整) -> 公共事件 -> 私有字段 -> 私有事件
+
+● 方法：
+
+构造方法 -> 公共方法 -> 私有方法
+
+一般方法 -> 事件调用方法 -> 回调方法 -> 完全初始化方法(Init)
+
+方法 -> 重载方法
+
+```c#
+public class SampleClass
+{
+    public const string SAMPLE_DESC = "sample class"; 
+    public readonly float rate = 1.0f;
+    public static int index {get;set;}
+    public string name {get;private set;}
+    public int count {
+        get{
+            return _list.Count;
+        }
+    }
+    public event SampleHandler onEvent;
+    
+    private List<string> _list;
+    private event SampleHandler _onPrivateEvent;
+    
+    public SampleClass(string nameArg) {
+        name = nameArg;
+    }
+    
+    public void Update(float f) {
+        //...
+    }
+    public void Update() { Update(1.0f); }
+    
+    public void OnEvent() {
+        if (onEvent == null)
+            return;
+        onEvent();
+    }
+    
+    public void CallCb() {}
+    
+    public void Init() {}
+    
+    private void GetIndex() {}
+    private void OnPrivateEvent() {
+        if (_onPrivateEvent == null)
+            return;
+        _onPrivateEvent();
+    }
+}
+```
+

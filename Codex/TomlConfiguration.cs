@@ -112,6 +112,26 @@ namespace DacLib.Codex
         }
 
         /// <summary>
+        /// Get config of short type
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public short GetShort(string section, string key, out Ret ret)
+        {
+            if (!ContainItem(section, key, out ret))
+                return 0;
+            return FormatFunc.StringToShort(_config[section][key], out ret);
+        }
+
+        public int GetShort(string section, string key)
+        {
+            Ret ret;
+            return GetShort(section, key, out ret);
+        }
+
+        /// <summary>
         /// Get config of float type
         /// </summary>
         /// <returns>The float.</returns>
