@@ -134,9 +134,11 @@ public class TS_Func : MonoBehaviour
         //Debug.Log("Register: " + ret.desc);
 
         //配置文件测试
+        //Ret ret;
+        //HoxisClient.InitConfig(out ret);
+        //Debug.Log(HoxisClient.serverIP + HoxisClient.port);
         Ret ret;
-        HoxisClient.InitConfig(out ret);
-        Debug.Log(HoxisClient.serverIP + HoxisClient.port);
+        HoxisUnityLauncher.Awake(out ret);
 
     }
 
