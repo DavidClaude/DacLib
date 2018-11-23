@@ -85,6 +85,21 @@ namespace DacLib.Generic
         }
 
         /// <summary>
+        /// Int to bytes array
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static byte[] IntToBytes(int i) { return BitConverter.GetBytes(i); }
+
+        /// <summary>
+        /// Bytes array to int
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="startIndex"></param>
+        /// <returns></returns>
+        public static int BytesToInt(byte[] data, int startIndex = 0) { return BitConverter.ToInt32(data, startIndex); }
+
+        /// <summary>
         /// String to int
         /// </summary>
         /// <param name="str"></param>

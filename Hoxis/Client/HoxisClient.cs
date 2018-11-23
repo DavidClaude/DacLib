@@ -17,8 +17,10 @@ namespace DacLib.Hoxis.Client
         public const byte RET_RECEIVE_END_EXCEPTION = 4;
         public const byte RET_SEND_BEGIN_EXCEPTION = 5;
         public const byte RET_SEND_END_EXCEPTION = 6;
-        public const int ERR_CONFIG_NOT_INITIALIZED = 10101;
-        public const int ERR_DISCONNECTED = 10102;
+        public const byte RET_CFG_UNINITIALIZED = 7;
+        public const byte RET_DISCONNECTED = 8;
+        public const string ERR_MSG_CFG_UNINITIALIZED = "Configuration file should be initialized first";
+        public const string ERR_MSG_DISCONNECTED = "Socket is disconnected";
         #endregion
 
         public static TomlConfiguration config { get; private set; }
@@ -36,10 +38,7 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Is the client connected ?
         /// </summary>
-        public static bool isConnected
-        {
-            get { return _socket.Connected; }
-        }
+        public static bool isConnected { get { return _socket.Connected; } }
 
         /// <summary>
         /// Event of initializing error
@@ -77,15 +76,21 @@ namespace DacLib.Hoxis.Client
         /// Init the configuration, such as the ip, port, socket
         /// </summary>
         /// <param name="ret"></param>
-        public static void InitConfig(out Ret ret)
+        public static void InitConfig(out Ret ret, string configPath = "")
         {
-            config = new TomlConfiguration(HoxisConfigs.basicPath + "Configs/hoxisclient.toml", out ret);
+            // Read config file
+            string path;
+            if (configPath != "") { path = configPath; }
+            else { path = HoxisConfigs.basicPath + "Configs/hoxisclient.toml"; }
+            config = new TomlConfiguration(path, out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
+            // Assign ip, port and init the sokcet
             serverIP = config.GetString("socket", "server_ip", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             port = config.GetInt("socket", "port", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+            // Init the extractor
             int size = config.GetInt("socket", "read_buffer_size", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             _extractor = new HoxisBytesExtractor(size);
@@ -102,10 +107,10 @@ namespace DacLib.Hoxis.Client
             {
                 IPAddress addr = IPAddress.Parse(serverIP);
                 IPEndPoint ep = new IPEndPoint(addr, port);
-                if (_socket == null) { throw new SocketException(ERR_CONFIG_NOT_INITIALIZED); }
+                if (_socket == null) { throw new Exception(ERR_MSG_CFG_UNINITIALIZED); }
                 _socket.BeginConnect(ep, new AsyncCallback(ConnectCb), null);
             }
-            catch (SocketException e) { OnConnectError(new Ret(LogLevel.Error, RET_CONNECT_BEGIN_EXCEPTION, e.Message)); }
+            catch (Exception e) { OnConnectError(new Ret(LogLevel.Error, RET_CFG_UNINITIALIZED, e.Message)); }
         }
 
         /// <summary>
@@ -113,11 +118,12 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         public static void Receive()
         {
-            try {
-                if (!isConnected) { throw new SocketException(ERR_DISCONNECTED); }
+            try
+            {
+                if (!isConnected) { throw new Exception(ERR_MSG_DISCONNECTED); }
                 _socket.BeginReceive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None, new AsyncCallback(ReceiveCb), null);
             }
-            catch (SocketException e) { OnReceiveError(new Ret(LogLevel.Error, RET_RECEIVE_BEGIN_EXCEPTION, e.Message)); }
+            catch (Exception e) { OnReceiveError(new Ret(LogLevel.Error, RET_RECEIVE_BEGIN_EXCEPTION, e.Message)); }
         }
 
         /// <summary>
@@ -129,11 +135,12 @@ namespace DacLib.Hoxis.Client
         {
             int len = protoData.Length;
             if (len <= 0) return;
-            byte[] header = BitConverter.GetBytes(len);
+            byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
             if (!asyn) { _socket.Send(data); }
             else
             {
+                if (!isConnected) { throw new Exception(ERR_MSG_DISCONNECTED); }
                 try { _socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(SendCb), null); }
                 catch (SocketException e) { OnSendError(new Ret(LogLevel.Error, RET_SEND_BEGIN_EXCEPTION, e.Message)); }
             }

@@ -93,7 +93,7 @@ namespace DacLib.Hoxis.Client
 
         /// <summary>
         /// **WITHIN THREAD**
-        /// Push an action to the queue
+        /// Push an action into the queue
         /// </summary>
         /// <param name="action"></param>
         public void Push(HoxisProtocolAction action)
@@ -102,19 +102,57 @@ namespace DacLib.Hoxis.Client
         }
         public void Push(HoxisProtocol proto) { Push(proto.action); }
 
-        public void Report(HoxisProtocolAction action)
+        /// <summary>
+        /// Report an action of this gameObject, generally syn
+        /// </summary>
+        /// <param name="action"></param>
+        public void Report(HoxisProtocolAction actionArg)
         {
-            //HoxisDirector
+            HoxisProtocol proto = new HoxisProtocol
+            {
+                type = ProtocolType.Synchronization,
+                handle = "",
+                rcvr = new HoxisProtocolReceiver
+                {
+                    type = ReceiverType.Cluster,
+                    hid = HoxisID.nil,
+                },
+                sndr = new HoxisProtocolSender
+                {
+                    hid = hoxisID,
+                    loopback = true,
+                },
+                action = actionArg,
+                desc = "",
+            };
+            HoxisDirector.ProtocolPost(proto);
         }
 
-        public void Report(string method, params KV<string, string>[] kvs)
+        public void Report(string methodArg, params KV<string, string>[] kvs)
         {
-
+            Dictionary<string, string> argsArg = new Dictionary<string, string>();
+            foreach (KV<string, string> kv in kvs) { argsArg.Add(kv.key, kv.val); }
+            HoxisProtocolAction action = new HoxisProtocolAction
+            {
+                method = methodArg,
+                args = argsArg,
+            };
+            Report(action);
         }
 
-        public void Report(string method, Dictionary<string, string> args)
+        public void Report(string methodArg, Dictionary<string, string> argsArg)
         {
+            HoxisProtocolAction action = new HoxisProtocolAction
+            {
+                method = methodArg,
+                args = argsArg,
+            };
+            Report(action);
+        }
 
+        public void Report(HoxisProtocol proto)
+        {
+            HoxisDirector.ProtocolPost(proto);
         }
 
         /// <summary>
@@ -124,6 +162,6 @@ namespace DacLib.Hoxis.Client
         private void CallBehaviour(HoxisProtocolAction action) { _behav.Act(action); }
         private void CallBehaviour(HoxisProtocol proto) { _behav.Act(proto); }
 
-        
+
     }
 }

@@ -59,7 +59,7 @@ namespace DacLib.Hoxis
             // Copy the first several bytes to header bytes
             Array.Copy(readBytes, _headerBytes, HEADER_SIZE);
             // Calculate the length value of current protocol
-            _protoLen = BitConverter.ToInt32(_headerBytes, 0);
+            _protoLen = FormatFunc.BytesToInt(_headerBytes);
             // Calculate the remain length supposing that current protocol is detached
             int remain = readCount - _protoLen - HEADER_SIZE;
             // The remain which is less than 0 means that more data need be received, next data
