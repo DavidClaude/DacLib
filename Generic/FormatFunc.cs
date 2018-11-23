@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace DacLib.Generic
@@ -32,7 +33,7 @@ namespace DacLib.Generic
         public static byte[] StringToBytes(string str) { return Encoding.UTF8.GetBytes(str); }
 
         /// <summary>
-        /// String appended
+        /// String append
         /// </summary>
         /// <returns>The append.</returns>
         /// <param name="desStr">DES string.</param>
@@ -68,6 +69,19 @@ namespace DacLib.Generic
             string s = str;
             foreach (string ss in srcStrs) { s = s.Replace(ss, desStr); }
             return s;
+        }
+
+        /// <summary>
+        /// Bytes concat
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="bytesArgs"></param>
+        /// <returns></returns>
+        public static byte[] BytesConcat(byte[] src, params byte[][] bytesArgs)
+        {
+            byte[] bfin = src;
+            foreach (byte[] bs in bytesArgs) { bfin = bfin.Concat(bs).ToArray(); }
+            return bfin;
         }
 
         /// <summary>

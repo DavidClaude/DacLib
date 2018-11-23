@@ -220,7 +220,7 @@ namespace DacLib.Generic
     /// <summary>
     /// 返回信息
     /// </summary>
-    public class Ret
+    public struct Ret
     {
         public static readonly Ret ok = new Ret(LogLevel.Info, 0, "");
         public readonly LogLevel level;

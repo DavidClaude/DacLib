@@ -141,12 +141,27 @@ namespace DacLib.Hoxis.Client
         }
 
         /// <summary>
-        /// The launcher of protocol
+        /// The poster of protocol
+        /// Convert protocol to protocol bytes
         /// </summary>
         /// <param name="proto"></param>
-        public static void ProtocolLaunch(HoxisProtocol proto)
+        public static void ProtocolPost(HoxisProtocol proto)
         {
-            
+            switch (proto.type)
+            {
+                case ProtocolType.Synchronization:
+                    
+                    break;
+                case ProtocolType.Request:
+                    // todo wait
+                    break;
+                case ProtocolType.Response:
+                    
+                    break;
+            }
+            string json = FormatFunc.ObjectToJson(proto);
+            byte[] data = FormatFunc.StringToBytes(json);
+            HoxisClient.Send(data);
         }
 
         #region private functions

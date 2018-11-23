@@ -35,9 +35,9 @@ namespace DacLib.Hoxis {
     #endregion
 
     #region configurations(constants)
-    public static class Configs
+    public static class HoxisConfigs
     {
-        public static string hoxisPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis/"; } }
+        public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis/"; } }
     }
     #endregion
 

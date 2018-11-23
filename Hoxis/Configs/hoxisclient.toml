@@ -1,7 +1,7 @@
 [socket]
 server_ip = 127.0.0.1
 port = 10086
-read_buffer_count = 1024
+read_buffer_size = 1024
 
 [protocol]
 request_timeout = 2000
