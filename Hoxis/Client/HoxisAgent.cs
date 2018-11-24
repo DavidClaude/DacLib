@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DacLib.Generic;
+using System;
 
 namespace DacLib.Hoxis.Client
 {
@@ -41,23 +42,13 @@ namespace DacLib.Hoxis.Client
         public bool isPlayer { get; private set; }
 
         private HoxisBehaviour _behav;
-        private Queue<HoxisProtocolAction> _actionQueue;
-        private short _processingQuantity;
+        private HoxisActionQueue _actionQueue;
 
         // Use this for initialization
         void Start()
         {
-            // Init the action queue by HoxisClient.config
-            int capacity;
-            Ret retCapacity;
-            capacity = HoxisClient.config.GetInt("protocol", "action_queue_capacity", out retCapacity);
-            if (retCapacity.code != 0) { capacity = 32; }
-            _actionQueue = new Queue<HoxisProtocolAction>(capacity);
-
-            // Init the processing quantity by HoxisClient.config
-            Ret retQuantity;
-            _processingQuantity = HoxisClient.config.GetShort("protocol", "processing_quantity", out retQuantity);
-            if (retQuantity.code != 0) { _processingQuantity = 5; }
+            
+            
         }
 
         /// <summary>
@@ -73,20 +64,18 @@ namespace DacLib.Hoxis.Client
             autoSyn = autoSynArg;
             isPlayer = (hoxisType == HoxisType.Host ? true : false);
             _behav = GetComponent<HoxisBehaviour>();
+            // Init the action queue by HoxisClient.config
+            Ret ret;
+            int capacity = HoxisClient.config.GetInt("protocol", "action_queue_capacity", out ret);
+            if (ret.code != 0) { capacity = 32; }
+            short quantity = HoxisClient.config.GetShort("protocol", "processing_quantity", out ret);
+            if (ret.code != 0) { quantity = 5; }
+            _actionQueue = new HoxisActionQueue(capacity, quantity,CallBehaviour);
         }
 
         void Update()
         {
-            // Process actions
-            short c = 0;
-            while (c < _processingQuantity)
-            {
-                if (_actionQueue.Count <= 0)
-                    break;
-                HoxisProtocolAction action = _actionQueue.Dequeue();
-                CallBehaviour(action);
-                c++;
-            }
+            _actionQueue.ProcessInRound();
 
             // todo autosyn, distance detection
         }
