@@ -14,7 +14,7 @@ namespace DacLib.Hoxis.Client
         /// Action reflected table
         /// Derived classes of this class must register for their own methods
         /// </summary>
-        protected Dictionary<string, ActionHandler> behavTable = new Dictionary<string, ActionHandler>();
+        protected Dictionary<string, ActionArgsHandler> behavTable = new Dictionary<string, ActionArgsHandler>();
 
         /// <summary>
         /// Reflect an action to method with protocol argument form
@@ -23,11 +23,8 @@ namespace DacLib.Hoxis.Client
         /// <param name="args"></param>
         public void Act(string method, Dictionary<string, string> args)
         {
-            Debug.Log("Act");
-            if (!behavTable.ContainsKey(method))
-                return;
+            if (!behavTable.ContainsKey(method)) return;
             if (args == null) { behavTable[method](new Dictionary<string, string>()); }
-            Debug.Log(method);
             behavTable[method](args);
         }
         public void Act(string method) { Act(method, null); }

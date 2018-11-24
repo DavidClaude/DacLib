@@ -5,7 +5,7 @@ using DacLib.Generic;
 using DacLib.Hoxis;
 using DacLib.Hoxis.Client;
 
-public static class HoxisUnityLauncher
+public class HoxisUnityLauncher:MonoBehaviour
 {
     #region ret codes
     public const byte RET_INVALID_PREFAB_PATH = 1;

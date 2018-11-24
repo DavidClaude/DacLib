@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace DacLib.Hoxis
 {
-    public delegate void HoxisActionHandler(HoxisProtocolAction action);
-
     /// <summary>
     /// Enable callbacks with HoxisProtocolAction in threads to enter the main procedure
     /// To operate Unity objects
@@ -22,13 +20,13 @@ namespace DacLib.Hoxis
         public short processingQuantity { get; }
 
         private Queue<HoxisProtocolAction> _queue;
-        private HoxisActionHandler _handler;
-        public HoxisActionQueue(int capacityArg, short processingQuantityArg, HoxisActionHandler handlerArg)
+        private ActionHandler _handler;
+        public HoxisActionQueue(int capacityArg, short processingQuantityArg, ActionHandler handlerArg)
         {
             capacity = capacityArg;
             processingQuantity = processingQuantityArg;
             _queue = new Queue<HoxisProtocolAction>(capacity);
-            _handler = new HoxisActionHandler(handlerArg);
+            _handler = new ActionHandler(handlerArg);
         }
 
         /// <summary>
