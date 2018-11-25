@@ -11,7 +11,7 @@ namespace DacLib.Generic
             try
             {
                 string name = Dns.GetHostName();
-                IPHostEntry entry = Dns.GetHostByName(name);
+                IPHostEntry entry = Dns.GetHostEntry(name);
                 foreach (IPAddress ipa in entry.AddressList)
                 {
                     if (ipa.AddressFamily == AddressFamily.InterNetwork)
