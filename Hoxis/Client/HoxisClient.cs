@@ -76,9 +76,10 @@ namespace DacLib.Hoxis.Client
         /// Init the configuration, such as the ip, port, socket
         /// </summary>
         /// <param name="ret"></param>
-        public static void InitConfig(out Ret ret, string configPath = "")
+        public static void InitConfig(string configPath = "")
         {
             // Read config file
+            Ret ret;
             string path;
             if (configPath != "") { path = configPath; }
             else { path = HoxisClientConfig.basicPath + "Configs/hoxis_client.toml"; }
@@ -95,7 +96,6 @@ namespace DacLib.Hoxis.Client
             if (ret.code != 0) { OnInitError(ret); return; }
             _extractor = new HoxisBytesExtractor(size);
             _extractor.onBytesExtracted += ExtractCb;
-            ret = Ret.ok;
         }
 
         /// <summary>
