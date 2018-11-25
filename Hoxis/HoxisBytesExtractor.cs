@@ -1,6 +1,5 @@
 ﻿using System;
 using DacLib.Generic;
-using DacLib.Hoxis.Client;
 
 namespace DacLib.Hoxis
 {

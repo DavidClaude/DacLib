@@ -81,7 +81,7 @@ namespace DacLib.Hoxis.Client
             // Read config file
             string path;
             if (configPath != "") { path = configPath; }
-            else { path = HoxisConfigs.basicPath + "Configs/hoxisclient.toml"; }
+            else { path = HoxisClientConfig.basicPath + "Configs/hoxis_client.toml"; }
             config = new TomlConfiguration(path, out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             // Assign ip, port and init the sokcet

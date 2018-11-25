@@ -1,0 +1,3 @@
+[socket]
+port = 10086
+max_client_count = 2048

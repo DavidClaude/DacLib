@@ -10,8 +10,4 @@ namespace DacLib.Generic
     public delegate void RetForVoid_Handler(Ret ret);
     public delegate void NoneForOutRet_Handler(out Ret ret);
     #endregion
-
-    #region U3D delegates
-    public delegate void GameObjectForVoid_Handler(UnityEngine.GameObject gameObj);
-    #endregion
 }
