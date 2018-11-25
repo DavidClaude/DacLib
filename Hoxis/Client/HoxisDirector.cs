@@ -23,7 +23,6 @@ namespace DacLib.Hoxis.Client
         #endregion
 
         private static Dictionary<HoxisID, HoxisAgent> _agentSearcher = new Dictionary<HoxisID, HoxisAgent>();
-        private static Dictionary<string, HoxisRequest> _requestReception = new Dictionary<string, HoxisRequest>();
 
         /// <summary>
         /// Add an agent to searcher
