@@ -23,6 +23,7 @@ namespace DacLib.Hoxis.Client
         #endregion
 
         private static Dictionary<HoxisID, HoxisAgent> _agentSearcher = new Dictionary<HoxisID, HoxisAgent>();
+        private static Dictionary<string, HoxisRequest> _requestReception = new Dictionary<string, HoxisRequest>();
 
         /// <summary>
         /// Add an agent to searcher
@@ -174,11 +175,8 @@ namespace DacLib.Hoxis.Client
         private static void SynChannelEntry(HoxisProtocol proto)
         {
             HoxisID hid = proto.sndr.hid;
-            Ret ret;
-            HoxisAgent agent = GetAgent(hid, out ret);
-            UnityEngine.Debug.Log("GetAgent: " + ret.desc);
-            
-            agent.Push(proto.action);
+            HoxisAgent agent = GetAgent(hid);            
+            agent.Implement(proto.action);
         }
 
         /// <summary>

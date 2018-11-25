@@ -137,8 +137,8 @@ public class TS_Func : MonoBehaviour
         //Ret ret;
         //HoxisClient.InitConfig(out ret);
         //Debug.Log(HoxisClient.serverIP + HoxisClient.port);
-        Ret ret;
-        HoxisUnityLauncher.Awake(out ret);
+        //Ret ret;
+        //HoxisUnityLauncher.Awake(out ret);
 
     }
 

@@ -47,8 +47,8 @@ namespace DacLib.Hoxis.Client
         // Use this for initialization
         void Start()
         {
-            
-            
+
+
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace DacLib.Hoxis.Client
             if (ret.code != 0) { capacity = 32; }
             short quantity = HoxisClient.config.GetShort("protocol", "processing_quantity", out ret);
             if (ret.code != 0) { quantity = 5; }
-            _actionQueue = new HoxisActionQueue(capacity, quantity,CallBehaviour);
+            _actionQueue = new HoxisActionQueue(capacity, quantity, CallBehaviour);
         }
 
         void Update()
@@ -85,11 +85,8 @@ namespace DacLib.Hoxis.Client
         /// Push an action into the queue
         /// </summary>
         /// <param name="action"></param>
-        public void Push(HoxisProtocolAction action)
-        {
-            lock (_actionQueue) { _actionQueue.Enqueue(action); }
-        }
-        public void Push(HoxisProtocol proto) { Push(proto.action); }
+        public void Implement(HoxisProtocolAction action) { _actionQueue.Enqueue(action); }
+        public void Implement(HoxisProtocol proto) { Implement(proto.action); }
 
         /// <summary>
         /// Report an action of this gameObject, generally syn
@@ -139,10 +136,11 @@ namespace DacLib.Hoxis.Client
             Report(action);
         }
 
-        public void Report(HoxisProtocol proto)
-        {
-            HoxisDirector.ProtocolPost(proto);
-        }
+        /// <summary>
+        /// Build custom protocol to report
+        /// </summary>
+        /// <param name="proto"></param>
+        public void Report(HoxisProtocol proto) { HoxisDirector.ProtocolPost(proto); }
 
         /// <summary>
         /// Call the behaviour-layer

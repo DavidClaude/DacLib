@@ -5,17 +5,29 @@ using DacLib.Generic;
 using DacLib.Hoxis;
 using DacLib.Hoxis.Client;
 
-public class HoxisUnityLauncher:MonoBehaviour
+public class HoxisUnityLauncher : MonoBehaviour
 {
     #region ret codes
     public const byte RET_INVALID_PREFAB_PATH = 1;
     public const byte RET_PREFAB_WITHOUT_HOXIS_BEHAVIOUR = 2;
     #endregion
 
+    public static HoxisUnityLauncher Ins { get; private set; }
+
+    void Awake()
+    {
+        if (Ins == null) { Ins = this; }
+    }
+
+    void Update()
+    {
+        
+    }
+
     /// <summary>
     /// The sample process of awaking Hoxis in playing scenes
     /// </summary>
-    public static void Awake(out Ret ret)
+    public void On(out Ret ret)
     {
         // Register methods to events of HoxisClient
         HoxisClient.onInitError += (ret0) => { Debug.LogError(ret0.desc); };
