@@ -22,7 +22,7 @@ namespace DacLib.Codex
         public int cycle { get; }
 
         /// <summary>
-        /// Get the remain count of unoccupied desks
+        /// Get the count of unoccupied desks
         /// </summary>
         public int remain
         {
@@ -56,8 +56,6 @@ namespace DacLib.Codex
             int index = GetUnoccupiedDesk(out ret);
             if (ret.code != 0)
                 return -1;
-            if (_desks[index] == null)
-                _desks[index] = new Desk<T>(cycle);
             _desks[index].Accept(guest);
             return index;
         }
@@ -79,6 +77,16 @@ namespace DacLib.Codex
                 }
             }
             ret = new Ret(LogLevel.Warning, RET_GUEST_NOT_ON_SERVICE, "The given guest is not on service");
+        }
+
+        public void Release(int index, out Ret ret)
+        {
+            if (index < 0 || index > count - 1) {
+                ret = new Ret(LogLevel.Error, 1, "Index:" + index + " is out of range");
+                return;
+            }
+            _desks[index].Decline();
+            ret = Ret.ok;
         }
 
         private int GetUnoccupiedDesk(out Ret ret)
@@ -118,13 +126,11 @@ namespace DacLib.Codex
             /// </summary>
             public int cycle { get; }
 
-            private Thread _serviceThread;
-
             public Desk(int cycleArg)
             {
+                guest = null;
                 rcptOn = false;
                 cycle = cycleArg;
-                _serviceThread = new Thread(Serve);
             }
 
             /// <summary>
@@ -138,7 +144,8 @@ namespace DacLib.Codex
                 guest.OnAccept();
                 if (guest.isUpdated) {
                     rcptOn = true;
-                    _serviceThread.Start();
+                    Thread t = new Thread(Serve);
+                    t.Start();
                 }
             }
 
@@ -150,14 +157,16 @@ namespace DacLib.Codex
                 if (!isOccupied) return;
                 rcptOn = false;
                 guest.OnDecline();
+                guest = null;
             }
 
             private void Serve()
             {
-                while (rcptOn)
+                while (true)
                 {
                     Thread.Sleep(cycle);
-                    lock (guest) { guest.OnService(); }
+                    if (rcptOn) { lock (guest) { guest.OnService(); } }
+                    else { break; }
                 }
             }
         }
