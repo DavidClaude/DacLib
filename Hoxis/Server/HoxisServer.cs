@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Collections.Generic;
 using DacLib.Generic;
 using DacLib.Codex;
@@ -14,11 +15,19 @@ namespace DacLib.Hoxis.Server
         public const string ERR_MSG_CFG_UNINITIALIZED = "Configuration file should be initialized first";
         #endregion
 
+        /// <summary>
+        /// Hoxis server configuration
+        /// </summary>
         public static TomlConfiguration config { get; private set; }
 
         public static string ip { get; private set; }
 
         public static int port { get; private set; }
+
+        /// <summary>
+        /// Hoxis server basic direction
+        /// </summary>
+        public static string basicPath { get { return AppDomain.CurrentDomain.BaseDirectory + @"DacLib\Hoxis"; } }
 
         private static Socket _socket;
 
@@ -28,7 +37,7 @@ namespace DacLib.Hoxis.Server
             Ret ret;
             string path;
             if (configPath != "") { path = configPath; }
-            else { path = HoxisServerConfig.basicPath + "Configs/hoxis_server.toml"; }
+            else { path = basicPath + @"\Configs\hoxis_server.toml"; }
             config = new TomlConfiguration(path, out ret);
             if (ret.code != 0) { Console.Write("[error]HoxisServer init: " + ret.desc); return; }
             // Assign ip, port and init the sokcet
@@ -39,6 +48,9 @@ namespace DacLib.Hoxis.Server
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
         }
 
+        /// <summary>
+        /// Bind and listen
+        /// </summary>
         public static void Listen()
         {
             try
@@ -53,5 +65,19 @@ namespace DacLib.Hoxis.Server
             catch (Exception e) { Console.Write("[error]HoxisServer listen: " + e.Message); }
         }
 
+        /// <summary>
+        /// Begin accept client sockets within thread
+        /// </summary>
+        public static void BeginAccept()
+        {
+            Thread t = new Thread(() =>
+            {
+                while (true) {
+                    Socket cs = _socket.Accept();
+                    Console.Write("New client: " + cs.RemoteEndPoint.ToString());
+                }
+            });
+            t.Start();
+        }
     }
 }

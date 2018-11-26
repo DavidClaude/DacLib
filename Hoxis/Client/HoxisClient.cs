@@ -23,6 +23,9 @@ namespace DacLib.Hoxis.Client
         public const string ERR_MSG_DISCONNECTED = "Socket is disconnected";
         #endregion
 
+        /// <summary>
+        /// Hoxis client configuration
+        /// </summary>
         public static TomlConfiguration config { get; private set; }
 
         /// <summary>
@@ -39,6 +42,11 @@ namespace DacLib.Hoxis.Client
         /// Is the client connected ?
         /// </summary>
         public static bool isConnected { get { return _socket.Connected; } }
+
+        /// <summary>
+        /// Hoxis client basic direction
+        /// </summary>
+        public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis"; } }
 
         /// <summary>
         /// Event of initializing error
@@ -82,7 +90,7 @@ namespace DacLib.Hoxis.Client
             Ret ret;
             string path;
             if (configPath != "") { path = configPath; }
-            else { path = HoxisClientConfig.basicPath + "Configs/hoxis_client.toml"; }
+            else { path = basicPath + "/Configs/hoxis_client.toml"; }
             config = new TomlConfiguration(path, out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             // Assign ip, port and init the sokcet
@@ -101,7 +109,7 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Connect to server asynchronously
         /// </summary>
-        public static void Connect()
+        public static void BeginConnect()
         {
             try
             {
@@ -116,7 +124,7 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Start receiving data asynchronously
         /// </summary>
-        public static void Receive()
+        public static void BeginReceive()
         {
             try
             {
@@ -179,7 +187,7 @@ namespace DacLib.Hoxis.Client
                 _extractor.Init();
                 OnReceiveError(new Ret(LogLevel.Error, RET_RECEIVE_END_EXCEPTION, e.Message));
             }
-            finally { Receive(); }
+            finally { BeginReceive(); }
         }
 
         /// <summary>
