@@ -208,28 +208,3 @@ public class MyInfo
         ability = abilityArg;
     }
 }
-
-public class Guest : IReceivable
-{
-    string name;
-
-    public Guest(string nameArg)
-    {
-        name = nameArg;
-    }
-
-    public void OnService()
-    {
-        Debug.Log(name + ": I'm on service");
-    }
-
-    public void OnServiceStart()
-    {
-        Debug.Log(name + ": I have started");
-    }
-
-    public void OnServiceStop()
-    {
-        Debug.Log(name + ": I have been stopped");
-    }
-}
