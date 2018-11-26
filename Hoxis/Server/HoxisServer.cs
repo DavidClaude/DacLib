@@ -31,6 +31,10 @@ namespace DacLib.Hoxis.Server
 
         private static Socket _socket;
 
+        /// <summary>
+        /// Init the configuration, such as the ip, port, socket
+        /// </summary>
+        /// <param name="configPath"></param>
         public static void InitConfig(string configPath = "")
         {
             // Read config file
@@ -46,6 +50,7 @@ namespace DacLib.Hoxis.Server
             port = config.GetInt("socket", "port", out ret);
             if (ret.code != 0) { Console.Write("[error]HoxisServer init: " + ret.desc); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+            Console.WriteLine("Configurations init success, server IP is {0}, port is {1}", ip, port.ToString());
         }
 
         /// <summary>
@@ -61,12 +66,13 @@ namespace DacLib.Hoxis.Server
                 _socket.Bind(ep);
                 int count = config.GetInt("socket", "max_client_count");
                 _socket.Listen(count);
+                Console.WriteLine("Listen success");
             }
             catch (Exception e) { Console.Write("[error]HoxisServer listen: " + e.Message); }
         }
 
         /// <summary>
-        /// Begin accept client sockets within thread
+        /// Begin accept socket connection within thread
         /// </summary>
         public static void BeginAccept()
         {
@@ -78,6 +84,7 @@ namespace DacLib.Hoxis.Server
                 }
             });
             t.Start();
+            Console.WriteLine("Begin accepting connection...");
         }
     }
 }
