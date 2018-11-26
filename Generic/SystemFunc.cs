@@ -6,6 +6,11 @@ namespace DacLib.Generic
 {
     public static class SystemFunc
     {
+        /// <summary>
+        /// Get IPv4 of host 
+        /// </summary>
+        /// <param name="ret"></param>
+        /// <returns></returns>
         public static string GetLocalIP(out Ret ret)
         {
             try
@@ -28,6 +33,11 @@ namespace DacLib.Generic
                 return "";
             }
             
+        }
+        public static string GetLocalIP()
+        {
+            Ret ret;
+            return GetLocalIP(out ret);
         }
     }
 }

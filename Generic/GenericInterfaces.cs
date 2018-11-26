@@ -17,8 +17,9 @@ namespace DacLib.Generic
     /// </summary>
     public interface IReceivable
     {
-        void OnServiceStart();
+        bool isUpdated { get; set; }
+        void OnAccept();
         void OnService();
-        void OnServiceStop();
+        void OnDecline();
     }
 }

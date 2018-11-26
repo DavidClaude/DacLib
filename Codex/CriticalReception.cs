@@ -29,10 +29,7 @@ namespace DacLib.Codex
             get
             {
                 int r = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (_desks[i].isOccupied) { r++; }
-                }
+                foreach (Desk<T> d in _desks) { if (!d.isOccupied) { r++; } }
                 return r;
             }
         }
@@ -61,7 +58,7 @@ namespace DacLib.Codex
                 return -1;
             if (_desks[index] == null)
                 _desks[index] = new Desk<T>(cycle);
-            _desks[index].StartService(guest);
+            _desks[index].Accept(guest);
             return index;
         }
 
@@ -76,7 +73,7 @@ namespace DacLib.Codex
             {
                 if (d.guest == guest)
                 {
-                    d.StopService();
+                    d.Decline();
                     ret = Ret.ok;
                     return;
                 }
@@ -106,9 +103,15 @@ namespace DacLib.Codex
             public TD guest { get; private set; }
 
             /// <summary>
+            /// Keep updating ?
+            /// Only used to guests updated
+            /// </summary>
+            public bool rcptOn { get; private set; }
+
+            /// <summary>
             /// Is this desk occupied ?
             /// </summary>
-            public bool isOccupied { get; private set; }
+            public bool isOccupied { get { return guest != null ? true : false; } }
 
             /// <summary>
             /// The cycle(ms) of service
@@ -119,41 +122,43 @@ namespace DacLib.Codex
 
             public Desk(int cycleArg)
             {
-                isOccupied = false;
+                rcptOn = false;
                 cycle = cycleArg;
-                _serviceThread = new Thread(() =>
-                {
-                    while (true)
-                    {
-                        lock (guest) { guest.OnService(); }
-                        Thread.Sleep(cycle);
-                    }
-                });
+                _serviceThread = new Thread(Serve);
             }
 
             /// <summary>
             /// Start the service with a guest
             /// </summary>
             /// <param name="guestArg"></param>
-            public void StartService(TD guestArg)
+            public void Accept(TD guestArg)
             {
-                if (isOccupied)
-                    return;
-                isOccupied = true;
+                if (isOccupied) return;
                 guest = guestArg;
-                guest.OnServiceStart();
-                _serviceThread.Start();
+                guest.OnAccept();
+                if (guest.isUpdated) {
+                    rcptOn = true;
+                    _serviceThread.Start();
+                }
             }
 
             /// <summary>
             /// Stop the active service
             /// </summary>
-            public void StopService()
+            public void Decline()
             {
-                if (_serviceThread.IsAlive) { _serviceThread.Abort(); }
-                guest.OnServiceStop();
-                guest = null;
-                isOccupied = false;
+                if (!isOccupied) return;
+                rcptOn = false;
+                guest.OnDecline();
+            }
+
+            private void Serve()
+            {
+                while (rcptOn)
+                {
+                    Thread.Sleep(cycle);
+                    lock (guest) { guest.OnService(); }
+                }
             }
         }
     }
