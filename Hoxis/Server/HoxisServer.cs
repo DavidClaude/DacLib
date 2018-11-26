@@ -25,11 +25,17 @@ namespace DacLib.Hoxis.Server
         public static int port { get; private set; }
 
         /// <summary>
+        /// The max count of socket connection
+        /// </summary>
+        public static int maxConnection { get; private set; }
+
+        /// <summary>
         /// Hoxis server basic direction
         /// </summary>
-        public static string basicPath { get { return AppDomain.CurrentDomain.BaseDirectory + @"DacLib\Hoxis"; } }
+        public static string basicPath { get { return AppDomain.CurrentDomain.BaseDirectory + @"\..\..\DacLib\Hoxis"; } }
 
         private static Socket _socket;
+        private static CriticalReception<HoxisConnection> _connReception;
 
         /// <summary>
         /// Init the configuration, such as the ip, port, socket
@@ -43,13 +49,16 @@ namespace DacLib.Hoxis.Server
             if (configPath != "") { path = configPath; }
             else { path = basicPath + @"\Configs\hoxis_server.toml"; }
             config = new TomlConfiguration(path, out ret);
-            if (ret.code != 0) { Console.Write("[error]HoxisServer init: " + ret.desc); return; }
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             // Assign ip, port and init the sokcet
             ip = SystemFunc.GetLocalIP(out ret);
-            if (ret.code != 0) { Console.Write("[error]HoxisServer init: " + ret.desc); return; }
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             port = config.GetInt("socket", "port", out ret);
-            if (ret.code != 0) { Console.Write("[error]HoxisServer init: " + ret.desc); return; }
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+            maxConnection = config.GetInt("socket", "max_connection", out ret);
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
+            _connReception = new CriticalReception<HoxisConnection>(maxConnection);
             Console.WriteLine("Configurations init success, server IP is {0}, port is {1}", ip, port.ToString());
         }
 
@@ -66,9 +75,9 @@ namespace DacLib.Hoxis.Server
                 _socket.Bind(ep);
                 int count = config.GetInt("socket", "max_client_count");
                 _socket.Listen(count);
-                Console.WriteLine("Listen success");
+                Console.WriteLine("Listen success, max connection count is {0}", maxConnection.ToString());
             }
-            catch (Exception e) { Console.Write("[error]HoxisServer listen: " + e.Message); }
+            catch (Exception e) { Console.Write("[error]HoxisServer listen: {0}", e.Message); }
         }
 
         /// <summary>
@@ -80,7 +89,10 @@ namespace DacLib.Hoxis.Server
             {
                 while (true) {
                     Socket cs = _socket.Accept();
+                    //will delete
                     Console.Write("New client: " + cs.RemoteEndPoint.ToString());
+
+                    //HoxisConnection conn = new HoxisConnection(cs);
                 }
             });
             t.Start();

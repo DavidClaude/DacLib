@@ -125,10 +125,30 @@ namespace DacLib.Codex
             return FormatFunc.StringToShort(_config[section][key], out ret);
         }
 
-        public int GetShort(string section, string key)
+        public short GetShort(string section, string key)
         {
             Ret ret;
             return GetShort(section, key, out ret);
+        }
+
+        /// <summary>
+        /// Get config of long type
+        /// </summary>
+        /// <param name="section"></param>
+        /// <param name="key"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public long GetLong(string section, string key, out Ret ret)
+        {
+            if (!ContainItem(section, key, out ret))
+                return 0;
+            return FormatFunc.StringToLong(_config[section][key], out ret);
+        }
+
+        public long GetLong(string section, string key)
+        {
+            Ret ret;
+            return GetLong(section, key, out ret);
         }
 
         /// <summary>
@@ -187,7 +207,7 @@ namespace DacLib.Codex
             }
             if (!_config[section].ContainsKey(key))
             {
-                ret = new Ret(LogLevel.Error, RET_NO_KEY, "Key:" + section + " doesn't exist");
+                ret = new Ret(LogLevel.Error, RET_NO_KEY, "Key:" + key + " doesn't exist");
                 return false;
             }
             ret = Ret.ok;
