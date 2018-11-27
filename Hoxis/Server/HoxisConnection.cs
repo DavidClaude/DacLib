@@ -19,14 +19,14 @@ namespace DacLib.Hoxis.Server
 
         }
 
+        public void OnRelease()
+        {
+            
+        }
+
         public void OnRequest(object state)
         {
             _socket = (Socket)state;
-        }
-
-        public void OnRelease()
-        {
-
         }
     }
 }
