@@ -8,30 +8,25 @@ using DacLib.Generic;
 
 namespace DacLib.Hoxis.Server
 {
-    class HoxisConnection : IReceivable
+    class HoxisConnection : IReusable
     {
-        public bool isUpdated { get; set; }
+        public bool isOccupied { get; set; }
 
         private Socket _socket;
 
-        public HoxisConnection(Socket socketArg)
+        public HoxisConnection()
         {
-            _socket = socketArg;
+
         }
 
-        public void OnAccept()
+        public void OnRequest(object state)
         {
-            
+            _socket = (Socket)state;
         }
 
-        public void OnDecline()
+        public void OnRelease()
         {
-            
-        }
 
-        public void OnService()
-        {
-            
         }
     }
 }

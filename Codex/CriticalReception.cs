@@ -53,7 +53,7 @@ namespace DacLib.Codex
         /// <returns></returns>
         public int Request(T guest, out Ret ret)
         {
-            int index = GetUnoccupiedDesk(out ret);
+            int index = GetUnoccupiedDeskIndex(out ret);
             if (ret.code != 0)
                 return -1;
             _desks[index].Accept(guest);
@@ -76,7 +76,7 @@ namespace DacLib.Codex
                     return;
                 }
             }
-            ret = new Ret(LogLevel.Warning, RET_GUEST_NOT_ON_SERVICE, "The given guest is not on service");
+            ret = new Ret(LogLevel.Warning, RET_GUEST_NOT_ON_SERVICE, "The guest given is not on service");
         }
 
         public void Release(int index, out Ret ret)
@@ -89,7 +89,7 @@ namespace DacLib.Codex
             ret = Ret.ok;
         }
 
-        private int GetUnoccupiedDesk(out Ret ret)
+        private int GetUnoccupiedDeskIndex(out Ret ret)
         {
             for (int i = 0; i < count; i++)
             {

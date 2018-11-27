@@ -22,4 +22,14 @@ namespace DacLib.Generic
         void OnService();
         void OnDecline();
     }
+
+    /// <summary>
+    /// Enable to be put into and out from most kinds of object pool 
+    /// </summary>
+    public interface IReusable
+    {
+        bool isOccupied { get; set; }
+        void OnRequest(object state);
+        void OnRelease();
+    }
 }
