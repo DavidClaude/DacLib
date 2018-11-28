@@ -46,6 +46,7 @@ namespace DacLib.Hoxis.Server
         public void OnRequest(object state)
         {
             _socket = (Socket)state;
+            BeginReceive();
         }
 
         /// <summary>
