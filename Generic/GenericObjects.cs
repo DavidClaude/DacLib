@@ -237,9 +237,17 @@ namespace DacLib.Generic
     /// <summary>
     /// 通用键值对
     /// </summary>
+    [Serializable]
     public struct KV<TK,TV>
     {
         public TK key;
         public TV val;
+    }
+
+    [Serializable]
+    public struct StringKV
+    {
+        public string key;
+        public string val;
     }
 }

@@ -161,7 +161,7 @@ namespace DacLib.Hoxis.Client
             }
             string json = FormatFunc.ObjectToJson(proto);
             byte[] data = FormatFunc.StringToBytes(json);
-            HoxisClient.Send(data);
+            HoxisClient.BeginSend(data);
         }
 
         #region private functions

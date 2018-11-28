@@ -2,6 +2,7 @@
 
 namespace DacLib.Hoxis
 {
+    [Serializable]
     public struct HoxisID
     {
         public static readonly HoxisID nil = new HoxisID("", 0);
