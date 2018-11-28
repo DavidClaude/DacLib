@@ -93,7 +93,7 @@ namespace DacLib.Hoxis.Server
                 {
                     Socket cs = _socket.Accept();
                     //will delete
-                    Console.Write("New client: " + cs.RemoteEndPoint.ToString());
+                    Console.WriteLine("New client: " + cs.RemoteEndPoint.ToString());
                     Ret ret;
                     _connReception.Request(cs, out ret);
                     if (ret.code != 0) { Console.WriteLine("[error]HoxisServer connection request: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); }
