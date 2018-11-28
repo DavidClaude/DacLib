@@ -122,7 +122,7 @@ namespace DacLib.Hoxis.Client
         }
 
         /// <summary>
-        /// Start receiving data asynchronously
+        /// Begin receiving data asynchronously
         /// </summary>
         public static void BeginReceive()
         {
@@ -135,23 +135,30 @@ namespace DacLib.Hoxis.Client
         }
 
         /// <summary>
-        /// Send protocol bytes to server synchronously or asynchronously
-        /// Called by HoxisDirector
+        /// Begin sending data asynchronously
         /// </summary>
-        /// <param name="data"></param>
-        public static void Send(byte[] protoData, bool asyn = false)
+        /// <param name="protoData"></param>
+        public static void BeginSend(byte[] protoData)
         {
             int len = protoData.Length;
             if (len <= 0) return;
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
-            if (!asyn) { _socket.Send(data); }
-            else
-            {
-                if (!isConnected) { throw new Exception(ERR_MSG_DISCONNECTED); }
-                try { _socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(SendCb), null); }
-                catch (SocketException e) { OnSendError(new Ret(LogLevel.Error, RET_SEND_BEGIN_EXCEPTION, e.Message)); }
-            }
+            try { _socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(SendCb), null); }
+            catch (Exception e) { OnSendError(new Ret(LogLevel.Error, RET_SEND_BEGIN_EXCEPTION, e.Message)); }
+        }
+
+        /// <summary>
+        /// Send data synchronously
+        /// </summary>
+        /// <param name="protoData"></param>
+        public static void Send(byte[] protoData)
+        {
+            int len = protoData.Length;
+            if (len <= 0) return;
+            byte[] header = FormatFunc.IntToBytes(len);
+            byte[] data = FormatFunc.BytesConcat(header, protoData);
+            _socket.Send(data);
         }
 
         #region private functions
@@ -168,7 +175,7 @@ namespace DacLib.Hoxis.Client
                 _socket.EndConnect(ar);
                 OnConnected();
             }
-            catch (SocketException e) { OnConnectError(new Ret(LogLevel.Error, RET_CONNECT_END_EXCEPTION, e.Message)); }
+            catch (Exception e) { OnConnectError(new Ret(LogLevel.Error, RET_CONNECT_END_EXCEPTION, e.Message)); }
         }
 
         /// <summary>
@@ -182,7 +189,7 @@ namespace DacLib.Hoxis.Client
                 int len = _socket.EndReceive(ar);
                 _extractor.Extract(len);
             }
-            catch (SocketException e)
+            catch (Exception e)
             {
                 _extractor.Init();
                 OnReceiveError(new Ret(LogLevel.Error, RET_RECEIVE_END_EXCEPTION, e.Message));
@@ -197,7 +204,7 @@ namespace DacLib.Hoxis.Client
         private static void SendCb(IAsyncResult ar)
         {
             try { _socket.EndSend(ar); }
-            catch (SocketException e) { OnSendError(new Ret(LogLevel.Error, RET_RECEIVE_END_EXCEPTION, e.Message)); }
+            catch (Exception e) { OnSendError(new Ret(LogLevel.Error, RET_RECEIVE_END_EXCEPTION, e.Message)); }
         }
 
         /// <summary>

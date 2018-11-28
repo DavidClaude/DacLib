@@ -59,6 +59,8 @@ namespace DacLib.Hoxis.Server
             maxConnection = config.GetInt("socket", "max_connection", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             _connReception = new CriticalPreformPool<HoxisConnection>(maxConnection);
+            HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             Console.WriteLine("Configurations init success, server IP: {0}, port: {1}", ip, port.ToString());
         }
 
@@ -87,7 +89,8 @@ namespace DacLib.Hoxis.Server
         {
             Thread t = new Thread(() =>
             {
-                while (true) {
+                while (true)
+                {
                     Socket cs = _socket.Accept();
                     //will delete
                     Console.Write("New client: " + cs.RemoteEndPoint.ToString());

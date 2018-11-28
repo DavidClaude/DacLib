@@ -1,3 +1,6 @@
 [socket]
 port = 10086
 max_connection = 2048
+
+[conn]
+read_buffer_size = 1024
