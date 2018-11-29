@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Security.Cryptography;
 using Newtonsoft.Json;
 
 namespace DacLib.Generic
@@ -422,5 +423,26 @@ namespace DacLib.Generic
                 return "";
             return input.Substring(beginIndex + 1, endIndex - beginIndex - 1);
         }
+
+        /// <summary>
+        /// Encode bytes to string by base64
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string Base64EncodeToString(byte[] data) { return Convert.ToBase64String(data); }
+
+        /// <summary>
+        /// Encode string to string by base64
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string Base64EncodeToString(string str) { return Base64EncodeToString(StringToBytes(str)); }
+
+        /// <summary>
+        /// Decode string to bytes by base64
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static byte[] Base64DecodeToBytes(string str) { return Convert.FromBase64String(str); }
     }
 }
