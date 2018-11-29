@@ -11,11 +11,8 @@ namespace DacLib.Hoxis.Server
     public class HoxisConnection : IReusable
     {
         #region ret codes
-        
         public const byte RET_DISCONNECTED = 1;
-        public const byte RET_CLOSE_EXCEPTION = 2;
         public const string ERR_MSG_DISCONNECTED = "Socket is disconnected";
-        public const string ERR_MSG_CLOSE_EXCEPTION = "Socket close exception";
         #endregion
 
         /// <summary>
@@ -40,11 +37,13 @@ namespace DacLib.Hoxis.Server
         {
             _extractor = new HoxisBytesExtractor(readBufferSize);
             _extractor.onBytesExtracted += ExtractCb;
+            remoteEndPoint = "";
         }
 
         public void OnRelease()
         {
             _socket = null;
+            remoteEndPoint = "";
         }
 
         public void OnRequest(object state)
@@ -97,27 +96,16 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Close the socket
         /// </summary>
-        /// <param name="ret"></param>
-        public void Close(out Ret ret)
+        public void Close()
         {
-            if (_socket == null) {
-                ret = new Ret(LogLevel.Info, 0, "socket is null");
-                return;
-            }
-            if (!isConnected) {
-                ret = new Ret(LogLevel.Info, 0, "socket is already disconnected");
-                return;
-            }
+            if (_socket == null) return;
+            if (!isConnected) return;
             try
             {
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
-                ret = Ret.ok;
             }
-            catch (Exception e) {
-                Console.WriteLine("[error]Socket close @{0}: {1}", remoteEndPoint, e.Message);
-                ret = new Ret(LogLevel.Error, RET_CLOSE_EXCEPTION, ERR_MSG_CLOSE_EXCEPTION);
-            }
+            catch (Exception e) { Console.WriteLine("[error]Socket close @{0}: {1}", remoteEndPoint, e.Message); }
         }
 
         #region private functions

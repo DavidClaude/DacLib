@@ -3,13 +3,13 @@
 namespace DacLib.Generic
 {
     /// <summary>
-    /// 数学相关的静态方法库
+    /// Static function library about mathematics
     /// </summary>
     public static class MathFunc
     {
 
         /// <summary>
-        /// 获取不定参数最小值
+        /// Get the minimum of values
         /// </summary>
         /// <param name="vals">Vals.</param>
         public static float Min(params float[] vals)
@@ -21,7 +21,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 获取不定参数最大值
+        /// Get the maximum of values
         /// </summary>
         /// <param name="vals">Vals.</param>
         public static float Max(params float[] vals)
@@ -33,7 +33,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 限制取值范围
+        /// Limit the range of value
         /// </summary>
         /// <param name="val">Value.</param>
         /// <param name="min">Minimum.</param>
@@ -47,7 +47,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 将角度值限制在[0-360)之间
+        /// Normalize the angle value
         /// </summary>
         /// <param name="val"></param>
         /// <returns></returns>

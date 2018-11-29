@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 namespace DacLib.Generic
 {
     /// <summary>
-    /// Static functions library for converting format
+    /// Static function library about formats converting
     /// </summary>
     public static class FormatFunc
     {

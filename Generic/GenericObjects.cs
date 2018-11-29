@@ -13,24 +13,24 @@ namespace DacLib.Generic
     public class Property : IJsonable
     {
         /// <summary>
-        /// 属性当前值
+        /// Current value
         /// </summary>
         public float val { get; private set; }
 
         /// <summary>
-        /// 初始值
+        /// Original value
         /// </summary>
         /// <value>The original.</value>
         public float orig { get; }
 
         /// <summary>
-        /// 最小值
+        /// Minimum value
         /// </summary>
         /// <value>The minimum.</value>
         public float min { get; }
 
         /// <summary>
-        /// 最大值
+        /// Maximum value
         /// </summary>
         /// <value>The max.</value>
         public float max { get; }
@@ -47,7 +47,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 添加修改记录
+        /// Add one op trace
         /// </summary>
         /// <param name="name">Name.</param>
         /// <param name="val">Value.</param>
@@ -73,7 +73,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 删除修改记录
+        /// Remove one op trace
         /// </summary>
         /// <param name="name">Name.</param>
         public void RemoveTrace(string name)
@@ -90,7 +90,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 初始化
+        /// Initialize
         /// </summary>
         public void Init()
         {
@@ -136,25 +136,25 @@ namespace DacLib.Generic
     public class Indicator:IJsonable
     {
         /// <summary>
-        /// 属性(当前)值
+        /// Curent value
         /// </summary>
         /// <value>The value.</value>
         public float val { get; private set; }
 
         /// <summary>
-        /// 初始值
+        /// Original value
         /// </summary>
         /// <value>The original.</value>
         public float orig { get; }
 
         /// <summary>
-        /// 最小值
+        /// Minimum value
         /// </summary>
         /// <value>The minimum.</value>
         public float min { get; }
 
         /// <summary>
-        /// 最大值
+        /// Maximum value
         /// </summary>
         /// <value>The max.</value>
         public float max { get; }
@@ -169,7 +169,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 改变指示值
+        /// Change the value
         /// </summary>
         /// <param name="valArg">Value argument.</param>
         /// <param name="mode">Mode.</param>
@@ -189,7 +189,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 设置指示值
+        /// Set the value
         /// </summary>
         /// <param name="valArg">Value argument.</param>
         public void Set(float valArg)
@@ -198,7 +198,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// 初始化
+        /// Initialize
         /// </summary>
         public void Init()
         {
@@ -218,7 +218,7 @@ namespace DacLib.Generic
     }
 
     /// <summary>
-    /// 返回信息
+    /// Generic return information
     /// </summary>
     public struct Ret
     {
@@ -235,7 +235,7 @@ namespace DacLib.Generic
     }
 
     /// <summary>
-    /// 通用键值对
+    /// Generic pair of key and value
     /// </summary>
     [Serializable]
     public struct KV<TK,TV>
@@ -244,6 +244,9 @@ namespace DacLib.Generic
         public TV val;
     }
 
+    /// <summary>
+    /// Both string pair of key and value
+    /// </summary>
     [Serializable]
     public struct StringKV
     {
