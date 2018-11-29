@@ -136,5 +136,14 @@ namespace DacLib.Codex
             for (int i = 0; i < count; i++) { if (_preforms[i] == perform) return i; }
             return -1;
         }
+
+        /// <summary>
+        /// TEST
+        /// </summary>
+        /// <returns></returns>
+        public T[] GetAll()
+        {
+            return _preforms;
+        }
     }
 }

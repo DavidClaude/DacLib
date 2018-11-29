@@ -29,6 +29,8 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public static int maxConnection { get; private set; }
 
+        public static int remainConn { get { return _connReception.remain; } }
+
         /// <summary>
         /// Hoxis server basic direction
         /// </summary>
@@ -102,6 +104,11 @@ namespace DacLib.Hoxis.Server
             });
             t.Start();
             Console.WriteLine("Begin accepting connection...");
+        }
+
+        public static HoxisConnection[] GetAll()
+        {
+            return _connReception.GetAll();
         }
     }
 }

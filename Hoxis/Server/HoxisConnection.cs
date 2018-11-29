@@ -8,12 +8,14 @@ using DacLib.Generic;
 
 namespace DacLib.Hoxis.Server
 {
-    class HoxisConnection : IReusable
+    public class HoxisConnection : IReusable
     {
         #region ret codes
-
-        public const byte RET_DISCONNECTED = 8;
+        
+        public const byte RET_DISCONNECTED = 1;
+        public const byte RET_CLOSE_EXCEPTION = 2;
         public const string ERR_MSG_DISCONNECTED = "Socket is disconnected";
+        public const string ERR_MSG_CLOSE_EXCEPTION = "Socket close exception";
         #endregion
 
         /// <summary>
@@ -21,6 +23,8 @@ namespace DacLib.Hoxis.Server
         /// Set by HoxisServer when initializing
         /// </summary>
         public static int readBufferSize { get; set; }
+
+        public string remoteEndPoint { get; private set; }
 
         /// <summary>
         /// Is the client connected ?
@@ -46,6 +50,7 @@ namespace DacLib.Hoxis.Server
         public void OnRequest(object state)
         {
             _socket = (Socket)state;
+            remoteEndPoint = _socket.RemoteEndPoint.ToString();
             BeginReceive();
         }
 
@@ -59,7 +64,7 @@ namespace DacLib.Hoxis.Server
                 if (!isConnected) { throw new Exception(ERR_MSG_DISCONNECTED); }
                 _socket.BeginReceive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None, new AsyncCallback(ReceiveCb), null);
             }
-            catch (Exception e) { Console.WriteLine("[error]Begin receive @{0}: {1}", _socket.RemoteEndPoint.ToString(), e.Message); }
+            catch (Exception e) { Console.WriteLine("[error]Begin receive @{0}: {1}", remoteEndPoint, e.Message); }
         }
 
         /// <summary>
@@ -73,7 +78,7 @@ namespace DacLib.Hoxis.Server
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
             try { _socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(SendCb), null); }
-            catch (Exception e) { Console.WriteLine("[error]Begin send @{0}: {1}", _socket.RemoteEndPoint.ToString(), e.Message); }
+            catch (Exception e) { Console.WriteLine("[error]Begin send @{0}: {1}", remoteEndPoint, e.Message); }
         }
 
         /// <summary>
@@ -89,6 +94,32 @@ namespace DacLib.Hoxis.Server
             _socket.Send(data);
         }
 
+        /// <summary>
+        /// Close the socket
+        /// </summary>
+        /// <param name="ret"></param>
+        public void Close(out Ret ret)
+        {
+            if (_socket == null) {
+                ret = new Ret(LogLevel.Info, 0, "socket is null");
+                return;
+            }
+            if (!isConnected) {
+                ret = new Ret(LogLevel.Info, 0, "socket is already disconnected");
+                return;
+            }
+            try
+            {
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Close();
+                ret = Ret.ok;
+            }
+            catch (Exception e) {
+                Console.WriteLine("[error]Socket close @{0}: {1}", remoteEndPoint, e.Message);
+                ret = new Ret(LogLevel.Error, RET_CLOSE_EXCEPTION, ERR_MSG_CLOSE_EXCEPTION);
+            }
+        }
+
         #region private functions
 
         /// <summary>
@@ -98,7 +129,7 @@ namespace DacLib.Hoxis.Server
         private void ExtractCb(byte[] data)
         {
             // test, will delete
-            Console.WriteLine("[test]Received string @{0}: {1}", _socket.RemoteEndPoint.ToString(), FormatFunc.BytesToString(data));
+            Console.WriteLine("[test]Received string @{0}: {1}", remoteEndPoint, FormatFunc.BytesToString(data));
         }
         /// <summary>
         /// Callback of receiving data
@@ -114,7 +145,7 @@ namespace DacLib.Hoxis.Server
             catch (Exception e)
             {
                 _extractor.Init();
-                Console.WriteLine("[error]End receive @{0}: {1}", _socket.RemoteEndPoint.ToString(), e.Message);
+                Console.WriteLine("[error]End receive @{0}: {1}", remoteEndPoint, e.Message);
             }
             finally { BeginReceive(); }
         }
@@ -126,7 +157,7 @@ namespace DacLib.Hoxis.Server
         private void SendCb(IAsyncResult ar)
         {
             try { _socket.EndSend(ar); }
-            catch (Exception e) { Console.WriteLine("[error]End send @{0}: {1}", _socket.RemoteEndPoint.ToString(), e.Message); }
+            catch (Exception e) { Console.WriteLine("[error]End send @{0}: {1}", remoteEndPoint, e.Message); }
         }
 
         #endregion
