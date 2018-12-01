@@ -11,7 +11,7 @@ namespace DacLib.Codex
     {
         #region ret codes
         public const byte RET_NO_UNOCCUPIED_PREFORM = 1;
-        public const byte RET_PERFORM_GIVEN_NOT_IN_POOL = 2;
+        public const byte RET_PREFORM_GIVEN_NOT_IN_POOL = 2;
         public const byte RET_INDEX_OBJECT_IS_NULL = 3;
         #endregion
 
@@ -80,14 +80,14 @@ namespace DacLib.Codex
         /// <summary>
         /// Release a preform by object
         /// </summary>
-        /// <param name="perform"></param>
+        /// <param name="preform"></param>
         /// <param name="ret"></param>
-        public void Release(T perform, out Ret ret)
+        public void Release(T preform, out Ret ret)
         {
-            int index = GetPerformIndex(perform);
+            int index = GetPreformIndex(preform);
             if (index < 0)
             {
-                ret = new Ret(LogLevel.Error, RET_PERFORM_GIVEN_NOT_IN_POOL, "The perform given is not in pool");
+                ret = new Ret(LogLevel.Error, RET_PREFORM_GIVEN_NOT_IN_POOL, "The preform given is not in pool");
                 return;
             }
             if (!_preforms[index].isOccupied) {
@@ -106,14 +106,10 @@ namespace DacLib.Codex
         /// <param name="ret"></param>
         public void Release(int index, out Ret ret)
         {
-            if (index < 0 || index > count - 1)
-            {
-                ret = new Ret(LogLevel.Error, 1, "Index:" + index + " is out of range");
-                return;
-            }
-            T perform = _preforms[index];
-            if (perform == null) {
-                ret = new Ret(LogLevel.Error, RET_INDEX_OBJECT_IS_NULL, "Perform in index:" + index.ToString() + " is null");
+            T preform = GetPreform(index, out ret);
+            if (ret.code != 0) { return; }
+            if (preform == null) {
+                ret = new Ret(LogLevel.Error, RET_INDEX_OBJECT_IS_NULL, "Preform in index:" + index.ToString() + " is null");
                 return;
             }
             if (!_preforms[index].isOccupied)
@@ -127,14 +123,32 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// Try to get the index of perform given
+        /// Try to get the index of preform given
         /// </summary>
-        /// <param name="perform"></param>
+        /// <param name="preform"></param>
         /// <returns></returns>
-        public int GetPerformIndex(T perform)
+        public int GetPreformIndex(T preform)
         {
-            for (int i = 0; i < count; i++) { if (_preforms[i] == perform) return i; }
+            for (int i = 0; i < count; i++) { if (_preforms[i] == preform) return i; }
             return -1;
+        }
+
+        /// <summary>
+        /// Get the preform by index
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="ret"></param>
+        /// <returns></returns>
+        public T GetPreform(int index, out Ret ret)
+        {
+            if (index < 0 || index > count - 1)
+            {
+                ret = new Ret(LogLevel.Error, 1, "Index:" + index + " is out of range");
+                return null;
+            }
+            T preform = _preforms[index];
+            ret = Ret.ok;
+            return preform;
         }
 
         /// <summary>

@@ -21,7 +21,15 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public static int readBufferSize { get; set; }
 
+        /// <summary>
+        /// Information of connection
+        /// </summary>
         public string remoteEndPoint { get; private set; }
+
+        /// <summary>
+        /// ID in connection pool
+        /// </summary>
+        public int connID { get; set; }
 
         /// <summary>
         /// Is the client connected ?

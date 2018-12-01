@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace DacLib.Hoxis.Server
 {
-    public class HoxisUser
+    public class HoxisCluster
     {
-        
-
+        public static int maxConnection { get; set; }
     }
 }

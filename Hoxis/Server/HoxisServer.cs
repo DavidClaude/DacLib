@@ -38,6 +38,7 @@ namespace DacLib.Hoxis.Server
 
         private static Socket _socket;
         private static CriticalPreformPool<HoxisConnection> _connReception;
+        private static List<HoxisCluster> _clusters;
 
         /// <summary>
         /// Init the configuration, such as the ip, port, socket
@@ -45,24 +46,37 @@ namespace DacLib.Hoxis.Server
         /// <param name="configPath"></param>
         public static void InitConfig(string configPath = "")
         {
-            // Read config file
             Ret ret;
+            // Init config
             string path;
             if (configPath != "") { path = configPath; }
             else { path = basicPath + @"\Configs\hoxis_server.toml"; }
             config = new TomlConfiguration(path, out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
+
             // Assign ip, port and init the sokcet
             ip = SystemFunc.GetLocalIP(out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
-            port = config.GetInt("socket", "port", out ret);
+            port = config.GetInt("server", "port", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
-            maxConnection = config.GetInt("socket", "max_connection", out ret);
+
+            // Init conn reception
+            maxConnection = config.GetInt("server", "max_conn", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             _connReception = new CriticalPreformPool<HoxisConnection>(maxConnection);
+
+            // Init cluster
+            _clusters = new List<HoxisCluster>();
+            HoxisCluster.maxConnection = config.GetInt("cluster", "max_conn", out ret);
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
+
+            // Init team
+
+            // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
+
             Console.WriteLine("Configurations init success, server IP: {0}, port: {1}", ip, port.ToString());
         }
 
@@ -97,9 +111,11 @@ namespace DacLib.Hoxis.Server
                     //will delete
                     Console.WriteLine("New client: " + cs.RemoteEndPoint.ToString());
                     Ret ret;
-                    _connReception.Request(cs, out ret);
+                    int id = _connReception.Request(cs, out ret);
                     if (ret.code != 0) { Console.WriteLine("[error]HoxisServer connection request: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); }
-
+                    HoxisConnection conn = _connReception.GetPreform(id, out ret);
+                    if (ret.code != 0) { Console.WriteLine("[error]HoxisServer connection get: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); }
+                    conn.connID = id;
                 }
             });
             t.Start();
