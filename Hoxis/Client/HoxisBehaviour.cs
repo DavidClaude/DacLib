@@ -21,13 +21,12 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         /// <param name="method"></param>
         /// <param name="args"></param>
-        public void Act(string method, Dictionary<string, string> args)
+        public void Act(string method, HoxisProtocolArgs args)
         {
             if (!behavTable.ContainsKey(method)) return;
-            if (args == null) { behavTable[method](new Dictionary<string, string>()); }
             behavTable[method](args);
         }
-        public void Act(string method) { Act(method, null); }
+        public void Act(string method) { Act(method, HoxisProtocolArgs.undef); }
         public void Act(HoxisProtocolAction action) { Act(action.method, action.args); }
         public void Act(HoxisProtocol proto) { Act(proto.action.method, proto.action.args); }
     }

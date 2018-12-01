@@ -11,9 +11,9 @@ namespace DacLib.Hoxis
         public static readonly HoxisProtocol nil = new HoxisProtocol
         {
             type = ProtocolType.None,
-            rcvr = HoxisProtocolReceiver.nil,
-            sndr = HoxisProtocolSender.nil,
-            action = HoxisProtocolAction.nil,
+            rcvr = HoxisProtocolReceiver.undef,
+            sndr = HoxisProtocolSender.undef,
+            action = HoxisProtocolAction.undef,
             desc = ""
         };
 
@@ -49,7 +49,7 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolReceiver
     {
-        public static readonly HoxisProtocolReceiver nil = new HoxisProtocolReceiver { type = ReceiverType.None, hid = HoxisID.nil };
+        public static readonly HoxisProtocolReceiver undef = new HoxisProtocolReceiver { type = ReceiverType.None, hid = HoxisID.undef };
 
         /// <summary>
         /// Server, cluster of current game, teammates, or some player ?
@@ -63,7 +63,7 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolSender
     {
-        public static readonly HoxisProtocolSender nil = new HoxisProtocolSender { hid = HoxisID.nil, loopback = true };
+        public static readonly HoxisProtocolSender undef = new HoxisProtocolSender { hid = HoxisID.undef, loopback = true };
 
         /// <summary>
         /// HoxisID of sender
@@ -77,7 +77,7 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolAction
     {
-        public static readonly HoxisProtocolAction nil = new HoxisProtocolAction { method = "", args = null };
+        public static readonly HoxisProtocolAction undef = new HoxisProtocolAction { method = "", args = HoxisProtocolArgs.undef };
 
         /// <summary>
         /// Method name in actionTable
@@ -91,7 +91,7 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolArgs
     {
-        public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { kv = null };
+        public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { kv = new Dictionary<string, string>() };
         public Dictionary<string, string> kv;
     }
 }

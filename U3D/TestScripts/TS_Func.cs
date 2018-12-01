@@ -163,10 +163,13 @@ public class TS_Func : MonoBehaviour
                 action = new HoxisProtocolAction
                 {
                     method = "shoot",
-                    args = new Dictionary<string, string> {
-                    { "val","15"},
-                    { "src","weapon"},
-                },
+                    args = new HoxisProtocolArgs
+                    {
+                        kv = new Dictionary<string, string> {
+                            { "val","15"},
+                            { "src","weapon"},
+                        }
+                    },
                 },
                 desc = "thread test",
             };
@@ -175,8 +178,8 @@ public class TS_Func : MonoBehaviour
 
             Thread t = new Thread(() =>
             {
-                    //Thread.Sleep(1000);
-                    HoxisDirector.ProtocolEntry(data);
+                //Thread.Sleep(1000);
+                HoxisDirector.ProtocolEntry(data);
             });
             t.Start();
         }

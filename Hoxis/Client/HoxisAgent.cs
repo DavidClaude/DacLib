@@ -101,7 +101,7 @@ namespace DacLib.Hoxis.Client
                 rcvr = new HoxisProtocolReceiver
                 {
                     type = ReceiverType.Cluster,
-                    hid = HoxisID.nil,
+                    hid = HoxisID.undef,
                 },
                 sndr = new HoxisProtocolSender
                 {
@@ -121,7 +121,7 @@ namespace DacLib.Hoxis.Client
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
-                args = argsArg,
+                args = new HoxisProtocolArgs { kv = argsArg},
             };
             Report(action);
         }
@@ -131,7 +131,7 @@ namespace DacLib.Hoxis.Client
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
-                args = argsArg,
+                args = new HoxisProtocolArgs { kv = argsArg},
             };
             Report(action);
         }

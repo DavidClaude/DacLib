@@ -22,9 +22,9 @@ public class TS_Soldier : HoxisBehaviour {
 		
 	}
 
-    void Shoot(Dictionary<string, string> args)
+    void Shoot(HoxisProtocolArgs args)
     {
-        Debug.Log("Hi, I'm attacked, args are " + args["val"] + ", " + args["src"]);
+        Debug.Log("Hi, I'm attacked, args are " + args.kv["val"] + ", " + args.kv["src"]);
         this.name = "hahaha";
     }
 }

@@ -24,7 +24,7 @@ namespace DacLib.Hoxis.Server
             long uid = FormatFunc.StringToLong(args["uid"]);
         }
 
-        private void 
+        //private void 
 
         #endregion
 
