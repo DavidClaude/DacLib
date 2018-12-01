@@ -114,10 +114,10 @@ namespace DacLib.Hoxis.Client
             HoxisDirector.ProtocolPost(proto);
         }
 
-        public void Report(string methodArg, params KV<string, string>[] kvs)
+        public void Report(string methodArg, params StringKV[] kvs)
         {
             Dictionary<string, string> argsArg = new Dictionary<string, string>();
-            foreach (KV<string, string> kv in kvs) { argsArg.Add(kv.key, kv.val); }
+            foreach (StringKV kv in kvs) { argsArg.Add(kv.key, kv.val); }
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
