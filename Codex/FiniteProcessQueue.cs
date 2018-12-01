@@ -1,41 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
+using DacLib.Generic;
 
-namespace DacLib.Hoxis
+namespace DacLib.Codex
 {
     /// <summary>
-    /// Enable callbacks with HoxisProtocolAction in threads to enter the main procedure
-    /// To operate Unity objects
+    /// Enable callbacks in threads to enter the main program
+    /// Useful for operating Unity objects
     /// </summary>
-    public class HoxisActionQueue
+    public class FiniteProcessQueue<T>
     {
         /// <summary>
-        /// Max quantity of actions in queue
+        /// Max quantity of affairs in queue
         /// </summary>
         public int capacity { get; }
         
         /// <summary>
-        /// The quantity of actions processed in one round
+        /// The quantity of affairs processed in one round
         /// </summary>
         public short processingQuantity { get; }
 
-        private Queue<HoxisProtocolAction> _queue;
-        private ActionHandler _handler;
-        public HoxisActionQueue(int capacityArg, short processingQuantityArg, ActionHandler handlerArg)
+        /// <summary>
+        /// Event of processing an affair
+        /// </summary>
+        public event ObjectForVoid_Handler onProcess;
+
+        private Queue<T> _queue;
+        //private ActionHandler _handler;
+        public FiniteProcessQueue(int capacityArg, short processingQuantityArg)
         {
             capacity = capacityArg;
             processingQuantity = processingQuantityArg;
-            _queue = new Queue<HoxisProtocolAction>(capacity);
-            _handler = new ActionHandler(handlerArg);
+            _queue = new Queue<T>(capacity);
         }
 
         /// <summary>
-        /// Enqueue an action
+        /// Enqueue an affair
         /// </summary>
         /// <param name="action"></param>
-        public void Enqueue(HoxisProtocolAction action)
+        public void Enqueue(T affair)
         {
-            lock (_queue) { _queue.Enqueue(action); }
+            lock (_queue) { _queue.Enqueue(affair); }
         }
 
         /// <summary>
@@ -48,8 +53,8 @@ namespace DacLib.Hoxis
             while (q < processingQuantity)
             {
                 if (_queue.Count <= 0) break;
-                HoxisProtocolAction action = _queue.Dequeue();
-                _handler(action);
+                T affair = _queue.Dequeue();
+                onProcess(affair);
                 q++;
             }
         }

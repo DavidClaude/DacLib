@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DacLib.Generic;
-using System;
+using DacLib.Codex;
 
 namespace DacLib.Hoxis.Client
 {
@@ -42,7 +43,7 @@ namespace DacLib.Hoxis.Client
         public bool isPlayer { get; private set; }
 
         private HoxisBehaviour _behav;
-        private HoxisActionQueue _actionQueue;
+        private FiniteProcessQueue<HoxisProtocolAction> _actionQueue;
 
         // Use this for initialization
         void Start()
@@ -70,7 +71,8 @@ namespace DacLib.Hoxis.Client
             if (ret.code != 0) { capacity = 32; }
             short quantity = HoxisClient.config.GetShort("protocol", "processing_quantity", out ret);
             if (ret.code != 0) { quantity = 5; }
-            _actionQueue = new HoxisActionQueue(capacity, quantity, CallBehaviour);
+            _actionQueue = new FiniteProcessQueue<HoxisProtocolAction>(capacity, quantity);
+            _actionQueue.onProcess += CallBehaviour;
         }
 
         void Update()
@@ -148,7 +150,7 @@ namespace DacLib.Hoxis.Client
         /// <param name="action"></param>
         private void CallBehaviour(HoxisProtocolAction action) { _behav.Act(action); }
         private void CallBehaviour(HoxisProtocol proto) { _behav.Act(proto); }
-
+        private void CallBehaviour(object state) { _behav.Act((HoxisProtocolAction)state); }
 
     }
 }
