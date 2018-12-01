@@ -8,7 +8,7 @@ namespace DacLib.Hoxis
         /// <summary>
         /// Default and invalid HoxisProtocol
         /// </summary>
-        public static readonly HoxisProtocol nil = new HoxisProtocol
+        public static readonly HoxisProtocol undef = new HoxisProtocol
         {
             type = ProtocolType.None,
             rcvr = HoxisProtocolReceiver.undef,

@@ -8,6 +8,12 @@ namespace DacLib.Hoxis.Server
 {
     public class HoxisCluster
     {
-        public static int maxConnection { get; set; }
+        public static int maxUser { get; set; }
+
+        private List<HoxisUser> _users;
+
+        public void Broadcast(HoxisProtocol proto) {
+
+        }
     }
 }

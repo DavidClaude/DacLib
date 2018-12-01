@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace DacLib.Hoxis {
     #region delegates
+    public delegate void ProtocolHandler(HoxisProtocol proto);
     public delegate void ActionHandler(HoxisProtocolAction action);
     public delegate void ActionArgsHandler(HoxisProtocolArgs args);
 

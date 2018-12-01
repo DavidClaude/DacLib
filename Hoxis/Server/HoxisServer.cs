@@ -68,7 +68,7 @@ namespace DacLib.Hoxis.Server
 
             // Init cluster
             _clusters = new List<HoxisCluster>();
-            HoxisCluster.maxConnection = config.GetInt("cluster", "max_conn", out ret);
+            HoxisCluster.maxUser = config.GetInt("cluster", "max_conn", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
 
             // Init team
@@ -109,7 +109,7 @@ namespace DacLib.Hoxis.Server
                 {
                     Socket cs = _socket.Accept();
                     //will delete
-                    Console.WriteLine("New client: " + cs.RemoteEndPoint.ToString());
+                    Console.WriteLine("[test]New client: " + cs.RemoteEndPoint.ToString());
                     Ret ret;
                     int id = _connReception.Request(cs, out ret);
                     if (ret.code != 0) { Console.WriteLine("[error]HoxisServer connection request: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); }
