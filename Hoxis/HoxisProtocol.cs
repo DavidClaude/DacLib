@@ -87,6 +87,11 @@ namespace DacLib.Hoxis
         /// <summary>
         /// Arguments of this method
         /// </summary>
-        public Dictionary<string, string> args;
+        public HoxisProtocolArgs args;
+    }
+    public struct HoxisProtocolArgs
+    {
+        public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { kv = null };
+        public Dictionary<string, string> kv;
     }
 }

@@ -205,6 +205,12 @@ namespace DacLib.Generic
             return i;
         }
 
+        public static long StringToLong(string str)
+        {
+            Ret ret;
+            return StringToLong(str, out ret);
+        }
+
         /// <summary>
         /// String to ulong
         /// </summary>
