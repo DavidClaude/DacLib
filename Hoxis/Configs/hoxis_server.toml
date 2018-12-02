@@ -6,3 +6,6 @@ max_team_user_quantity = 5
 
 [conn]
 read_buffer_size = 1024
+
+[protocol]
+request_timeout = 10

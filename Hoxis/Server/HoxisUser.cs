@@ -15,6 +15,7 @@ namespace DacLib.Hoxis.Server
         public bool isOccupied { get; set; }
         #endregion
 
+        public static int requestTimeoutSec { get; set; }
 
         public long userID { get; private set; }
 
@@ -71,6 +72,13 @@ namespace DacLib.Hoxis.Server
                     //SynChannelEntry(proto);
                     break;
                 case ProtocolType.Request:
+                    // Request check
+                    ReqHandle handle = FormatFunc.JsonToObject<ReqHandle>(proto.handle);
+                    if (handle.req != proto.action.method) { ResponseError(proto.handle, "request name doesn't match method name"); return; }
+                    long ts = handle.ts;
+                    int intv = (int)Math.Abs(SystemFunc.GetTimeStamp() - ts);
+                    if (intv > requestTimeoutSec) { ResponseError(proto.handle, "request is expired"); return; }
+                    // Check ok
                     respTable[proto.action.method](proto.action.args, proto.handle);
                     break;
                 case ProtocolType.Response:
@@ -86,16 +94,44 @@ namespace DacLib.Hoxis.Server
             connection.BeginSend(data);
         }
 
-        public void Response(HoxisProtocolAction actionArg, string handleArg)
+        public void Response(string handleArg, HoxisProtocolAction actionArg)
         {
             HoxisProtocol proto = new HoxisProtocol
             {
                 type = ProtocolType.Response,
                 handle = handleArg,
+                err = false,
                 rcvr = HoxisProtocolReceiver.undef,
                 sndr = HoxisProtocolSender.undef,
                 action = actionArg,
                 desc = ""
+            };
+            ProtocolPost(proto);
+        }
+
+        public void Response(string handle, string methodArg, params StringKV[] kvs)
+        {
+            Dictionary<string, string> argsArg = new Dictionary<string, string>();
+            foreach (StringKV kv in kvs) { argsArg.Add(kv.key, kv.val); }
+            HoxisProtocolAction action = new HoxisProtocolAction
+            {
+                method = methodArg,
+                args = new HoxisProtocolArgs { kv = argsArg },
+            };
+            Response(handle, action);
+        }
+
+        public void ResponseError(string handleArg, string descArg)
+        {
+            HoxisProtocol proto = new HoxisProtocol
+            {
+                type = ProtocolType.Response,
+                handle = handleArg,
+                err = true,
+                rcvr = HoxisProtocolReceiver.undef,
+                sndr = HoxisProtocolSender.undef,
+                action = HoxisProtocolAction.undef,
+                desc = descArg
             };
             ProtocolPost(proto);
         }
@@ -108,7 +144,8 @@ namespace DacLib.Hoxis.Server
 
         public void TakeOverConnection(HoxisConnection conn)
         {
-            lock (connection) {
+            lock (connection)
+            {
                 connection = conn;
                 connection.onExtract += ProtocolEntry;
             }
@@ -124,16 +161,7 @@ namespace DacLib.Hoxis.Server
             {
                 if (u.userID == uid && uid > 0)
                 {
-                    HoxisProtocolAction action = new HoxisProtocolAction
-                    {
-                        method = "SignInCb",
-                        args = new HoxisProtocolArgs{
-                            kv = new Dictionary<string, string>
-                            {
-                                //todo
-                            }
-                        },
-                    };
+
                     HandOverConnection(u);
                     HoxisServer.ReleaseUser(this);
                 }

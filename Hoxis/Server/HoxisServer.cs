@@ -84,6 +84,10 @@ namespace DacLib.Hoxis.Server
             HoxisTeam.maxUser = config.GetInt("server", "max_team_user_quantity", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
 
+            // Init user
+            HoxisUser.requestTimeoutSec = config.GetInt("protocol", "request_timeout", out ret);
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
+
             // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }

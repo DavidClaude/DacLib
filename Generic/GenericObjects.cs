@@ -253,4 +253,13 @@ namespace DacLib.Generic
         public string key;
         public string val;
     }
+
+    /// <summary>
+    /// Handle used for request
+    /// </summary>
+    public struct ReqHandle
+    {
+        public string req;
+        public long ts;
+    }
 }

@@ -33,32 +33,16 @@ namespace DacLib.Hoxis {
         Proxied,
         Perpetual
     }
+    /// <summary>
+    /// State that server keeps to decide how to communicate
+    /// </summary>
     public enum UserState
     {
-        /// <summary>
-        /// Unused
-        /// </summary>
         None = 0,
-        /// <summary>
-        /// In the main scene
-        /// </summary>
         Main,
-        /// <summary>
-        /// In a team
-        /// </summary>
         Inteam,
-        /// <summary>
-        /// Matching for playing
-        /// </summary>
         Matching,
-        /// <summary>
-        /// Playing
-        /// </summary>
-        Playing,
-        /// <summary>
-        /// Waiting for reconnecting after disconnected with exception
-        /// </summary>
-        Waiting
+        Playing
     }
 
     #endregion

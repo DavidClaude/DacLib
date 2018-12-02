@@ -11,6 +11,8 @@ namespace DacLib.Hoxis
         public static readonly HoxisProtocol undef = new HoxisProtocol
         {
             type = ProtocolType.None,
+            handle = "",
+            err = false,
             rcvr = HoxisProtocolReceiver.undef,
             sndr = HoxisProtocolSender.undef,
             action = HoxisProtocolAction.undef,
@@ -26,6 +28,11 @@ namespace DacLib.Hoxis
         /// The key to match one request and response, no use for synchronization
         /// </summary>
         public string handle;
+
+        /// <summary>
+        /// The flag if response succeeds, no use except response
+        /// </summary>
+        public bool err;
 
         /// <summary>
         /// Whom will receive this protocol
