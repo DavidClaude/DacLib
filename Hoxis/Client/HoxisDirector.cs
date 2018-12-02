@@ -24,6 +24,12 @@ namespace DacLib.Hoxis.Client
 
         private static Dictionary<HoxisID, HoxisAgent> _agentSearcher = new Dictionary<HoxisID, HoxisAgent>();
 
+        public static void Init(string clientConfigPath)
+        {
+            HoxisClient.InitConfig(clientConfigPath);
+            HoxisClient.onExtract += ProtocolEntry;
+        }
+
         /// <summary>
         /// Add an agent to searcher
         /// </summary>

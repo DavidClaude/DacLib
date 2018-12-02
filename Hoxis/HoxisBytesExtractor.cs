@@ -32,7 +32,7 @@ namespace DacLib.Hoxis
         public int remainCount { get { return readBufferSize - readCount; } }
 
         /// <summary>
-        /// Event of bytes being extracted
+        /// Event of bytes extracted
         /// </summary>
         public event BytesForVoid_Handler onBytesExtracted;
 

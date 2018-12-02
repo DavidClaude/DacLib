@@ -49,6 +49,11 @@ namespace DacLib.Hoxis.Client
         public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis"; } }
 
         /// <summary>
+        /// Event of bytes extracted
+        /// </summary>
+        public static event BytesForVoid_Handler onExtract;
+
+        /// <summary>
         /// Event of initializing error
         /// </summary>
         public static event RetForVoid_Handler onInitError;
@@ -86,24 +91,26 @@ namespace DacLib.Hoxis.Client
         /// <param name="ret"></param>
         public static void InitConfig(string configPath = "")
         {
-            // Read config file
             Ret ret;
+            // Read config file
             string path;
             if (configPath != "") { path = configPath; }
             else { path = basicPath + "/Configs/hoxis_client.toml"; }
             config = new TomlConfiguration(path, out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
+
             // Assign ip, port and init the sokcet
             serverIP = config.GetString("socket", "server_ip", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             port = config.GetInt("socket", "port", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+
             // Init the extractor
             int size = config.GetInt("socket", "read_buffer_size", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             _extractor = new HoxisBytesExtractor(size);
-            _extractor.onBytesExtracted += ExtractCb;
+            _extractor.onBytesExtracted += OnExtract;
         }
 
         /// <summary>
@@ -211,7 +218,7 @@ namespace DacLib.Hoxis.Client
         /// Callback of extracting protocol data
         /// </summary>
         /// <param name="data"></param>
-        private static void ExtractCb(byte[] data) { HoxisDirector.ProtocolEntry(data); }
+        private static void OnExtract(byte[] data) { onExtract(data); }
 
         private static void OnInitError(Ret ret) { if (onInitError == null) return; onInitError(ret); }
         private static void OnConnected() { if (onConnected == null) return; onConnected(); }
