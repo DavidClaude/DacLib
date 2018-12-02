@@ -22,12 +22,17 @@ namespace DacLib.Hoxis.Client
         public const byte RET_NO_HID = 3;
         #endregion
 
-        private static Dictionary<HoxisID, HoxisAgent> _agentSearcher = new Dictionary<HoxisID, HoxisAgent>();
+        private static Dictionary<HoxisID, HoxisAgent> _agentSearcher;
 
+        /// <summary>
+        /// The original entrance of Hoxis in clients
+        /// </summary>
+        /// <param name="clientConfigPath"></param>
         public static void Init(string clientConfigPath)
         {
             HoxisClient.InitConfig(clientConfigPath);
             HoxisClient.onExtract += ProtocolEntry;
+            _agentSearcher = new Dictionary<HoxisID, HoxisAgent>();
         }
 
         /// <summary>

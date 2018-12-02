@@ -28,6 +28,7 @@ namespace DacLib.Generic
     /// </summary>
     public interface IReusable
     {
+        int localID { get; set; }
         bool isOccupied { get; set; }
         void OnRequest(object state);
         void OnRelease();

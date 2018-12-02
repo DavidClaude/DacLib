@@ -1,12 +1,8 @@
 [server]
 port = 10086
-max_conn = 2048
-
-[cluster]
-max_conn = 100
-
-[team]
-max_conn = 5
+max_conn_user_quantity = 2048
+max_cluster_user_quantity = 100
+max_team_user_quantity = 5
 
 [conn]
 read_buffer_size = 1024

@@ -218,7 +218,7 @@ namespace DacLib.Hoxis.Client
         /// Callback of extracting protocol data
         /// </summary>
         /// <param name="data"></param>
-        private static void OnExtract(byte[] data) { onExtract(data); }
+        private static void OnExtract(byte[] data) { if (onExtract == null) return; onExtract(data); }
 
         private static void OnInitError(Ret ret) { if (onInitError == null) return; onInitError(ret); }
         private static void OnConnected() { if (onConnected == null) return; onConnected(); }

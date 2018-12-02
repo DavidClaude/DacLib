@@ -207,7 +207,7 @@ namespace DacLib.Codex
             }
             if (!_config[section].ContainsKey(key))
             {
-                ret = new Ret(LogLevel.Error, RET_NO_KEY, "Key:" + key + " doesn't exist");
+                ret = new Ret(LogLevel.Error, RET_NO_KEY, "Section:" + section + ", key:" + key + " doesn't exist");
                 return false;
             }
             ret = Ret.ok;

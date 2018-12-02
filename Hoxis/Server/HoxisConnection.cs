@@ -8,7 +8,7 @@ using DacLib.Generic;
 
 namespace DacLib.Hoxis.Server
 {
-    public class HoxisConnection : IReusable
+    public class HoxisConnection
     {
         #region ret codes
         public const byte RET_DISCONNECTED = 1;
@@ -27,38 +27,25 @@ namespace DacLib.Hoxis.Server
         public string remoteEndPoint { get; private set; }
 
         /// <summary>
-        /// ID in connection pool
-        /// </summary>
-        public int connID { get; set; }
-
-        /// <summary>
         /// Is the client connected ?
         /// </summary>
         public bool isConnected { get { return _socket.Connected; } }
 
-        public bool isOccupied { get; set; }
+        /// <summary>
+        /// Event of bytes extracted
+        /// Observed by superior HoxisUser
+        /// </summary>
+        public event BytesForVoid_Handler onExtract;
 
         private Socket _socket;
         private HoxisBytesExtractor _extractor;
 
-        public HoxisConnection()
+        public HoxisConnection(Socket socketArg)
         {
+            _socket = socketArg;
             _extractor = new HoxisBytesExtractor(readBufferSize);
-            _extractor.onBytesExtracted += ExtractCb;
-            remoteEndPoint = "";
-        }
-
-        public void OnRelease()
-        {
-            _socket = null;
-            remoteEndPoint = "";
-        }
-
-        public void OnRequest(object state)
-        {
-            _socket = (Socket)state;
-            remoteEndPoint = _socket.RemoteEndPoint.ToString();
-            BeginReceive();
+            _extractor.onBytesExtracted += OnExtract;
+            remoteEndPoint = socketArg.RemoteEndPoint.ToString();
         }
 
         /// <summary>
@@ -119,15 +106,6 @@ namespace DacLib.Hoxis.Server
         #region private functions
 
         /// <summary>
-        /// Callback of extracting protocol data
-        /// </summary>
-        /// <param name="data"></param>
-        private void ExtractCb(byte[] data)
-        {
-            // test, will delete
-            Console.WriteLine("[test]Received string @{0}: {1}", remoteEndPoint, FormatFunc.BytesToString(data));
-        }
-        /// <summary>
         /// Callback of receiving data
         /// </summary>
         /// <param name="ar"></param>
@@ -155,6 +133,8 @@ namespace DacLib.Hoxis.Server
             try { _socket.EndSend(ar); }
             catch (Exception e) { Console.WriteLine("[error]End send @{0}: {1}", remoteEndPoint, e.Message); }
         }
+
+        private void OnExtract(byte[] data) { if (onExtract == null) return; onExtract(data); }
 
         #endregion
     }

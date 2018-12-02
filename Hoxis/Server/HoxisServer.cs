@@ -20,16 +20,25 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public static TomlConfiguration config { get; private set; }
 
+        /// <summary>
+        /// Local IP
+        /// </summary>
         public static string ip { get; private set; }
 
+        /// <summary>
+        /// Local port
+        /// </summary>
         public static int port { get; private set; }
 
         /// <summary>
-        /// The max count of socket connection
+        /// The max count of user connection
         /// </summary>
-        public static int maxConnection { get; private set; }
+        public static int maxConn { get; private set; }
 
-        public static int remainConn { get { return _connReception.remain; } }
+        /// <summary>
+        /// Remain count of user connection
+        /// </summary>
+        public static int remainConn { get { return _userReception.remain; } }
 
         /// <summary>
         /// Hoxis server basic direction
@@ -37,7 +46,7 @@ namespace DacLib.Hoxis.Server
         public static string basicPath { get { return AppDomain.CurrentDomain.BaseDirectory + @"\..\..\DacLib\Hoxis"; } }
 
         private static Socket _socket;
-        private static CriticalPreformPool<HoxisConnection> _connReception;
+        private static CriticalPreformPool<HoxisUser> _userReception;
         private static List<HoxisCluster> _clusters;
 
         /// <summary>
@@ -61,17 +70,19 @@ namespace DacLib.Hoxis.Server
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
 
-            // Init conn reception
-            maxConnection = config.GetInt("server", "max_conn", out ret);
+            // Init user reception
+            maxConn = config.GetInt("server", "max_conn_user_quantity", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
-            _connReception = new CriticalPreformPool<HoxisConnection>(maxConnection);
+            _userReception = new CriticalPreformPool<HoxisUser>(maxConn);
 
             // Init cluster
             _clusters = new List<HoxisCluster>();
-            HoxisCluster.maxUser = config.GetInt("cluster", "max_conn", out ret);
+            HoxisCluster.maxUser = config.GetInt("server", "max_cluster_user_quantity", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
 
             // Init team
+            HoxisTeam.maxUser = config.GetInt("server", "max_team_user_quantity", out ret);
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
 
             // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
@@ -93,7 +104,7 @@ namespace DacLib.Hoxis.Server
                 _socket.Bind(ep);
                 int count = config.GetInt("socket", "max_client_count");
                 _socket.Listen(count);
-                Console.WriteLine("Listen success, max connection count: {0}", maxConnection.ToString());
+                Console.WriteLine("Listen success, max connection count: {0}", maxConn.ToString());
             }
             catch (Exception e) { Console.Write("[error]HoxisServer listen: {0}", e.Message); }
         }
@@ -110,21 +121,41 @@ namespace DacLib.Hoxis.Server
                     Socket cs = _socket.Accept();
                     //will delete
                     Console.WriteLine("[test]New client: " + cs.RemoteEndPoint.ToString());
+
                     Ret ret;
-                    int id = _connReception.Request(cs, out ret);
-                    if (ret.code != 0) { Console.WriteLine("[error]HoxisServer connection request: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); }
-                    HoxisConnection conn = _connReception.GetPreform(id, out ret);
-                    if (ret.code != 0) { Console.WriteLine("[error]HoxisServer connection get: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); }
-                    conn.connID = id;
+                    // Request a UserConn
+                    HoxisUser user = _userReception.Request(cs, out ret);
+                    if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user request: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); break; }
                 }
             });
             t.Start();
             Console.WriteLine("Begin accepting connection...");
         }
 
-        public static HoxisConnection[] GetAll()
+        #region management
+        /// <summary>
+        /// Get all 
+        /// </summary>
+        /// <returns></returns>
+        public static List<HoxisUser> GetWorkers() { return _userReception.GetOccupiedPreforms(); }
+
+        public static void ReleaseUser(HoxisUser user)
         {
-            return _connReception.GetAll();
+            Ret ret;
+            _userReception.Release(user, out ret);
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user release: {0}, socekt: {1}", ret.desc, user.connection.remoteEndPoint);}
         }
+
+        public static void LogConfig()
+        {
+            Console.WriteLine("Server IP: {0}", ip);
+            Console.WriteLine("Server port: {0}", port.ToString());
+            Console.WriteLine("Max connecting user quantity: {0}", maxConn.ToString());
+            Console.WriteLine("Max cluster user quantity: {0}", HoxisCluster.maxUser.ToString());
+            Console.WriteLine("Max team user quantity: {0}", HoxisTeam.maxUser.ToString());
+            Console.WriteLine("Read buffer size: {0}", HoxisConnection.readBufferSize.ToString());
+        }
+
+        #endregion
     }
 }

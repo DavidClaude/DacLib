@@ -12,7 +12,7 @@ namespace DacLib.Codex
         #region ret codes
         public const byte RET_NO_UNOCCUPIED_PREFORM = 1;
         public const byte RET_PREFORM_GIVEN_NOT_IN_POOL = 2;
-        public const byte RET_INDEX_OBJECT_IS_NULL = 3;
+        public const byte RET_OBJECT_IS_NULL = 3;
         #endregion
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace DacLib.Codex
         /// <param name="state"></param>
         /// <param name="ret"></param>
         /// <returns></returns>
-        public int Request(object state, out Ret ret)
+        public T Request(object state, out Ret ret)
         {
             for (int i = 0; i < count; i++)
             {
@@ -60,21 +60,23 @@ namespace DacLib.Codex
                 {
                     _preforms[i] = new T();
                     _preforms[i].isOccupied = true;
+                    _preforms[i].localID = i;
                     _preforms[i].OnRequest(state);
                     ret = new Ret(LogLevel.Info, 0, "new object");
-                    return i;
+                    return _preforms[i];
                 }
                 // If not occupied, use it
                 if (_preforms[i].isOccupied == false)
                 {
                     _preforms[i].isOccupied = true;
+                    _preforms[i].localID = i;
                     _preforms[i].OnRequest(state);
                     ret = Ret.ok;
-                    return i;
+                    return _preforms[i];
                 }
             }
             ret = new Ret(LogLevel.Warning, RET_NO_UNOCCUPIED_PREFORM, "No unoccupied preform");
-            return -1;
+            return null;
         }
 
         /// <summary>
@@ -84,18 +86,18 @@ namespace DacLib.Codex
         /// <param name="ret"></param>
         public void Release(T preform, out Ret ret)
         {
-            int index = GetPreformIndex(preform);
-            if (index < 0)
+            if (preform == null)
             {
-                ret = new Ret(LogLevel.Error, RET_PREFORM_GIVEN_NOT_IN_POOL, "The preform given is not in pool");
+                ret = new Ret(LogLevel.Error, RET_OBJECT_IS_NULL, "Preform is null");
                 return;
-            }
-            if (!_preforms[index].isOccupied) {
+            }     
+            if (!preform.isOccupied) {
                 ret = new Ret(LogLevel.Info, 0, "Already released");
                 return;
             }
-            _preforms[index].OnRelease();
-            _preforms[index].isOccupied = false;
+            preform.OnRelease();
+            preform.localID = -1;
+            preform.isOccupied = false;
             ret = Ret.ok;
         }
 
@@ -107,19 +109,7 @@ namespace DacLib.Codex
         public void Release(int index, out Ret ret)
         {
             T preform = GetPreform(index, out ret);
-            if (ret.code != 0) { return; }
-            if (preform == null) {
-                ret = new Ret(LogLevel.Error, RET_INDEX_OBJECT_IS_NULL, "Preform in index:" + index.ToString() + " is null");
-                return;
-            }
-            if (!_preforms[index].isOccupied)
-            {
-                ret = new Ret(LogLevel.Info, 0, "Already released");
-                return;
-            }
-            _preforms[index].OnRelease();
-            _preforms[index].isOccupied = false;
-            ret = Ret.ok;
+            Release(preform, out ret);
         }
 
         /// <summary>
@@ -152,12 +142,18 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// TEST
+        /// Get all occupied preforms
         /// </summary>
         /// <returns></returns>
-        public T[] GetAll()
+        public List<T> GetOccupiedPreforms()
         {
-            return _preforms;
+            List<T> preforms = new List<T>();
+            foreach (T p in _preforms) {
+                if (p == null) continue;
+                if (!p.isOccupied) continue;
+                preforms.Add(p);
+            }
+            return preforms;
         }
     }
 }
