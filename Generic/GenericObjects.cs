@@ -118,7 +118,7 @@ namespace DacLib.Generic
         string IJsonable.ToJson()
         {
             return FormatFunc.JsonAppend("",
-                new KV<string,object> { key = "_constTraces", val = _constTraces },
+                new KV<string, object> { key = "_constTraces", val = _constTraces },
                 new KV<string, object> { key = "_percTraces", val = _percTraces }
                 );
         }
@@ -133,7 +133,7 @@ namespace DacLib.Generic
     }
 
 
-    public class Indicator:IJsonable
+    public class Indicator : IJsonable
     {
         /// <summary>
         /// Curent value
@@ -238,8 +238,13 @@ namespace DacLib.Generic
     /// Generic pair of key and value
     /// </summary>
     [Serializable]
-    public struct KV<TK,TV>
+    public struct KV<TK, TV>
     {
+        public KV(TK k, TV v)
+        {
+            key = k;
+            val = v;
+        }
         public TK key;
         public TV val;
     }
@@ -248,8 +253,13 @@ namespace DacLib.Generic
     /// Both string pair of key and value
     /// </summary>
     [Serializable]
-    public struct StringKV
+    public struct KVString
     {
+        public KVString(string k, string v)
+        {
+            key = k;
+            val = v;
+        }
         public string key;
         public string val;
     }

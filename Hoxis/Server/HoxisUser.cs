@@ -21,7 +21,7 @@ namespace DacLib.Hoxis.Server
 
         public HoxisConnection connection { get; private set; }
 
-        public HoxisRealtimeStatus status { get; private set; }
+        public HoxisRealtimeStatus realtimeStatus { get; private set; }
 
         ///// <summary>
         ///// Event of post protocols
@@ -31,13 +31,13 @@ namespace DacLib.Hoxis.Server
 
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
 
-
-
         public HoxisUser()
         {
             #region register reflection table
-            //businessTable.Add("load_user_data", LoadUserData);
-            //businessTable.Add("save_user_data", SaveUserData);
+            respTable.Add("SignIn", SignIn);
+            respTable.Add("GetRealtimeStatus", GetRealtimeStatus);
+            respTable.Add("LoadUserData", LoadUserData);
+            respTable.Add("SaveUserData", SaveUserData);
             #endregion
         }
 
@@ -52,7 +52,7 @@ namespace DacLib.Hoxis.Server
         {
             userID = -1;
             connection = null;
-            status = HoxisRealtimeStatus.undef;
+            realtimeStatus = HoxisRealtimeStatus.undef;
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace DacLib.Hoxis.Server
                     int intv = (int)Math.Abs(SystemFunc.GetTimeStamp() - ts);
                     if (intv > requestTimeoutSec) { ResponseError(proto.handle, "request is expired"); return; }
                     // Check ok
-                    respTable[proto.action.method](proto.action.args, proto.handle);
+                    respTable[proto.action.method](proto.handle, proto.action.args);
                     break;
                 case ProtocolType.Response:
                     //RespChannelEntry(proto);
@@ -94,7 +94,7 @@ namespace DacLib.Hoxis.Server
             connection.BeginSend(data);
         }
 
-        public void Response(string handleArg, HoxisProtocolAction actionArg)
+        public bool Response(string handleArg, HoxisProtocolAction actionArg)
         {
             HoxisProtocol proto = new HoxisProtocol
             {
@@ -107,21 +107,36 @@ namespace DacLib.Hoxis.Server
                 desc = ""
             };
             ProtocolPost(proto);
+            return true;
         }
 
-        public void Response(string handle, string methodArg, params StringKV[] kvs)
+        public bool Response(string handleArg, string methodArg, params KVString[] kvs)
         {
             Dictionary<string, string> argsArg = new Dictionary<string, string>();
-            foreach (StringKV kv in kvs) { argsArg.Add(kv.key, kv.val); }
+            foreach (KVString kv in kvs) { argsArg.Add(kv.key, kv.val); }
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
                 args = new HoxisProtocolArgs { kv = argsArg },
             };
-            Response(handle, action);
+            return Response(handleArg, action);
         }
 
-        public void ResponseError(string handleArg, string descArg)
+        public bool ResponseSuccess(string handleArg, string methodArg) { return Response(handleArg, methodArg, new KVString("code", Consts.RESP_SUCCESS)); }
+        public bool ResponseSuccess(string handleArg, string methodArg, params KVString[] kvs)
+        {
+            Dictionary<string, string> argsArg = new Dictionary<string, string>();
+            argsArg.Add("code", Consts.RESP_SUCCESS);
+            foreach (KVString kv in kvs) { argsArg.Add(kv.key, kv.val); }
+            HoxisProtocolAction action = new HoxisProtocolAction
+            {
+                method = methodArg,
+                args = new HoxisProtocolArgs { kv = argsArg }
+            };
+            return Response(handleArg, action);
+        }
+
+        public bool ResponseError(string handleArg, string descArg)
         {
             HoxisProtocol proto = new HoxisProtocol
             {
@@ -134,6 +149,7 @@ namespace DacLib.Hoxis.Server
                 desc = descArg
             };
             ProtocolPost(proto);
+            return true;
         }
 
         public void HandOverConnection(HoxisUser user)
@@ -153,7 +169,7 @@ namespace DacLib.Hoxis.Server
 
         #region reflection functions: response
 
-        private void SignIn(HoxisProtocolArgs args, string handle)
+        private bool SignIn(string handle, HoxisProtocolArgs args)
         {
             long uid = FormatFunc.StringToLong(args.kv["uid"]);
             List<HoxisUser> workers = HoxisServer.GetWorkers();
@@ -161,46 +177,35 @@ namespace DacLib.Hoxis.Server
             {
                 if (u.userID == uid && uid > 0)
                 {
-
+                    Response(handle, "SignInCb", new KVString("code", Consts.RESP_RECONNECT));
                     HandOverConnection(u);
                     HoxisServer.ReleaseUser(this);
+                    return true;
                 }
             }
+            userID = uid;
+            return ResponseSuccess(handle, "SignInCb");
         }
 
-        private void LoadUserData(HoxisProtocolArgs args)
+        private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
         {
-            //解析uid
-            long uid = FormatFunc.StringToLong(args.kv["uid"]);
-
-            //访问数据库，获取UserData
-
-            //将UserData转为json
-
-            //将UserData打包成协议
-            HoxisProtocol proto = new HoxisProtocol
-            {
-                type = ProtocolType.Response,
-                handle = "",
-                rcvr = HoxisProtocolReceiver.undef,
-                sndr = HoxisProtocolSender.undef,
-                action = new HoxisProtocolAction
-                {
-                    method = "",
-                    args = new HoxisProtocolArgs
-                    {
-                        kv = new Dictionary<string, string> {
-                            {"data","" },
-                        }
-                    }
-                },
-                desc = "",
-            };
+            string json = FormatFunc.ObjectToJson(realtimeStatus);
+            return ResponseSuccess(handle, "GetRealtimeStatusCb", new KVString("status", json));
         }
 
-        private void SaveUserData(HoxisProtocolArgs args)
+        private bool LoadUserData(string handle, HoxisProtocolArgs args)
         {
+            //todo 访问数据库，通过userID获取用户数据
+            //todo 转为json
+            string json = "";
+            return ResponseSuccess(handle, "LoadUserDataCb", new KVString("data", json));
+        }
 
+        private bool SaveUserData(string handle, HoxisProtocolArgs args)
+        {
+            string json = args.kv["data"];
+            //todo 写入数据库
+            return ResponseSuccess(handle, "SaveUserDataCb");
         }
 
 

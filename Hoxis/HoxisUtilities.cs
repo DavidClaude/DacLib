@@ -7,7 +7,7 @@ namespace DacLib.Hoxis {
     public delegate void ProtocolHandler(HoxisProtocol proto);
     public delegate void ActionHandler(HoxisProtocolAction action);
     public delegate void ActionArgsHandler(HoxisProtocolArgs args);
-    public delegate void ResponseHandler(HoxisProtocolArgs args, string handle);
+    public delegate bool ResponseHandler(string handle, HoxisProtocolArgs args);
     #endregion
 
     #region enums
@@ -49,5 +49,12 @@ namespace DacLib.Hoxis {
 
     #region interfaces
 
+    #endregion
+
+    #region constants
+    public class Consts {
+        public const string RESP_SUCCESS = "0";
+        public const string RESP_RECONNECT = "10001";
+    }
     #endregion
 }
