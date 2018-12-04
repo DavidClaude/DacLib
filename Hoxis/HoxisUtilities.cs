@@ -24,9 +24,9 @@ namespace DacLib.Hoxis {
         Server,
         Cluster,
         Team,
-        Player
+        User
     }
-    public enum HoxisType
+    public enum AgentType
     {
         None = 0,
         Host,
@@ -40,9 +40,7 @@ namespace DacLib.Hoxis {
     {
         None = 0,
         Main,
-        Inteam,
-        Matching,
-        Playing
+        Reconnecting
     }
 
     #endregion

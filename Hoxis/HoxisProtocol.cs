@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DacLib.Generic;
 
 namespace DacLib.Hoxis
 {
@@ -13,8 +14,8 @@ namespace DacLib.Hoxis
             type = ProtocolType.None,
             handle = "",
             err = false,
-            rcvr = HoxisProtocolReceiver.undef,
-            sndr = HoxisProtocolSender.undef,
+            receiver = HoxisProtocolReceiver.undef,
+            sender = HoxisProtocolSender.undef,
             action = HoxisProtocolAction.undef,
             desc = ""
         };
@@ -37,12 +38,12 @@ namespace DacLib.Hoxis
         /// <summary>
         /// Whom will receive this protocol
         /// </summary>
-        public HoxisProtocolReceiver rcvr;
+        public HoxisProtocolReceiver receiver;
 
         /// <summary>
         /// Who sends this protocol
         /// </summary>
-        public HoxisProtocolSender sndr;
+        public HoxisProtocolSender sender;
 
         /// <summary>
         /// What to do after reception
@@ -67,6 +68,12 @@ namespace DacLib.Hoxis
         /// If to some player, what's his HoxisID
         /// </summary>
         public HoxisID hid;
+
+        public HoxisProtocolReceiver(ReceiverType typeArg, HoxisID id)
+        {
+            type = typeArg;
+            hid = id;
+        }
     }
     public struct HoxisProtocolSender
     {
@@ -81,6 +88,12 @@ namespace DacLib.Hoxis
         /// Should server return this protocol when broadcasting ?
         /// </summary>
         public bool loopback;
+
+        public HoxisProtocolSender(HoxisID id, bool loopbackArg = true)
+        {
+            hid = id;
+            loopback = loopbackArg;
+        }
     }
     public struct HoxisProtocolAction
     {
@@ -95,10 +108,22 @@ namespace DacLib.Hoxis
         /// Arguments of this method
         /// </summary>
         public HoxisProtocolArgs args;
+
+        public HoxisProtocolAction(string methodArg, HoxisProtocolArgs argsArg)
+        {
+            method = methodArg;
+            args = argsArg;
+        }
     }
     public struct HoxisProtocolArgs
     {
         public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { kv = new Dictionary<string, string>() };
         public Dictionary<string, string> kv;
+        public HoxisProtocolArgs(Dictionary<string, string> kvArg) { kv = kvArg; }
+        public HoxisProtocolArgs(params KVString[] kvs)
+        {
+            kv = new Dictionary<string, string>();
+            foreach (KVString s in kvs) { kv.Add(s.key, s.val); }
+        }
     }
 }

@@ -10,6 +10,11 @@ namespace DacLib.Hoxis.Server
 {
     public class HoxisUser : IReusable
     {
+        #region ret codes
+        public const byte RET_CHECK_ERROR = 1;
+        #endregion
+
+
         #region reusable
         public int localID { get; set; }
         public bool isOccupied { get; set; }
@@ -22,6 +27,10 @@ namespace DacLib.Hoxis.Server
         public HoxisConnection connection { get; private set; }
 
         public HoxisRealtimeStatus realtimeStatus { get; private set; }
+
+        public HoxisCluster superiorCluster { get; private set; }
+
+        public HoxisTeam superiorTeam { get; private set; }
 
         ///// <summary>
         ///// Event of post protocols
@@ -69,24 +78,42 @@ namespace DacLib.Hoxis.Server
             switch (proto.type)
             {
                 case ProtocolType.Synchronization:
-                    //SynChannelEntry(proto);
+                    switch (proto.receiver.type)
+                    {
+                        case ReceiverType.Cluster:
+                            if (superiorCluster == null) return;
+                            superiorCluster.SynBroadcast(proto);
+                            break;
+                        case ReceiverType.Team:
+                            if (superiorTeam == null) return;
+                            superiorTeam.SynBroadcast(proto);
+                            break;
+                        case ReceiverType.User:
+
+                            break;
+                    }
                     break;
                 case ProtocolType.Request:
                     // Request check
-                    ReqHandle handle = FormatFunc.JsonToObject<ReqHandle>(proto.handle);
-                    if (handle.req != proto.action.method) { ResponseError(proto.handle, "request name doesn't match method name"); return; }
-                    long ts = handle.ts;
-                    int intv = (int)Math.Abs(SystemFunc.GetTimeStamp() - ts);
-                    if (intv > requestTimeoutSec) { ResponseError(proto.handle, "request is expired"); return; }
+                    Ret retCheck;
+                    CheckRequest(proto, out retCheck);
+                    if (retCheck.code != 0) { ResponseError(proto.handle, retCheck.desc); return; }
                     // Check ok
                     respTable[proto.action.method](proto.handle, proto.action.args);
                     break;
                 case ProtocolType.Response:
-                    //RespChannelEntry(proto);
+
+                    break;
+                default:
+                    ResponseError(proto.handle, "invalid type of protocol");
                     break;
             }
         }
 
+        /// <summary>
+        /// Post a protocol to client
+        /// </summary>
+        /// <param name="proto"></param>
         public void ProtocolPost(HoxisProtocol proto)
         {
             string json = FormatFunc.ObjectToJson(proto);
@@ -94,6 +121,12 @@ namespace DacLib.Hoxis.Server
             connection.BeginSend(data);
         }
 
+        /// <summary>
+        /// Response a custom result, hardly called immediately
+        /// </summary>
+        /// <param name="handleArg"></param>
+        /// <param name="actionArg"></param>
+        /// <returns></returns>
         public bool Response(string handleArg, HoxisProtocolAction actionArg)
         {
             HoxisProtocol proto = new HoxisProtocol
@@ -101,8 +134,8 @@ namespace DacLib.Hoxis.Server
                 type = ProtocolType.Response,
                 handle = handleArg,
                 err = false,
-                rcvr = HoxisProtocolReceiver.undef,
-                sndr = HoxisProtocolSender.undef,
+                receiver = HoxisProtocolReceiver.undef,
+                sender = HoxisProtocolSender.undef,
                 action = actionArg,
                 desc = ""
             };
@@ -112,30 +145,32 @@ namespace DacLib.Hoxis.Server
 
         public bool Response(string handleArg, string methodArg, params KVString[] kvs)
         {
-            Dictionary<string, string> argsArg = new Dictionary<string, string>();
-            foreach (KVString kv in kvs) { argsArg.Add(kv.key, kv.val); }
-            HoxisProtocolAction action = new HoxisProtocolAction
-            {
-                method = methodArg,
-                args = new HoxisProtocolArgs { kv = argsArg },
-            };
+            HoxisProtocolAction action = new HoxisProtocolAction(methodArg, new HoxisProtocolArgs(kvs));
             return Response(handleArg, action);
         }
 
+        /// <summary>
+        /// Response an successful result with result code and action
+        /// </summary>
+        /// <param name="handleArg"></param>
+        /// <param name="methodArg"></param>
+        /// <returns></returns>
         public bool ResponseSuccess(string handleArg, string methodArg) { return Response(handleArg, methodArg, new KVString("code", Consts.RESP_SUCCESS)); }
         public bool ResponseSuccess(string handleArg, string methodArg, params KVString[] kvs)
         {
             Dictionary<string, string> argsArg = new Dictionary<string, string>();
             argsArg.Add("code", Consts.RESP_SUCCESS);
             foreach (KVString kv in kvs) { argsArg.Add(kv.key, kv.val); }
-            HoxisProtocolAction action = new HoxisProtocolAction
-            {
-                method = methodArg,
-                args = new HoxisProtocolArgs { kv = argsArg }
-            };
+            HoxisProtocolAction action = new HoxisProtocolAction(methodArg, new HoxisProtocolArgs(argsArg));
             return Response(handleArg, action);
         }
 
+        /// <summary>
+        /// Response an error with only description
+        /// </summary>
+        /// <param name="handleArg"></param>
+        /// <param name="descArg"></param>
+        /// <returns></returns>
         public bool ResponseError(string handleArg, string descArg)
         {
             HoxisProtocol proto = new HoxisProtocol
@@ -143,13 +178,31 @@ namespace DacLib.Hoxis.Server
                 type = ProtocolType.Response,
                 handle = handleArg,
                 err = true,
-                rcvr = HoxisProtocolReceiver.undef,
-                sndr = HoxisProtocolSender.undef,
+                receiver = HoxisProtocolReceiver.undef,
+                sender = HoxisProtocolSender.undef,
                 action = HoxisProtocolAction.undef,
                 desc = descArg
             };
             ProtocolPost(proto);
             return true;
+        }
+
+        /// <summary>
+        /// Check the request name and time stamp
+        /// </summary>
+        /// <param name="proto"></param>
+        /// <param name="ret"></param>
+        public void CheckRequest(HoxisProtocol proto, out Ret ret)
+        {
+            ReqHandle handle = FormatFunc.JsonToObject<ReqHandle>(proto.handle, out ret);
+            if (ret.code != 0) return;
+            // Check if request name matches method name
+            if (handle.req != proto.action.method) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request name doesn't match method name"); return; }
+            // Check if expired
+            long ts = handle.ts;
+            int intv = (int)Math.Abs(SystemFunc.GetTimeStamp() - ts);
+            if (intv > requestTimeoutSec) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request is expired"); return; }
+            ret = Ret.ok;
         }
 
         public void HandOverConnection(HoxisUser user)
@@ -165,6 +218,19 @@ namespace DacLib.Hoxis.Server
                 connection = conn;
                 connection.onExtract += ProtocolEntry;
             }
+        }
+
+        public void OnManagementUpdate()
+        {
+            string cid = realtimeStatus.cluster_id;
+            if (cid == "") return;
+            HoxisCluster hc = HoxisServer.GetCluster(cid);
+            if (hc == null) return;
+            superiorCluster = hc;
+            string tid = realtimeStatus.team_id;
+            HoxisTeam ht = hc.GetTeam(tid);
+            if (ht == null) return;
+            superiorTeam = ht;
         }
 
         #region reflection functions: response
@@ -187,6 +253,12 @@ namespace DacLib.Hoxis.Server
             return ResponseSuccess(handle, "SignInCb");
         }
 
+        /// <summary>
+        /// Called if client requests for reconnecting
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
         {
             string json = FormatFunc.ObjectToJson(realtimeStatus);

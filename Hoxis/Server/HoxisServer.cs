@@ -47,7 +47,7 @@ namespace DacLib.Hoxis.Server
 
         private static Socket _socket;
         private static CriticalPreformPool<HoxisUser> _userReception;
-        private static List<HoxisCluster> _clusters;
+        private static Dictionary<string, HoxisCluster> _clusters;
 
         /// <summary>
         /// Init the configuration, such as the ip, port, socket
@@ -76,7 +76,7 @@ namespace DacLib.Hoxis.Server
             _userReception = new CriticalPreformPool<HoxisUser>(maxConn);
 
             // Init cluster
-            _clusters = new List<HoxisCluster>();
+            _clusters = new Dictionary<string, HoxisCluster>();
             HoxisCluster.maxUser = config.GetInt("server", "max_cluster_user_quantity", out ret);
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer init: {0}", ret.desc); return; }
 
@@ -143,12 +143,48 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         public static List<HoxisUser> GetWorkers() { return _userReception.GetOccupiedPreforms(); }
 
+        public static HoxisCluster GetCluster(string cid)
+        {
+            if (!_clusters.ContainsKey(cid)) return null;
+            return _clusters[cid];
+        }
+
+        /// <summary>
+        /// Release an user
+        /// Generally called when an user quits, reconnects or stops heartbeats
+        /// </summary>
+        /// <param name="user"></param>
         public static void ReleaseUser(HoxisUser user)
         {
             Ret ret;
             _userReception.Release(user, out ret);
-            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user release: {0}, socekt: {1}", ret.desc, user.connection.remoteEndPoint);}
+            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user release: {0}, socekt: {1}", ret.desc, user.connection.remoteEndPoint); }
         }
+
+        public static bool ClusterManage(string operation, HoxisUser sponsor)
+        {
+            switch (operation)
+            {
+                case "create":
+                    string id = FormatFunc.StringAppend(sponsor.userID.ToString(), "@", SystemFunc.GetTimeStamp().ToString());
+                    if (_clusters.ContainsKey(id)) { Console.WriteLine("[error]Create cluster: {0} already exists", id); return false; }
+                    lock (_clusters)
+                    {
+                        _clusters.Add(id, new HoxisCluster(id));
+                        // add this user
+                    }
+                    break;
+                case "join":
+                    break;
+                case "destroy":
+                    break;
+                default:
+                    break;
+            }
+            return true;
+        }
+
+        #endregion
 
         public static void LogConfig()
         {
@@ -160,6 +196,6 @@ namespace DacLib.Hoxis.Server
             Console.WriteLine("Read buffer size: {0}", HoxisConnection.readBufferSize.ToString());
         }
 
-        #endregion
+
     }
 }

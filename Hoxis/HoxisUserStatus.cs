@@ -11,15 +11,14 @@ namespace DacLib.Hoxis
         public static readonly HoxisRealtimeStatus undef = new HoxisRealtimeStatus {
             state = UserState.None,
         };
+
         public UserState state;
+        public string cluster_id;
+        public string team_id;
 
     }
-    public struct HoxisRealtimeStatusHost
+    public struct HoxisRealtimeStatusAgent
     {
-
-    }
-    public struct HoxisRealtimeStatusProxy
-    {
-
+        public AgentType agent_type;
     }
 }
