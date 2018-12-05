@@ -11,25 +11,21 @@ namespace DacLib.Hoxis.Server
     {
         public static int maxUser { get; set; }
 
-        public string clusterID { get; }
+        public string name { get; }
 
         public int userCount { get { return _users.Count; } }
 
         private List<HoxisUser> _users;
         private Dictionary<string, HoxisTeam> _teams;
 
-        public HoxisCluster(string id)
+        public HoxisCluster(string nameArg)
         {
-            clusterID = id;
+            name = nameArg;
             _users = new List<HoxisUser>();
             _teams = new Dictionary<string, HoxisTeam>();
         }
 
-        public void SynBroadcast(HoxisProtocol proto)
-        {
-            if (proto.type != ProtocolType.Synchronization) return;
-            foreach (HoxisUser u in _users) { u.ProtocolPost(proto); }
-        }
+        public void ProtocolBroadcast(HoxisProtocol proto) { foreach (HoxisUser u in _users) { u.ProtocolPost(proto); } }
 
         public HoxisTeam GetTeam(string tid)
         {
@@ -37,18 +33,18 @@ namespace DacLib.Hoxis.Server
             return _teams[tid];
         }
 
-        public bool TeamManage(string operation, HoxisUser sponsor)
+        public bool ManageTeam(string operation, HoxisUser sponsor)
         {
             switch (operation)
             {
                 case "create":
-                    string id = FormatFunc.StringAppend(clusterID, ".", sponsor.userID.ToString());
-                    if (_teams.ContainsKey(id)) { Console.WriteLine("[error]Create team: {0} already exists", id); return false; }
-                    lock (_teams)
-                    {
-                        _teams.Add(id, new HoxisTeam(id));
-                        // add this user
-                    }
+                    //string id = FormatFunc.StringAppend(clusterID, ".", sponsor.userID.ToString());
+                    //if (_teams.ContainsKey(id)) { Console.WriteLine("[error]Create team: {0} already exists", id); return false; }
+                    //lock (_teams)
+                    //{
+                    //    _teams.Add(id, new HoxisTeam(id));
+                    //    // add this user
+                    //}
                     break;
                 case "join":
                     break;

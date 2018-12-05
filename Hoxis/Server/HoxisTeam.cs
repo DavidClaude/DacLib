@@ -10,22 +10,18 @@ namespace DacLib.Hoxis.Server
     {
         public static int maxUser { get; set; }
 
-        public string teamID { get; }
+        public string name { get; }
 
         public int userCount { get { return _users.Count; } }
 
         private List<HoxisUser> _users;
 
-        public HoxisTeam(string id)
+        public HoxisTeam(string nameArg)
         {
-            teamID = id;
+            name = nameArg;
             _users = new List<HoxisUser>();
         }
 
-        public void SynBroadcast(HoxisProtocol proto)
-        {
-            if (proto.type != ProtocolType.Synchronization) return;
-            foreach (HoxisUser u in _users) { u.ProtocolPost(proto); }
-        }
+        public void ProtocolBroadcast(HoxisProtocol proto) { foreach (HoxisUser u in _users) { u.ProtocolPost(proto); } }
     }
 }

@@ -143,12 +143,6 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         public static List<HoxisUser> GetWorkers() { return _userReception.GetOccupiedPreforms(); }
 
-        public static HoxisCluster GetCluster(string cid)
-        {
-            if (!_clusters.ContainsKey(cid)) return null;
-            return _clusters[cid];
-        }
-
         /// <summary>
         /// Release an user
         /// Generally called when an user quits, reconnects or stops heartbeats
@@ -161,18 +155,24 @@ namespace DacLib.Hoxis.Server
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user release: {0}, socekt: {1}", ret.desc, user.connection.remoteEndPoint); }
         }
 
-        public static bool ClusterManage(string operation, HoxisUser sponsor)
+        public static HoxisCluster GetCluster(string cid)
+        {
+            if (!_clusters.ContainsKey(cid)) return null;
+            return _clusters[cid];
+        }
+
+        public static bool ManageCluster(string operation, HoxisUser sponsor)
         {
             switch (operation)
             {
                 case "create":
-                    string id = FormatFunc.StringAppend(sponsor.userID.ToString(), "@", SystemFunc.GetTimeStamp().ToString());
-                    if (_clusters.ContainsKey(id)) { Console.WriteLine("[error]Create cluster: {0} already exists", id); return false; }
-                    lock (_clusters)
-                    {
-                        _clusters.Add(id, new HoxisCluster(id));
-                        // add this user
-                    }
+                    //string id = FormatFunc.StringAppend(sponsor.userID.ToString(), "@", SystemFunc.GetTimeStamp().ToString());
+                    //if (_clusters.ContainsKey(id)) { Console.WriteLine("[error]Create cluster: {0} already exists", id); return false; }
+                    //lock (_clusters)
+                    //{
+                    //    _clusters.Add(id, new HoxisCluster(id));
+                    //    // add this user
+                    //}
                     break;
                 case "join":
                     break;

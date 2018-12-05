@@ -26,11 +26,25 @@ namespace DacLib.Hoxis.Server
 
         public HoxisConnection connection { get; private set; }
 
-        public HoxisRealtimeStatus realtimeStatus { get; private set; }
+        public HoxisRealtimeStatus realtimeStatus;
 
-        public HoxisCluster superiorCluster { get; private set; }
+        public HoxisCluster superiorCluster {
+            get { return _superiorCluster; }
+            set {
+                _superiorCluster = value;
+                if (_superiorCluster == null) { realtimeStatus.cluster = ""; return; }
+                realtimeStatus.cluster = _superiorCluster.name;
+            }
+        }
 
-        public HoxisTeam superiorTeam { get; private set; }
+        public HoxisTeam superiorTeam {
+            get { return _superiorTeam; }
+            set {
+                _superiorTeam = value;
+                if (_superiorTeam == null) { realtimeStatus.team = "";return; }
+                realtimeStatus.cluster = _superiorTeam.name;
+            }
+        }
 
         ///// <summary>
         ///// Event of post protocols
@@ -39,6 +53,9 @@ namespace DacLib.Hoxis.Server
         //public event ProtocolHandler onPost;
 
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
+
+        private HoxisCluster _superiorCluster;
+        private HoxisTeam _superiorTeam;
 
         public HoxisUser()
         {
@@ -82,11 +99,11 @@ namespace DacLib.Hoxis.Server
                     {
                         case ReceiverType.Cluster:
                             if (superiorCluster == null) return;
-                            superiorCluster.SynBroadcast(proto);
+                            superiorCluster.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.Team:
                             if (superiorTeam == null) return;
-                            superiorTeam.SynBroadcast(proto);
+                            superiorTeam.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.User:
 
@@ -218,19 +235,6 @@ namespace DacLib.Hoxis.Server
                 connection = conn;
                 connection.onExtract += ProtocolEntry;
             }
-        }
-
-        public void OnManagementUpdate()
-        {
-            string cid = realtimeStatus.cluster_id;
-            if (cid == "") return;
-            HoxisCluster hc = HoxisServer.GetCluster(cid);
-            if (hc == null) return;
-            superiorCluster = hc;
-            string tid = realtimeStatus.team_id;
-            HoxisTeam ht = hc.GetTeam(tid);
-            if (ht == null) return;
-            superiorTeam = ht;
         }
 
         #region reflection functions: response

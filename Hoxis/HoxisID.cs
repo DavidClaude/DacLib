@@ -3,14 +3,14 @@
 namespace DacLib.Hoxis
 {
     [Serializable]
-    public struct HoxisID
+    public struct HoxisAgentID
     {
-        public static readonly HoxisID undef = new HoxisID("", 0);
-        public static readonly HoxisID server = new HoxisID("server", 0);
+        public static readonly HoxisAgentID undef = new HoxisAgentID("", 0);
+        public static readonly HoxisAgentID server = new HoxisAgentID("server", 0);
 
         public string group;
         public ushort id;
-        public HoxisID(string groupArg, ushort idArg)
+        public HoxisAgentID(string groupArg, ushort idArg)
         {
             group = groupArg;
             id = idArg;

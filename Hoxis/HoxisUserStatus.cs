@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DacLib.Generic;
+using DacLib.Hoxis.Server;
 
 namespace DacLib.Hoxis
 {
@@ -13,9 +15,8 @@ namespace DacLib.Hoxis
         };
 
         public UserState state;
-        public string cluster_id;
-        public string team_id;
-
+        public string cluster;
+        public string team;
     }
     public struct HoxisRealtimeStatusAgent
     {
