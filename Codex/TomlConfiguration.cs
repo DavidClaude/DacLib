@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+
 using DacLib.Generic;
+using FF = DacLib.Generic.FormatFunc;
 
 namespace DacLib.Codex
 {
@@ -34,9 +36,9 @@ namespace DacLib.Codex
         {
             _config = new Dictionary<string, Dictionary<string, string>>();
             // Is toml file ?
-            string[] paths = FormatFunc.StringSplit(path, '/');
-            string[] strs = FormatFunc.StringSplit(FormatFunc.LastOfArray(paths), '.');
-            if (FormatFunc.LastOfArray(strs) != "toml")
+            string[] paths = FF.StringSplit(path, '/');
+            string[] name = FF.StringSplit(FF.LastOfArray(paths), '.');
+            if (FF.LastOfArray(name) != "toml")
             {
                 ret = new Ret(LogLevel.Error, RET_NOT_TOML, "File:" + path + " isn't .toml");
                 return;
@@ -53,12 +55,15 @@ namespace DacLib.Codex
             foreach (string line in lines)
             {
                 string lineTrim = line.Trim();
-                if (FormatFunc.RegexMatch(lineTrim, @"^\[.+\]$"))
-                {
-                    string section = FormatFunc.GetStringInBrackets(lineTrim, "[]");
-                    _config.Add(section, new Dictionary<string, string>());
-                    curSec = section;
-                    continue;
+                string[] vals = FF.RegexGetValue(lineTrim, @"^\[.+\]$", "[", "]");
+                if (vals != null) {
+                    if (vals.Length == 1)
+                    {
+                        string section = vals[0];
+                        if (!_config.ContainsKey(section)) { _config.Add(section, new Dictionary<string, string>()); }
+                        curSec = section;
+                        continue;
+                    }
                 }
                 if (curSec == "")
                     continue;
@@ -102,7 +107,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return 0;
-            return FormatFunc.StringToInt(_config[section][key], out ret);
+            return FF.StringToInt(_config[section][key], out ret);
         }
 
         public int GetInt(string section, string key)
@@ -122,7 +127,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return 0;
-            return FormatFunc.StringToShort(_config[section][key], out ret);
+            return FF.StringToShort(_config[section][key], out ret);
         }
 
         public short GetShort(string section, string key)
@@ -142,7 +147,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return 0;
-            return FormatFunc.StringToLong(_config[section][key], out ret);
+            return FF.StringToLong(_config[section][key], out ret);
         }
 
         public long GetLong(string section, string key)
@@ -162,7 +167,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return 0f;
-            return FormatFunc.StringToFloat(_config[section][key], out ret);
+            return FF.StringToFloat(_config[section][key], out ret);
         }
 
         public float GetFloat(string section, string key)
@@ -182,7 +187,7 @@ namespace DacLib.Codex
         {
             if (!ContainItem(section, key, out ret))
                 return false;
-            return FormatFunc.StringToBool(_config[section][key], out ret);
+            return FF.StringToBool(_config[section][key], out ret);
         }
 
         public bool GetBool(string section, string key)

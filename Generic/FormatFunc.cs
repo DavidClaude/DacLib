@@ -9,6 +9,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
 
+
+using C = System.Console;
+
 namespace DacLib.Generic
 {
     /// <summary>
@@ -67,9 +70,42 @@ namespace DacLib.Generic
         /// <returns></returns>
         public static string StringReplace(string str, string desStr, params string[] srcStrs)
         {
-            string s = str;
-            foreach (string ss in srcStrs) { s = s.Replace(ss, desStr); }
-            return s;
+            string rlt = str;
+            foreach (string s in srcStrs) { rlt = rlt.Replace(s, desStr); }
+            return rlt;
+        }
+
+        public static void ReferStringReplace(ref string str, string desStr, params string[] srcStrs)
+        {
+            foreach (string s in srcStrs) { str = str.Replace(s, desStr); }
+        }
+
+        /// <summary>
+        /// Quick generate string with tag like "{0}"
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="srcStrs"></param>
+        /// <returns></returns>
+        public static string StringFormat(string str, params object[] srcStrs)
+        {
+            // Get the indexes
+            string[] tags = RegexGetValue(str, @"\{\d+\}", "{", "}");
+            Dictionary<int, string> table = new Dictionary<int, string>();
+            Ret ret;
+            // Add all tags like "{0}" to table
+            foreach (string t in tags)
+            {
+                int index = StringToInt(t, out ret);
+                if (ret.code != 0) return "";
+                if (index >= srcStrs.Length) continue;
+                if (table.ContainsKey(index)) continue;
+                table.Add(index, "");
+            }
+            // Set values of index
+            for (int i = 0; i < srcStrs.Length; i++) { if (table.ContainsKey(i)) { table[i] = srcStrs[i].ToString(); } }
+            string rlt = str;
+            foreach (int i in table.Keys) { rlt = RegexReplace(rlt, @"\{" + i.ToString() + @"\}", table[i]); }
+            return rlt;
         }
 
         /// <summary>
@@ -391,43 +427,45 @@ namespace DacLib.Generic
         /// <returns><c>true</c>, if match was regexed, <c>false</c> otherwise.</returns>
         /// <param name="input">Input.</param>
         /// <param name="pattern">Pattern.</param>
-        public static bool RegexMatch(string input, string pattern)
+        public static bool RegexMatch(string input, string pattern) { return Regex.IsMatch(input, pattern); }
+
+        /// <summary>
+        /// Regex match and replace
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="pattern"></param>
+        /// <param name="desStr"></param>
+        /// <returns></returns>
+        public static string RegexReplace(string input, string pattern, string desStr)
         {
-            Regex reg = new Regex(pattern);
-            Match match = reg.Match(input);
-            return match.Success;
+            string rlt = input;
+            MatchCollection mc = Regex.Matches(input, pattern);
+            foreach (Match m in mc) { rlt = StringReplace(rlt, desStr, m.Value); }
+            return rlt;
+        }
+
+        public static void ReferRegexReplace(ref string input, string pattern, string desStr)
+        {
+            MatchCollection mc = Regex.Matches(input, pattern);
+            foreach (Match m in mc) { ReferStringReplace(ref input, desStr, m.Value); }
         }
 
         /// <summary>
-        /// Get string in brackets
-        /// The brackets must be string whose length is 2
+        /// Get the value with given pattern
+        /// Need trim the strings besides value
         /// </summary>
-        /// <returns>The string in brackets.</returns>
-        /// <param name="input">Input.</param>
-        /// <param name="brackets">Brackets, such as "()","[]","{}"</param>
-        public static string GetStringInBrackets(string input, string brackets)
+        /// <param name="input"></param>
+        /// <param name="pattern"></param>
+        /// <param name="trims"></param>
+        /// <returns></returns>
+        public static string[] RegexGetValue(string input, string pattern, params string[] trims)
         {
-            //如果brackets字符个数不为2
-            if (brackets.Length != 2)
-                return "";
-            int len = input.Length;
-            //如果input为""
-            if (len <= 0)
-                return "";
-            int beginIndex = -1;
-            int endIndex = -1;
-            for (int i = 0; i < len; i++)
-            {
-                if (input[i] == brackets[0]) { beginIndex = i; }
-                if (input[i] == brackets[1]) { endIndex = i; }
-            }
-            //如果没有匹配到左括号或右括号
-            if (beginIndex == -1 || endIndex == -1)
-                return "";
-            //如果左括号索引大于等于右括号索引
-            if (beginIndex >= endIndex)
-                return "";
-            return input.Substring(beginIndex + 1, endIndex - beginIndex - 1);
+            MatchCollection mc = Regex.Matches(input, pattern);
+            if (mc.Count <= 0) return null;
+            string[] rlts = new string[mc.Count];
+            int index = 0;
+            foreach (Match m in mc) { rlts[index] = StringReplace(m.Value, "", trims); index++; }
+            return rlts;
         }
 
         /// <summary>

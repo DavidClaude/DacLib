@@ -3,59 +3,86 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using DacLib.Generic;
+using FF = DacLib.Generic.FormatFunc;
 
 namespace DacLib.Hoxis.Server
 {
     public class HoxisCluster
     {
+        #region ret codes
+        public const byte RET_ENOUGH_USERS = 1;
+        public const byte RET_ALL_USERS_LEAVE = 2;
+        public const byte RET_USER_EXISTS = 3;
+        public const byte RET_NO_USER = 4;
+        #endregion
+
         public static int maxUser { get; set; }
 
-        public string name { get; }
+        public string id { get; }
 
         public int userCount { get { return _users.Count; } }
+
+        public HoxisTeam this[string tid]
+        {
+            get
+            {
+                if (_teams == null) return null;
+                if (!_teams.ContainsKey(tid)) return null;
+                return _teams[tid];
+            }
+        }
 
         private List<HoxisUser> _users;
         private Dictionary<string, HoxisTeam> _teams;
 
-        public HoxisCluster(string nameArg)
+        public HoxisCluster(string idArg)
         {
-            name = nameArg;
+            id = idArg;
             _users = new List<HoxisUser>();
             _teams = new Dictionary<string, HoxisTeam>();
         }
 
         public void ProtocolBroadcast(HoxisProtocol proto) { foreach (HoxisUser u in _users) { u.ProtocolPost(proto); } }
 
-        public HoxisTeam GetTeam(string tid)
+        public bool ManageTeam(ManageOperation op, HoxisUser sponsor)
         {
-            if (!_teams.ContainsKey(tid)) return null;
-            return _teams[tid];
-        }
-
-        public bool ManageTeam(string operation, HoxisUser sponsor)
-        {
-            switch (operation)
+            switch (op)
             {
-                case "create":
-                    //string id = FormatFunc.StringAppend(clusterID, ".", sponsor.userID.ToString());
-                    //if (_teams.ContainsKey(id)) { Console.WriteLine("[error]Create team: {0} already exists", id); return false; }
-                    //lock (_teams)
-                    //{
-                    //    _teams.Add(id, new HoxisTeam(id));
-                    //    // add this user
-                    //}
+                case ManageOperation.Create:
+
                     break;
-                case "join":
+                case ManageOperation.Join:
+
                     break;
-                case "leave":
+                case ManageOperation.Leave:
+
                     break;
-                case "destroy":
-                    break;
-                default:
+                case ManageOperation.Destroy:
+
                     break;
             }
             return true;
+        }
+
+        public void UserJoin(HoxisUser user, out Ret ret)
+        {
+            if (_users.Count >= maxUser) { ret = new Ret(LogLevel.Info, RET_ENOUGH_USERS, "Users are enough"); return; }
+            if (_users.Contains(user)) { ret = new Ret(LogLevel.Warning, RET_USER_EXISTS, FF.StringFormat("User:{0} already exists", user.userID)); return; }
+            _users.Add(user);
+            user.superiorCluster = this;
+            ret = Ret.ok;
+        }
+
+        public void UserLeave(HoxisUser user, out Ret ret)
+        {
+            if (!_users.Contains(user)) { ret = new Ret(LogLevel.Warning, RET_NO_USER, FF.StringFormat("User:{0} doesn't exist", user.userID)); return; }
+            ManageTeam(ManageOperation.Leave, user);
+            user.superiorCluster = null;
+            _users.Remove(user);
+            if (_users.Count == 0) { ret = new Ret(LogLevel.Info, RET_ALL_USERS_LEAVE, "All users have left"); return; }
+            ret = Ret.ok;
         }
     }
 }

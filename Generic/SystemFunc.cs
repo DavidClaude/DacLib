@@ -56,15 +56,16 @@ namespace DacLib.Generic
         /// </summary>
         /// <param name="unit"></param>
         /// <returns></returns>
-        public static long GetTimeStamp(string unit = "s")
+        public static long GetTimeStamp(TimeUnit unit = TimeUnit.Second)
         {
             TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1);
             long tsLong = 0;
-            switch (unit) {
-                case "s":
+            switch (unit)
+            {
+                case TimeUnit.Second:
                     tsLong = (long)ts.TotalSeconds;
                     break;
-                case "ms":
+                case TimeUnit.Millisecond:
                     tsLong = (long)ts.TotalMilliseconds;
                     break;
             }

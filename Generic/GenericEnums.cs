@@ -2,19 +2,34 @@
 
 namespace DacLib.Generic
 {
-    public enum LogLevel {
+    public enum LogLevel
+    {
         /// <summary>
         /// Custom description without troubles
         /// </summary>
-        Info = 0,
+        Info = 1,
         /// <summary>
         /// Notices of unexpected but not fatal results
         /// </summary>
-        Warning = 1,
+        Warning,
         /// <summary>
         /// Dangerous errors that might lead the program to crashes
         /// </summary>
-        Error = 2
+        Error
+    }
+
+    public enum TimeUnit
+    {
+        None = 0,
+        Nanosecond,
+        Microsecond,
+        Millisecond,
+        Second,
+        Minute,
+        Hour,
+        Day,
+        Week,
+        Month,
+        Year
     }
 }
-

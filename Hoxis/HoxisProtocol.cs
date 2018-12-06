@@ -57,7 +57,7 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolReceiver
     {
-        public static readonly HoxisProtocolReceiver undef = new HoxisProtocolReceiver { type = ReceiverType.None, hid = HoxisID.undef };
+        public static readonly HoxisProtocolReceiver undef = new HoxisProtocolReceiver { type = ReceiverType.None, hid = HoxisAgentID.undef };
 
         /// <summary>
         /// Server, cluster of current game, teammates, or some player ?
@@ -67,9 +67,9 @@ namespace DacLib.Hoxis
         /// <summary>
         /// If to some player, what's his HoxisID
         /// </summary>
-        public HoxisID hid;
+        public HoxisAgentID hid;
 
-        public HoxisProtocolReceiver(ReceiverType typeArg, HoxisID id)
+        public HoxisProtocolReceiver(ReceiverType typeArg, HoxisAgentID id)
         {
             type = typeArg;
             hid = id;
@@ -77,19 +77,19 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolSender
     {
-        public static readonly HoxisProtocolSender undef = new HoxisProtocolSender { hid = HoxisID.undef, loopback = true };
+        public static readonly HoxisProtocolSender undef = new HoxisProtocolSender { hid = HoxisAgentID.undef, loopback = true };
 
         /// <summary>
         /// HoxisID of sender
         /// </summary>
-        public HoxisID hid;
+        public HoxisAgentID hid;
 
         /// <summary>
         /// Should server return this protocol when broadcasting ?
         /// </summary>
         public bool loopback;
 
-        public HoxisProtocolSender(HoxisID id, bool loopbackArg = true)
+        public HoxisProtocolSender(HoxisAgentID id, bool loopbackArg = true)
         {
             hid = id;
             loopback = loopbackArg;
@@ -117,13 +117,19 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolArgs
     {
-        public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { kv = new Dictionary<string, string>() };
-        public Dictionary<string, string> kv;
-        public HoxisProtocolArgs(Dictionary<string, string> kvArg) { kv = kvArg; }
+        public string this[string key] {
+            get {
+                if (!table.ContainsKey(key)) return "";
+                return (table[key]);
+            }
+        }
+        public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { table = new Dictionary<string, string>() };
+        public Dictionary<string, string> table;
+        public HoxisProtocolArgs(Dictionary<string, string> kvArg) { table = kvArg; }
         public HoxisProtocolArgs(params KVString[] kvs)
         {
-            kv = new Dictionary<string, string>();
-            foreach (KVString s in kvs) { kv.Add(s.key, s.val); }
+            table = new Dictionary<string, string>();
+            foreach (KVString s in kvs) { table.Add(s.key, s.val); }
         }
     }
 }

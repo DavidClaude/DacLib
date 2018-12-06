@@ -14,7 +14,6 @@ namespace DacLib.Hoxis.Server
         public const byte RET_CHECK_ERROR = 1;
         #endregion
 
-
         #region reusable
         public int localID { get; set; }
         public bool isOccupied { get; set; }
@@ -22,29 +21,41 @@ namespace DacLib.Hoxis.Server
 
         public static int requestTimeoutSec { get; set; }
 
+        /// <summary>
+        /// Unique ID of user
+        /// </summary>
         public long userID { get; private set; }
 
+        /// <summary>
+        /// Socket connection manager
+        /// </summary>
         public HoxisConnection connection { get; private set; }
 
-        public HoxisRealtimeStatus realtimeStatus;
-
+        /// <summary>
+        /// Current cluster
+        /// </summary>
         public HoxisCluster superiorCluster {
             get { return _superiorCluster; }
             set {
                 _superiorCluster = value;
-                if (_superiorCluster == null) { realtimeStatus.cluster = ""; return; }
-                realtimeStatus.cluster = _superiorCluster.name;
+                if (_superiorCluster == null) { _realtimeStatus.clusterid = string.Empty; return; }
+                _realtimeStatus.clusterid = _superiorCluster.id;
             }
         }
 
+        /// <summary>
+        /// Current team
+        /// </summary>
         public HoxisTeam superiorTeam {
             get { return _superiorTeam; }
             set {
                 _superiorTeam = value;
-                if (_superiorTeam == null) { realtimeStatus.team = "";return; }
-                realtimeStatus.cluster = _superiorTeam.name;
+                if (_superiorTeam == null) { _realtimeStatus.teamid = string.Empty;return; }
+                _realtimeStatus.teamid = _superiorTeam.id;
             }
         }
+
+        
 
         ///// <summary>
         ///// Event of post protocols
@@ -54,6 +65,7 @@ namespace DacLib.Hoxis.Server
 
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
 
+        private HoxisRealtimeStatus _realtimeStatus;
         private HoxisCluster _superiorCluster;
         private HoxisTeam _superiorTeam;
 
@@ -78,7 +90,7 @@ namespace DacLib.Hoxis.Server
         {
             userID = -1;
             connection = null;
-            realtimeStatus = HoxisRealtimeStatus.undef;
+            _realtimeStatus = HoxisRealtimeStatus.undef;
         }
 
         /// <summary>
@@ -98,12 +110,12 @@ namespace DacLib.Hoxis.Server
                     switch (proto.receiver.type)
                     {
                         case ReceiverType.Cluster:
-                            if (superiorCluster == null) return;
-                            superiorCluster.ProtocolBroadcast(proto);
+                            if (_superiorCluster == null) return;
+                            _superiorCluster.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.Team:
-                            if (superiorTeam == null) return;
-                            superiorTeam.ProtocolBroadcast(proto);
+                            if (_superiorTeam == null) return;
+                            _superiorTeam.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.User:
 
@@ -241,7 +253,7 @@ namespace DacLib.Hoxis.Server
 
         private bool SignIn(string handle, HoxisProtocolArgs args)
         {
-            long uid = FormatFunc.StringToLong(args.kv["uid"]);
+            long uid = FormatFunc.StringToLong(args["uid"]);
             List<HoxisUser> workers = HoxisServer.GetWorkers();
             foreach (HoxisUser u in workers)
             {
@@ -265,7 +277,7 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
         {
-            string json = FormatFunc.ObjectToJson(realtimeStatus);
+            string json = FormatFunc.ObjectToJson(_realtimeStatus);
             return ResponseSuccess(handle, "GetRealtimeStatusCb", new KVString("status", json));
         }
 
@@ -279,7 +291,7 @@ namespace DacLib.Hoxis.Server
 
         private bool SaveUserData(string handle, HoxisProtocolArgs args)
         {
-            string json = args.kv["data"];
+            string json = args["data"];
             //todo 写入数据库
             return ResponseSuccess(handle, "SaveUserDataCb");
         }

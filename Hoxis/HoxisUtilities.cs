@@ -42,6 +42,14 @@ namespace DacLib.Hoxis {
         Main,
         Reconnecting
     }
+    public enum ManageOperation
+    {
+        None = 0,
+        Create,
+        Join,
+        Leave,
+        Destroy
+    }
 
     #endregion
 

@@ -3,9 +3,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Generic;
+
 using DacLib.Generic;
 using DacLib.Codex;
-
+using FF = DacLib.Generic.FormatFunc;
+using MF = DacLib.Generic.MathFunc;
+using SF = DacLib.Generic.SystemFunc;
 
 namespace DacLib.Hoxis.Server
 {
@@ -123,11 +126,11 @@ namespace DacLib.Hoxis.Server
                 while (true)
                 {
                     Socket cs = _socket.Accept();
-                    //will delete
+
+                    // LOG instead
                     Console.WriteLine("[test]New client: " + cs.RemoteEndPoint.ToString());
 
                     Ret ret;
-                    // Request a UserConn
                     HoxisUser user = _userReception.Request(cs, out ret);
                     if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user request: {0}, socekt: {1}", ret.desc, cs.RemoteEndPoint); break; }
                 }
@@ -155,30 +158,30 @@ namespace DacLib.Hoxis.Server
             if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user release: {0}, socekt: {1}", ret.desc, user.connection.remoteEndPoint); }
         }
 
-        public static HoxisCluster GetCluster(string cid)
+        public static bool ManageCluster(ManageOperation op, HoxisUser sponsor)
         {
-            if (!_clusters.ContainsKey(cid)) return null;
-            return _clusters[cid];
-        }
-
-        public static bool ManageCluster(string operation, HoxisUser sponsor)
-        {
-            switch (operation)
+            switch (op)
             {
-                case "create":
-                    //string id = FormatFunc.StringAppend(sponsor.userID.ToString(), "@", SystemFunc.GetTimeStamp().ToString());
-                    //if (_clusters.ContainsKey(id)) { Console.WriteLine("[error]Create cluster: {0} already exists", id); return false; }
-                    //lock (_clusters)
-                    //{
-                    //    _clusters.Add(id, new HoxisCluster(id));
-                    //    // add this user
-                    //}
+                case ManageOperation.Create:
+                    string cid = FF.StringAppend(sponsor.userID.ToString(), "@", SF.GetTimeStamp().ToString());
+                    if (_clusters.ContainsKey(cid)) { Console.WriteLine("[error]Create cluster: cluster {0} already exists", cid); return false; }
+                    lock (_clusters)
+                    {
+                        HoxisCluster hc = new HoxisCluster(cid);
+                        _clusters.Add(cid, hc);
+                        Ret ret;
+                        hc.UserJoin(sponsor, out ret);
+                        if (ret.code != 0) { Console.WriteLine("[warning]Create cluster: {0}", ret.desc); return false; }
+                    }
                     break;
-                case "join":
+                case ManageOperation.Join:
+                    // todo Call matching sdk, get a cluster
                     break;
-                case "destroy":
+                case ManageOperation.Leave:
+
                     break;
-                default:
+                case ManageOperation.Destroy:
+
                     break;
             }
             return true;

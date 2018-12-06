@@ -10,15 +10,15 @@ namespace DacLib.Hoxis.Server
     {
         public static int maxUser { get; set; }
 
-        public string name { get; }
+        public string id { get; }
 
         public int userCount { get { return _users.Count; } }
 
         private List<HoxisUser> _users;
 
-        public HoxisTeam(string nameArg)
+        public HoxisTeam(string idArg)
         {
-            name = nameArg;
+            id = idArg;
             _users = new List<HoxisUser>();
         }
 
