@@ -7,66 +7,66 @@ using System.IO;
 using DacLib.Generic;
 
 using FF = DacLib.Generic.FormatFunc;
+using SF = DacLib.Generic.SystemFunc;
 
 namespace DacLib.Codex
 {
     public class DebugRecorder
     {
-        public const byte RET_OPENORCREATE_FILE_EXCEPTION = 1;
+        public const byte RET_STREAM_INIT_ERROR = 1;
+
+        public FileMode fileMode { get; }
+        public FileAccess fileAccess { get; }
+        public LogWriteMode writeMode { get; }
 
         private FileStream _stream;
         private StreamWriter _writer;
 
-        public DebugRecorder(string path)
+        public DebugRecorder(string path, out Ret ret, FileMode mode = FileMode.OpenOrCreate, FileAccess access = FileAccess.ReadWrite, LogWriteMode write = LogWriteMode.Append)
         {
-            _stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-        }
-
-        public void Start(out Ret ret, string pattern)
-        {
-            if (_stream == null)
+            fileMode = mode;
+            fileAccess = access;
+            writeMode = write;
+            try
             {
-                ret = new Ret(LogLevel.Error, RET_OPENORCREATE_FILE_EXCEPTION, "File stream is null, open or create exception");
+                _stream = new FileStream(path, fileMode, access);
+                if (writeMode == LogWriteMode.Append) _stream.Position = _stream.Length;
+                ret = Ret.ok;
             }
-            _writer = new StreamWriter(_stream);
-            ret = Ret.ok;
-
+            catch (Exception e) { ret = new Ret(LogLevel.Error, RET_STREAM_INIT_ERROR, e.Message); }
         }
+        public void Begin(string pattern = "") { _writer = new StreamWriter(_stream); }
+        public void Flush() { _stream.Flush(); }
+        public void Close() { _writer.Close(); _stream.Close(); }
+        public void End() { _writer.WriteLine(""); Flush(); Close(); }
 
-        public void End()
+        public void Log(string content, bool console = false)
         {
-            _writer.Close();
-            _stream.Close();
+            _writer.WriteLine(content);
+            if (console) Console.WriteLine(content);
         }
-        public void Flush()
+        public void LogTag(string content, string tag = "", string speaker = "", bool console = false)
         {
-            _writer.Flush();
-            _stream.Flush();
+            string s;
+            if (speaker == "") s = FF.StringFormat("[{0}]{1}:  {2}", SF.GetDateTime(), tag, content);
+            else s = FF.StringFormat("[{0}]{1}:  {2}--->{3}", SF.GetDateTime(), tag, speaker, content);
+            _writer.WriteLine(s);
+            if (console) Console.WriteLine(s);
         }
-
-        public void Log(string content, LogLevel level)
+        public void LogInfo(string content, string speaker, bool console = false) { LogTag(content, "Info", speaker, console); }
+        public void LogWarning(string content, string speaker, bool console = false) { LogTag(content, "Warning", speaker, console); }
+        public void LogError(string content, string speaker, bool console = false) { LogTag(content, "Error", speaker, console); }
+        public void LogFatal(string content, string speaker, bool console = false) { LogTag(content, "Fatal", speaker, console); End(); }
+        public void LogPattern(string copyright, string version, string project)
         {
-            //_writer.WriteLine(FF.StringAppend())
-        }
-
-        public void LogInfo(string content)
-        {
-
-        }
-
-        public void LogWarning(string content)
-        {
-
-        }
-
-        public void LogError(string content)
-        {
-
-        }
-
-        private void LogPattern(string pattern)
-        {
-
+            Log("=============== Hoxis Server ===============");
+            Log("-- Copyright: " + copyright);
+            Log("-- Version: " + version);
+            Log("-- Project: " + project);
+            Log("-- IPv4: " + SF.GetLocalIP());
+            Log("-- Platform: " + SF.GetOSVersion());
+            Log("-- Time: " + SF.GetDateTime().ToString());
+            Log("=================== logs ===================");
         }
     }
 }

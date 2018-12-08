@@ -90,6 +90,7 @@ namespace DacLib.Generic
         {
             // Get the indexes
             string[] tags = RegexGetValue(str, @"\{\d+\}", "{", "}");
+            if (tags == null) return str;
             Dictionary<int, string> table = new Dictionary<int, string>();
             Ret ret;
             // Add all tags like "{0}" to table
@@ -97,7 +98,6 @@ namespace DacLib.Generic
             {
                 int index = StringToInt(t, out ret);
                 if (ret.code != 0) return "";
-                if (index >= srcStrs.Length) continue;
                 if (table.ContainsKey(index)) continue;
                 table.Add(index, "");
             }

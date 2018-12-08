@@ -32,4 +32,11 @@ namespace DacLib.Generic
         Month,
         Year
     }
+
+    public enum LogWriteMode
+    {
+        None = 0,
+        Append,
+        Override
+    }
 }

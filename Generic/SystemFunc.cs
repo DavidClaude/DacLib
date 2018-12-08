@@ -71,5 +71,21 @@ namespace DacLib.Generic
             }
             return tsLong;
         }
+
+        /// <summary>
+        /// Get current date & time
+        /// </summary>
+        /// <param name="utc"></param>
+        /// <returns></returns>
+        public static DateTime GetDateTime(bool utc = false) {
+            if (utc) { return DateTime.UtcNow; }
+            else { return DateTime.Now; }
+        }
+
+        /// <summary>
+        /// Get version of operation system
+        /// </summary>
+        /// <returns></returns>
+        public static OperatingSystem GetOSVersion() { return Environment.OSVersion; }
     }
 }
