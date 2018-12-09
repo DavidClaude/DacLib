@@ -14,9 +14,10 @@ namespace DacLib.Hoxis {
     public enum ProtocolType
     {
         None = 0,
-        Synchronization,
-        Request,
-        Response
+        Synchronization,    // One client sends -> Server transmits -> All clients receive
+        Request,            // One client sends -> Server responses -> This client receive
+        Response,           // ...
+        Proclamation        // Server(only) sends -> All clients receive
     }
     public enum ReceiverType
     {

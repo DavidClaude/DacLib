@@ -21,6 +21,20 @@ namespace DacLib.Hoxis
         };
 
         /// <summary>
+        /// Heartbeat protocol
+        /// </summary>
+        public static readonly HoxisProtocol heartbeat = new HoxisProtocol
+        {
+            type = ProtocolType.Proclamation,
+            handle = string.Empty,
+            err = false,
+            receiver = HoxisProtocolReceiver.undef,
+            sender = HoxisProtocolSender.undef,
+            action = new HoxisProtocolAction("HeartBeat"),
+            desc = string.Empty
+        };
+
+        /// <summary>
         /// Which intention of this protocol, synchronization, request or response ?
         /// </summary>
         public ProtocolType type;
@@ -113,6 +127,12 @@ namespace DacLib.Hoxis
         {
             method = methodArg;
             args = argsArg;
+        }
+
+        public HoxisProtocolAction(string methodArg)
+        {
+            method = methodArg;
+            args = HoxisProtocolArgs.undef;
         }
     }
     public struct HoxisProtocolArgs

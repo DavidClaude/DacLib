@@ -49,7 +49,7 @@ namespace DacLib.Hoxis.Server
         public static int remainConn { get { return _userReception.remain; } }
 
         /// <summary>
-        /// Hoxis server basic direction
+        /// Basic direction of application
         /// </summary>
         public static readonly string basicPath = AppDomain.CurrentDomain.BaseDirectory;
 
@@ -60,7 +60,7 @@ namespace DacLib.Hoxis.Server
         private static Dictionary<string, HoxisCluster> _clusters;
 
         /// <summary>
-        /// Init the configuration, such as the ip, port, socket
+        /// Init the configuration, such as the ip, port, socket and arguments
         /// </summary>
         /// <param name="configPath"></param>
         public static void InitConfig(string configPath, out Ret ret)
@@ -88,26 +88,32 @@ namespace DacLib.Hoxis.Server
             _logger.LogInfo(FF.StringFormat("ip is {0}, port is {1}", ip, port.ToString()), "Init");
 
             // Init user reception
-            maxConn = config.GetInt("server", "max_conn_user_quantity", out ret);
+            maxConn = config.GetInt("server", "max_conn_user", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
             _userReception = new CriticalPreformPool<HoxisUser>(maxConn);
             _logger.LogInfo(FF.StringFormat("max connections is {0}", maxConn), "Init");
 
             // Init cluster
             _clusters = new Dictionary<string, HoxisCluster>();
-            HoxisCluster.maxUser = config.GetInt("server", "max_cluster_user_quantity", out ret);
+            HoxisCluster.maxUser = config.GetInt("cluster", "max_user", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
             _logger.LogInfo(FF.StringFormat("max users of cluster is {0}", HoxisCluster.maxUser), "Init");
 
             // Init team
-            HoxisTeam.maxUser = config.GetInt("server", "max_team_user_quantity", out ret);
+            HoxisTeam.maxUser = config.GetInt("team", "max_user", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
             _logger.LogInfo(FF.StringFormat("max users of team is {0}", HoxisTeam.maxUser), "Init");
 
             // Init user
-            HoxisUser.requestTimeoutSec = config.GetInt("protocol", "request_timeout", out ret);
+            HoxisUser.requestTimeoutSec = config.GetInt("user", "request_timeout", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("request timeout is {0}", HoxisUser.requestTimeoutSec), "Init");
+            _logger.LogInfo(FF.StringFormat("request timeout is {0} seconds", HoxisUser.requestTimeoutSec), "Init");
+            HoxisUser.heartbeatTimeout = config.GetInt("user", "heartbeat_timeout", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
+            _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0} milliseconds", HoxisUser.heartbeatTimeout), "Init");
+            HoxisUser.heartbeatInterval = config.GetInt("user", "heartbeat_interval", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
+            _logger.LogInfo(FF.StringFormat("heartbeat interval is {0} milliseconds", HoxisUser.heartbeatInterval), "Init");
 
             // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
@@ -153,6 +159,7 @@ namespace DacLib.Hoxis.Server
             });
             _acceptThread.Start();
             _logger.LogInfo("begin...", "Accept", true);
+            _logger.End();
         }
 
         #region management

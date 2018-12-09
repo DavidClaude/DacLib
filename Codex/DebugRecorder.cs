@@ -35,7 +35,7 @@ namespace DacLib.Codex
             }
             catch (Exception e) { ret = new Ret(LogLevel.Error, RET_STREAM_INIT_ERROR, e.Message); }
         }
-        public void Begin(string pattern = "") { _writer = new StreamWriter(_stream); }
+        public void Begin() { _writer = new StreamWriter(_stream); }
         public void Flush() { _stream.Flush(); }
         public void Close() { _writer.Close(); _stream.Close(); }
         public void End() { _writer.WriteLine(""); Flush(); Close(); }

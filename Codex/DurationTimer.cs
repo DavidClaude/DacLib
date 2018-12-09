@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace DacLib.Codex
 {
-    public class Timer
+    public class DurationTimer
     {
-        public static readonly Timer Ins = new Timer();
-        private DateTime _startDT;
-        private DateTime _stopDT;
+        public static readonly DurationTimer Ins = new DurationTimer();
+
+        private DateTime _startDT = DateTime.MinValue;
+        private DateTime _stopDT = DateTime.MinValue;
         private bool _isRunning = false;
 
         public void Start()
@@ -23,6 +24,12 @@ namespace DacLib.Codex
         {
             if (!_isRunning) return;
             _stopDT = DateTime.Now;
+            _isRunning = false;
+        }
+        public void Reset()
+        {
+            _startDT = DateTime.MinValue;
+            _stopDT = DateTime.MinValue;
             _isRunning = false;
         }
         public TimeSpan GetDuration() { return _stopDT - _startDT; }

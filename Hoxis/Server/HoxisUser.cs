@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using DacLib.Generic;
+using DacLib.Codex;
+
+using FF = DacLib.Generic.FormatFunc;
 
 namespace DacLib.Hoxis.Server
 {
@@ -20,6 +23,8 @@ namespace DacLib.Hoxis.Server
         #endregion
 
         public static int requestTimeoutSec { get; set; }
+        public static int heartbeatInterval { get; set; }
+        public static int heartbeatTimeout { get; set; }
 
         /// <summary>
         /// Unique ID of user
@@ -34,9 +39,11 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Current cluster
         /// </summary>
-        public HoxisCluster superiorCluster {
+        public HoxisCluster superiorCluster
+        {
             get { return _superiorCluster; }
-            set {
+            set
+            {
                 _superiorCluster = value;
                 if (_superiorCluster == null) { _realtimeStatus.clusterid = string.Empty; return; }
                 _realtimeStatus.clusterid = _superiorCluster.id;
@@ -46,16 +53,18 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Current team
         /// </summary>
-        public HoxisTeam superiorTeam {
+        public HoxisTeam superiorTeam
+        {
             get { return _superiorTeam; }
-            set {
+            set
+            {
                 _superiorTeam = value;
-                if (_superiorTeam == null) { _realtimeStatus.teamid = string.Empty;return; }
+                if (_superiorTeam == null) { _realtimeStatus.teamid = string.Empty; return; }
                 _realtimeStatus.teamid = _superiorTeam.id;
             }
         }
 
-        
+
 
         ///// <summary>
         ///// Event of post protocols
@@ -65,9 +74,11 @@ namespace DacLib.Hoxis.Server
 
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
 
-        private HoxisRealtimeStatus _realtimeStatus;
+        private HoxisRealtimeStatus _realtimeStatus = HoxisRealtimeStatus.undef;
         private HoxisCluster _superiorCluster;
         private HoxisTeam _superiorTeam;
+        private HoxisHeartbeat _heartbeat = new HoxisHeartbeat(heartbeatTimeout, heartbeatInterval);
+        private DebugRecorder _logger;
 
         public HoxisUser()
         {
@@ -77,6 +88,12 @@ namespace DacLib.Hoxis.Server
             respTable.Add("LoadUserData", LoadUserData);
             respTable.Add("SaveUserData", SaveUserData);
             #endregion
+            _heartbeat.onTimeout += (int time) =>
+            {
+                connection.Close();
+                _realtimeStatus.state = UserState.Reconnecting;
+                _heartbeat.Reset();
+            };
         }
 
         public void OnRequest(object state)
@@ -91,6 +108,7 @@ namespace DacLib.Hoxis.Server
             userID = -1;
             connection = null;
             _realtimeStatus = HoxisRealtimeStatus.undef;
+            _heartbeat.Reset();
         }
 
         /// <summary>
@@ -130,9 +148,6 @@ namespace DacLib.Hoxis.Server
                     // Check ok
                     respTable[proto.action.method](proto.handle, proto.action.args);
                     break;
-                case ProtocolType.Response:
-
-                    break;
                 default:
                     ResponseError(proto.handle, "invalid type of protocol");
                     break;
@@ -145,9 +160,24 @@ namespace DacLib.Hoxis.Server
         /// <param name="proto"></param>
         public void ProtocolPost(HoxisProtocol proto)
         {
-            string json = FormatFunc.ObjectToJson(proto);
-            byte[] data = FormatFunc.StringToBytes(json);
+            string json = FF.ObjectToJson(proto);
+            byte[] data = FF.StringToBytes(json);
             connection.BeginSend(data);
+        }
+
+        public void HandOverConnection(HoxisUser user)
+        {
+            connection.onExtract -= ProtocolEntry;
+            user.TakeOverConnection(connection);
+        }
+
+        public void TakeOverConnection(HoxisConnection conn)
+        {
+            lock (connection)
+            {
+                connection = conn;
+                connection.onExtract += ProtocolEntry;
+            }
         }
 
         /// <summary>
@@ -234,22 +264,14 @@ namespace DacLib.Hoxis.Server
             ret = Ret.ok;
         }
 
-        public void HandOverConnection(HoxisUser user)
-        {
-            connection.onExtract -= ProtocolEntry;
-            user.TakeOverConnection(connection);
-        }
-
-        public void TakeOverConnection(HoxisConnection conn)
-        {
-            lock (connection)
-            {
-                connection = conn;
-                connection.onExtract += ProtocolEntry;
-            }
-        }
-
         #region reflection functions: response
+        private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
+        {
+            if (_heartbeat == null) return ResponseError(handle, "heartbeat is null");
+            if (!_heartbeat.enable) return ResponseError(handle, "heartbeat is disable");
+            _heartbeat.Refresh();
+            return ResponseSuccess(handle, "RefreshHeartbeatCb");
+        }
 
         private bool SignIn(string handle, HoxisProtocolArgs args)
         {
@@ -266,6 +288,7 @@ namespace DacLib.Hoxis.Server
                 }
             }
             userID = uid;
+            _heartbeat.Start();
             return ResponseSuccess(handle, "SignInCb");
         }
 
@@ -277,7 +300,7 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
         {
-            string json = FormatFunc.ObjectToJson(_realtimeStatus);
+            string json = FF.ObjectToJson(_realtimeStatus);
             return ResponseSuccess(handle, "GetRealtimeStatusCb", new KVString("status", json));
         }
 
@@ -295,9 +318,6 @@ namespace DacLib.Hoxis.Server
             //todo 写入数据库
             return ResponseSuccess(handle, "SaveUserDataCb");
         }
-
-
-
 
         #endregion
     }
