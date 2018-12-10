@@ -24,7 +24,7 @@ public class TS_Soldier : HoxisBehaviour {
 
     void Shoot(HoxisProtocolArgs args)
     {
-        Debug.Log("Hi, I'm attacked, args are " + args.kv["val"] + ", " + args.kv["src"]);
+        Debug.Log("Hi, I'm attacked, args are " + args["val"] + ", " + args["src"]);
         this.name = "hahaha";
     }
 }

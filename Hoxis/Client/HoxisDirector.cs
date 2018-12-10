@@ -22,7 +22,7 @@ namespace DacLib.Hoxis.Client
         public const byte RET_NO_HID = 3;
         #endregion
 
-        private static Dictionary<HoxisID, HoxisAgent> _agentSearcher;
+        private static Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
 
         /// <summary>
         /// The original entrance of Hoxis in clients
@@ -32,7 +32,7 @@ namespace DacLib.Hoxis.Client
         {
             HoxisClient.InitConfig(clientConfigPath);
             HoxisClient.onExtract += ProtocolEntry;
-            _agentSearcher = new Dictionary<HoxisID, HoxisAgent>();
+            _agentSearcher = new Dictionary<HoxisAgentID, HoxisAgent>();
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace DacLib.Hoxis.Client
         /// <param name="ret"></param>
         public static void Register(HoxisAgent agent, out Ret ret)
         {
-            HoxisID hid = agent.hoxisID;
+            HoxisAgentID hid = agent.id;
             if (_agentSearcher.ContainsKey(hid))
             {
                 ret = new Ret(LogLevel.Warning, RET_HID_EXISTS, "HoxisID:" + hid.group + "," + hid.id + " already exists");
@@ -57,7 +57,7 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         /// <param name="id"></param>
         /// <param name="ret"></param>
-        public static void Remove(HoxisID id, out Ret ret)
+        public static void Remove(HoxisAgentID id, out Ret ret)
         {
             if (!_agentSearcher.ContainsKey(id))
             {
@@ -70,7 +70,7 @@ namespace DacLib.Hoxis.Client
 
         public static void Remove(HoxisAgent agent, out Ret ret)
         {
-            HoxisID hid = agent.hoxisID;
+            HoxisAgentID hid = agent.id;
             Remove(hid, out ret);
         }
 
@@ -86,7 +86,7 @@ namespace DacLib.Hoxis.Client
             int len = _agentSearcher.Count;
             for (ushort i = 0; i <= ushort.MaxValue; i++)
             {
-                HoxisID hid = new HoxisID(group, i);
+                HoxisAgentID hid = new HoxisAgentID(group, i);
                 if (_agentSearcher.ContainsKey(hid))
                     continue;
                 ret = Ret.ok;
@@ -102,7 +102,7 @@ namespace DacLib.Hoxis.Client
         /// <param name="id"></param>
         /// <param name="ret"></param>
         /// <returns></returns>
-        public static HoxisAgent GetAgent(HoxisID id, out Ret ret)
+        public static HoxisAgent GetAgent(HoxisAgentID id, out Ret ret)
         {
             if (!_agentSearcher.ContainsKey(id))
             {
@@ -113,7 +113,7 @@ namespace DacLib.Hoxis.Client
             return _agentSearcher[id];
         }
 
-        public static HoxisAgent GetAgent(HoxisID id)
+        public static HoxisAgent GetAgent(HoxisAgentID id)
         {
             Ret ret;
             return GetAgent(id, out ret);
@@ -184,7 +184,7 @@ namespace DacLib.Hoxis.Client
         /// <param name="proto"></param>
         private static void SynChannelEntry(HoxisProtocol proto)
         {
-            HoxisID hid = proto.sndr.hid;
+            HoxisAgentID hid = proto.sender.hid;
             HoxisAgent agent = GetAgent(hid);            
             agent.Implement(proto.action);
         }

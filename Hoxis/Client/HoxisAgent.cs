@@ -23,13 +23,13 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Host, Proxy, Perpetual or None ?
         /// </summary>
-        public HoxisType hoxisType { get; private set; }
+        public AgentType hoxisType { get; private set; }
 
         /// <summary>
         /// The unique id for searching
         /// </summary>
         /// <value>The hoxis identifier.</value>
-        public HoxisID hoxisID { get; private set; }
+        public HoxisAgentID id { get; private set; }
 
         /// <summary>
         /// Auto synchronized or not
@@ -58,12 +58,12 @@ namespace DacLib.Hoxis.Client
         /// <param name="hoxisTypeArg"></param>
         /// <param name="hoxisIDArg"></param>
         /// <param name="autoSynArg"></param>
-        public void CoFunc(HoxisType hoxisTypeArg, HoxisID hoxisIDArg, bool autoSynArg = true)
+        public void CoFunc(AgentType hoxisTypeArg, HoxisAgentID idArg, bool autoSynArg = true)
         {
             hoxisType = hoxisTypeArg;
-            hoxisID = hoxisIDArg;
+            id = idArg;
             autoSyn = autoSynArg;
-            isPlayer = (hoxisType == HoxisType.Host ? true : false);
+            isPlayer = (hoxisType == AgentType.Host ? true : false);
             _behav = GetComponent<HoxisBehaviour>();
             // Init the action queue by HoxisClient.config
             Ret ret;
@@ -100,14 +100,14 @@ namespace DacLib.Hoxis.Client
             {
                 type = ProtocolType.Synchronization,
                 handle = "",
-                rcvr = new HoxisProtocolReceiver
+                receiver = new HoxisProtocolReceiver
                 {
                     type = ReceiverType.Cluster,
-                    hid = HoxisID.undef,
+                    hid = HoxisAgentID.undef,
                 },
-                sndr = new HoxisProtocolSender
+                sender = new HoxisProtocolSender
                 {
-                    hid = hoxisID,
+                    hid = id,
                     loopback = true,
                 },
                 action = actionArg,
@@ -116,14 +116,14 @@ namespace DacLib.Hoxis.Client
             HoxisDirector.ProtocolPost(proto);
         }
 
-        public void Report(string methodArg, params StringKV[] kvs)
+        public void Report(string methodArg, params KVString[] kvs)
         {
             Dictionary<string, string> argsArg = new Dictionary<string, string>();
-            foreach (StringKV kv in kvs) { argsArg.Add(kv.key, kv.val); }
+            foreach (KVString kv in kvs) { argsArg.Add(kv.key, kv.val); }
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
-                args = new HoxisProtocolArgs { kv = argsArg},
+                args = new HoxisProtocolArgs { table = argsArg},
             };
             Report(action);
         }
@@ -133,7 +133,7 @@ namespace DacLib.Hoxis.Client
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
-                args = new HoxisProtocolArgs { kv = argsArg},
+                args = new HoxisProtocolArgs { table = argsArg},
             };
             Report(action);
         }

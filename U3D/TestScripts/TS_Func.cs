@@ -150,14 +150,14 @@ public class TS_Func : MonoBehaviour
             HoxisProtocol proto = new HoxisProtocol
             {
                 type = ProtocolType.Synchronization,
-                rcvr = new HoxisProtocolReceiver
+                receiver = new HoxisProtocolReceiver
                 {
                     type = ReceiverType.Cluster,
-                    hid = new HoxisID("survivor", 5),
+                    hid = new HoxisAgentID("survivor", 5),
                 },
-                sndr = new HoxisProtocolSender
+                sender = new HoxisProtocolSender
                 {
-                    hid = new HoxisID("soldier", 10),
+                    hid = new HoxisAgentID("soldier", 10),
                     loopback = true,
                 },
                 action = new HoxisProtocolAction
@@ -165,7 +165,7 @@ public class TS_Func : MonoBehaviour
                     method = "shoot",
                     args = new HoxisProtocolArgs
                     {
-                        kv = new Dictionary<string, string> {
+                        table = new Dictionary<string, string> {
                             { "val","15"},
                             { "src","weapon"},
                         }
