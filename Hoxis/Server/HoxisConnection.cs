@@ -42,10 +42,10 @@ namespace DacLib.Hoxis.Server
 
         public HoxisConnection(Socket socketArg)
         {
+            remoteEndPoint = socketArg.RemoteEndPoint.ToString();
             _socket = socketArg;
             _extractor = new HoxisBytesExtractor(readBufferSize);
             _extractor.onBytesExtracted += OnExtract;
-            remoteEndPoint = socketArg.RemoteEndPoint.ToString();
         }
 
         /// <summary>

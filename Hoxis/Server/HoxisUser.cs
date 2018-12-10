@@ -8,6 +8,7 @@ using DacLib.Generic;
 using DacLib.Codex;
 
 using FF = DacLib.Generic.FormatFunc;
+using SF = DacLib.Generic.SystemFunc;
 
 namespace DacLib.Hoxis.Server
 {
@@ -27,14 +28,19 @@ namespace DacLib.Hoxis.Server
         public static int heartbeatTimeout { get; set; }
 
         /// <summary>
+        /// Socket connection manager
+        /// </summary>
+        public HoxisConnection connection { get; private set; }
+
+        /// <summary>
         /// Unique ID of user
         /// </summary>
         public long userID { get; private set; }
 
         /// <summary>
-        /// Socket connection manager
+        /// State the server keeps which describes the connection
         /// </summary>
-        public HoxisConnection connection { get; private set; }
+        public UserState userState { get; private set; }
 
         /// <summary>
         /// Current cluster
@@ -64,21 +70,13 @@ namespace DacLib.Hoxis.Server
             }
         }
 
-
-
-        ///// <summary>
-        ///// Event of post protocols
-        ///// Should be registered by superior HoxisConnection
-        ///// </summary>
-        //public event ProtocolHandler onPost;
-
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
 
         private HoxisRealtimeStatus _realtimeStatus = HoxisRealtimeStatus.undef;
-        private HoxisCluster _superiorCluster;
-        private HoxisTeam _superiorTeam;
+        private HoxisCluster _superiorCluster = null;
+        private HoxisTeam _superiorTeam = null;
         private HoxisHeartbeat _heartbeat = new HoxisHeartbeat(heartbeatTimeout, heartbeatInterval);
-        private DebugRecorder _logger;
+        private DebugRecorder _logger = null;
 
         public HoxisUser()
         {
@@ -91,7 +89,8 @@ namespace DacLib.Hoxis.Server
             _heartbeat.onTimeout += (int time) =>
             {
                 connection.Close();
-                _realtimeStatus.state = UserState.Reconnecting;
+                if (userState == UserState.Served) userState = UserState.Reconnecting;
+                else { HoxisServer.ReleaseUser(this); }
                 _heartbeat.Reset();
             };
         }
@@ -105,10 +104,15 @@ namespace DacLib.Hoxis.Server
 
         public void OnRelease()
         {
-            userID = -1;
             connection = null;
+            userID = -1;
+            userState = UserState.None;
             _realtimeStatus = HoxisRealtimeStatus.undef;
+            _superiorCluster = null;
+            _superiorTeam = null;
             _heartbeat.Reset();
+            _logger.End();
+            _logger = null;
         }
 
         /// <summary>
@@ -165,12 +169,6 @@ namespace DacLib.Hoxis.Server
             connection.BeginSend(data);
         }
 
-        public void HandOverConnection(HoxisUser user)
-        {
-            connection.onExtract -= ProtocolEntry;
-            user.TakeOverConnection(connection);
-        }
-
         public void TakeOverConnection(HoxisConnection conn)
         {
             lock (connection)
@@ -178,6 +176,7 @@ namespace DacLib.Hoxis.Server
                 connection = conn;
                 connection.onExtract += ProtocolEntry;
             }
+            if (userState == UserState.Reconnecting) userState = UserState.Served;
         }
 
         /// <summary>
@@ -277,18 +276,29 @@ namespace DacLib.Hoxis.Server
         {
             long uid = FormatFunc.StringToLong(args["uid"]);
             List<HoxisUser> workers = HoxisServer.GetWorkers();
-            foreach (HoxisUser u in workers)
+            foreach (HoxisUser w in workers)
             {
-                if (u.userID == uid && uid > 0)
+                if (w.userID == uid && uid > 0)
                 {
-                    Response(handle, "SignInCb", new KVString("code", Consts.RESP_RECONNECT));
-                    HandOverConnection(u);
-                    HoxisServer.ReleaseUser(this);
-                    return true;
+                    if (w.userState == UserState.Reconnecting)
+                    {
+                        Response(handle, "SignInCb", new KVString("code", Consts.RESP_RECONNECT));
+                        connection.onExtract -= ProtocolEntry;
+                        w.TakeOverConnection(connection);
+                        HoxisServer.ReleaseUser(this);
+                        return true;
+                    }
+                    else { HoxisServer.ReleaseUser(w); }
                 }
             }
             userID = uid;
+            userState = UserState.Main;
             _heartbeat.Start();
+            Ret ret;
+            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\",
+                uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"), out ret);
+            _logger.Begin();
+            _logger.LogInfo("signs in", "");
             return ResponseSuccess(handle, "SignInCb");
         }
 

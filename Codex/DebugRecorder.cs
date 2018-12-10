@@ -15,22 +15,15 @@ namespace DacLib.Codex
     {
         public const byte RET_STREAM_INIT_ERROR = 1;
 
-        public FileMode fileMode { get; }
-        public FileAccess fileAccess { get; }
-        public LogWriteMode writeMode { get; }
-
         private FileStream _stream;
         private StreamWriter _writer;
 
         public DebugRecorder(string path, out Ret ret, FileMode mode = FileMode.OpenOrCreate, FileAccess access = FileAccess.ReadWrite, LogWriteMode write = LogWriteMode.Append)
         {
-            fileMode = mode;
-            fileAccess = access;
-            writeMode = write;
             try
             {
-                _stream = new FileStream(path, fileMode, access);
-                if (writeMode == LogWriteMode.Append) _stream.Position = _stream.Length;
+                _stream = new FileStream(path, mode, access);
+                if (write == LogWriteMode.Append) _stream.Position = _stream.Length;
                 ret = Ret.ok;
             }
             catch (Exception e) { ret = new Ret(LogLevel.Error, RET_STREAM_INIT_ERROR, e.Message); }

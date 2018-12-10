@@ -154,12 +154,12 @@ namespace DacLib.Hoxis.Server
                     _logger.LogInfo(FF.StringAppend( "new client",cs.RemoteEndPoint.ToString()), "Accept");
                     Ret ret;
                     HoxisUser user = _userReception.Request(cs, out ret);
-                    if (ret.code != 0) { _logger.LogWarning(ret.desc, cs.RemoteEndPoint.ToString()); }
+                    if (ret.code != 0) { _logger.LogWarning(ret.desc, cs.RemoteEndPoint.ToString()); continue; }
+                    _logger.LogInfo("request successful", user.connection.remoteEndPoint);
                 }
             });
             _acceptThread.Start();
             _logger.LogInfo("begin...", "Accept", true);
-            _logger.End();
         }
 
         #region management
@@ -176,9 +176,11 @@ namespace DacLib.Hoxis.Server
         /// <param name="user"></param>
         public static void ReleaseUser(HoxisUser user)
         {
+            string rep = user.connection.remoteEndPoint;
             Ret ret;
             _userReception.Release(user, out ret);
-            if (ret.code != 0) { Console.WriteLine("[error]HoxisServer user release: {0}, socekt: {1}", ret.desc, user.connection.remoteEndPoint); }
+            if (ret.code != 0) { _logger.LogWarning(ret.desc, rep); return; }
+            _logger.LogWarning("released", rep);
         }
 
         public static bool ManageCluster(ManageOperation op, HoxisUser sponsor)
