@@ -171,7 +171,7 @@ namespace DacLib.Hoxis.Server
 
         public void TakeOverConnection(HoxisConnection conn)
         {
-            lock (connection)
+            lock (this)
             {
                 connection = conn;
                 connection.onExtract += ProtocolEntry;
