@@ -46,6 +46,7 @@ namespace DacLib.Hoxis.Server
             _socket = socketArg;
             _extractor = new HoxisBytesExtractor(readBufferSize);
             _extractor.onBytesExtracted += OnExtract;
+            BeginReceive();
         }
 
         /// <summary>
@@ -57,6 +58,9 @@ namespace DacLib.Hoxis.Server
             {
                 if (!isConnected) { throw new Exception(ERR_MSG_DISCONNECTED); }
                 _socket.BeginReceive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None, new AsyncCallback(ReceiveCb), null);
+
+                Console.WriteLine("BeginReceive called");
+
             }
             catch (Exception e) { Console.WriteLine("[error]Begin receive @{0}: {1}", remoteEndPoint, e.Message); }
         }
@@ -111,6 +115,7 @@ namespace DacLib.Hoxis.Server
         /// <param name="ar"></param>
         private void ReceiveCb(IAsyncResult ar)
         {
+            Console.WriteLine("ReceiveCb called");
             try
             {
                 int len = _socket.EndReceive(ar);

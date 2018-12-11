@@ -46,6 +46,8 @@ namespace DacLib.Hoxis
             readCount = 0;
         }
 
+        int index = 0;
+
         /// <summary>
         /// Extract the meaningful protocol data 
         /// </summary>
@@ -68,6 +70,9 @@ namespace DacLib.Hoxis
             Array.Copy(readBytes, HEADER_SIZE, data, 0, _protoLen);
             // Trigger the event on protocol data extracted
             OnBytesExtracted(data);
+
+
+
             // Detach the extracted data and initialize
             Array.Copy(readBytes, _protoLen + HEADER_SIZE, readBytes, 0, remain);
             Init();
@@ -84,6 +89,6 @@ namespace DacLib.Hoxis
             _protoLen = 0;
         }
 
-        private void OnBytesExtracted(byte[] data){if (onBytesExtracted == null)return;onBytesExtracted(data);}
+        private void OnBytesExtracted(byte[] data) { if (onBytesExtracted == null) return; onBytesExtracted(data); }
     }
 }

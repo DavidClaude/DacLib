@@ -180,7 +180,7 @@ namespace DacLib.Hoxis.Server
             Ret ret;
             _userReception.Release(user, out ret);
             if (ret.code != 0) { _logger.LogWarning(ret.desc, rep); return; }
-            _logger.LogWarning("released", rep);
+            _logger.LogInfo("released", rep);
         }
 
         public static bool ManageCluster(ManageOperation op, HoxisUser sponsor)

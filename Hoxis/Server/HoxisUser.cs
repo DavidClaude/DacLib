@@ -148,9 +148,16 @@ namespace DacLib.Hoxis.Server
                     // Request check
                     Ret retCheck;
                     CheckRequest(proto, out retCheck);
-                    if (retCheck.code != 0) { ResponseError(proto.handle, retCheck.desc); return; }
+                    if (retCheck.code != 0)
+                    {
+                        ResponseError(proto.handle, retCheck.desc);
+                        _logger.LogError(retCheck.desc, userID.ToString());
+                        _logger.End();
+                        return;
+                    }
                     // Check ok
                     respTable[proto.action.method](proto.handle, proto.action.args);
+                    _logger.LogInfo(proto.action.method, userID.ToString());
                     break;
                 default:
                     ResponseError(proto.handle, "invalid type of protocol");
