@@ -107,13 +107,13 @@ namespace DacLib.Hoxis.Server
             // Init user
             HoxisUser.requestTimeoutSec = config.GetInt("user", "request_timeout", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("request timeout is {0} seconds", HoxisUser.requestTimeoutSec), "Init");
+            _logger.LogInfo(FF.StringFormat("request timeout is {0}s", HoxisUser.requestTimeoutSec), "Init");
             HoxisUser.heartbeatTimeout = config.GetInt("user", "heartbeat_timeout", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0} milliseconds", HoxisUser.heartbeatTimeout), "Init");
+            _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0}ms", HoxisUser.heartbeatTimeout), "Init");
             HoxisUser.heartbeatInterval = config.GetInt("user", "heartbeat_interval", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("heartbeat interval is {0} milliseconds", HoxisUser.heartbeatInterval), "Init");
+            _logger.LogInfo(FF.StringFormat("heartbeat interval is {0}ms", HoxisUser.heartbeatInterval), "Init");
 
             // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
