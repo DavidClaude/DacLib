@@ -76,7 +76,7 @@ namespace DacLib.Hoxis.Server
             if (configPath != "") { path = configPath; }
             else { path = FF.StringAppend(basicPath, @"..\..\DacLib\Hoxis\Configs\hoxis_server.toml"); }
             config = new TomlConfiguration(path, out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc,"Init",true); return; }
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init", true); return; }
             _logger.LogInfo("read configuration success", "Init");
 
             // Assign ip, port and init the sokcet
@@ -111,9 +111,6 @@ namespace DacLib.Hoxis.Server
             HoxisUser.heartbeatTimeout = config.GetInt("user", "heartbeat_timeout", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
             _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0}ms", HoxisUser.heartbeatTimeout), "Init");
-            HoxisUser.heartbeatInterval = config.GetInt("user", "heartbeat_interval", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("heartbeat interval is {0}ms", HoxisUser.heartbeatInterval), "Init");
 
             // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
@@ -150,12 +147,9 @@ namespace DacLib.Hoxis.Server
             {
                 while (true)
                 {
-                    Socket cs = _socket.Accept();
-                    _logger.LogInfo(FF.StringAppend( "new client: ",cs.RemoteEndPoint.ToString()), "Accept");
-                    Ret ret;
-                    HoxisUser user = _userReception.Request(cs, out ret);
-                    if (ret.code != 0) { _logger.LogWarning(ret.desc, cs.RemoteEndPoint.ToString()); continue; }
-                    _logger.LogInfo("request successful", user.connection.remoteEndPoint);
+                    Socket socket = _socket.Accept();
+                    _logger.LogInfo(FF.StringAppend("new client: ", socket.RemoteEndPoint.ToString()), "Accept");
+                    RequestUser(socket);
                 }
             });
             _acceptThread.Start();
@@ -167,7 +161,19 @@ namespace DacLib.Hoxis.Server
         /// Get all 
         /// </summary>
         /// <returns></returns>
-        public static List<HoxisUser> GetWorkers() { return _userReception.GetOccupiedPreforms(); }
+        public static List<HoxisUser> GetWorkingUsers() { return _userReception.GetOccupiedPreforms(); }
+
+        /// <summary>
+        /// Request an user
+        /// </summary>
+        /// <param name="socket"></param>
+        public static void RequestUser(Socket socket)
+        {
+            Ret ret;
+            HoxisUser user = _userReception.Request(socket, out ret);
+            if (ret.code != 0) { _logger.LogWarning(ret.desc, socket.RemoteEndPoint.ToString()); return; }
+            _logger.LogInfo("request successful", socket.RemoteEndPoint.ToString());
+        }
 
         /// <summary>
         /// Release an user
@@ -176,41 +182,40 @@ namespace DacLib.Hoxis.Server
         /// <param name="user"></param>
         public static void ReleaseUser(HoxisUser user)
         {
-            string rep = user.connection.remoteEndPoint;
             Ret ret;
             _userReception.Release(user, out ret);
-            if (ret.code != 0) { _logger.LogWarning(ret.desc, rep); return; }
-            _logger.LogInfo("released", rep);
+            if (ret.code != 0) { _logger.LogWarning(ret.desc, ""); return; }
+            _logger.LogInfo("released successful", "");
         }
 
-        public static bool ManageCluster(ManageOperation op, HoxisUser sponsor)
-        {
-            switch (op)
-            {
-                case ManageOperation.Create:
-                    string cid = FF.StringAppend(sponsor.userID.ToString(), "@", SF.GetTimeStamp().ToString());
-                    if (_clusters.ContainsKey(cid)) { Console.WriteLine("[error]Create cluster: cluster {0} already exists", cid); return false; }
-                    lock (_clusters)
-                    {
-                        HoxisCluster hc = new HoxisCluster(cid);
-                        _clusters.Add(cid, hc);
-                        Ret ret;
-                        hc.UserJoin(sponsor, out ret);
-                        if (ret.code != 0) { Console.WriteLine("[warning]Create cluster: {0}", ret.desc); return false; }
-                    }
-                    break;
-                case ManageOperation.Join:
-                    // todo Call matching sdk, get a cluster
-                    break;
-                case ManageOperation.Leave:
+        //public static bool ManageCluster(ManageOperation op, HoxisUser sponsor)
+        //{
+        //    switch (op)
+        //    {
+        //        case ManageOperation.Create:
+        //            string cid = FF.StringAppend(sponsor.userID.ToString(), "@", SF.GetTimeStamp().ToString());
+        //            if (_clusters.ContainsKey(cid)) { Console.WriteLine("[error]Create cluster: cluster {0} already exists", cid); return false; }
+        //            lock (_clusters)
+        //            {
+        //                HoxisCluster hc = new HoxisCluster(cid);
+        //                _clusters.Add(cid, hc);
+        //                Ret ret;
+        //                hc.UserJoin(sponsor, out ret);
+        //                if (ret.code != 0) { Console.WriteLine("[warning]Create cluster: {0}", ret.desc); return false; }
+        //            }
+        //            break;
+        //        case ManageOperation.Join:
+        //            // todo Call matching sdk, get a cluster
+        //            break;
+        //        case ManageOperation.Leave:
 
-                    break;
-                case ManageOperation.Destroy:
+        //            break;
+        //        case ManageOperation.Destroy:
 
-                    break;
-            }
-            return true;
-        }
+        //            break;
+        //    }
+        //    return true;
+        //}
 
         #endregion
 
@@ -227,7 +232,7 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Stop the service saftly
         /// </summary>
-        public static void Stop()
+        public static void Quit()
         {
             _logger.End();
             _acceptThread.Abort();

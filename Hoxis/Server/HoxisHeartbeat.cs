@@ -16,11 +16,6 @@ namespace DacLib.Hoxis.Server
         public int timeout { get; }
 
         /// <summary>
-        /// Check interval(millisecond)
-        /// </summary>
-        public int interval { get; }
-
-        /// <summary>
         /// Is the heartbeat enable ?
         /// </summary>
         public bool enable { get; private set; }
@@ -33,12 +28,10 @@ namespace DacLib.Hoxis.Server
         private Thread _thread;
         private int _time = 0;
 
-        public HoxisHeartbeat(int timeoutArg, int intervalArg = 200)
+        public HoxisHeartbeat(int timeoutArg)
         {
             if (timeoutArg <= 0) { timeout = 5000; }
             else timeout = timeoutArg;
-            if (intervalArg <= 0) interval = 200;
-            else interval = intervalArg;
             enable = false;
             _thread = new Thread(TimerRun);
         }
@@ -68,8 +61,8 @@ namespace DacLib.Hoxis.Server
         {
             while (enable)
             {
-                Thread.Sleep(interval);
-                _time += interval;
+                Thread.Sleep(200);
+                _time += 200;
                 if (_time > timeout) { OnTimeout(_time); }
             }
         }

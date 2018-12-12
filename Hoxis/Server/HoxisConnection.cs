@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using DacLib.Generic;
 
 namespace DacLib.Hoxis.Server
@@ -39,6 +39,7 @@ namespace DacLib.Hoxis.Server
 
         private Socket _socket;
         private HoxisBytesExtractor _extractor;
+        private Thread _receiveThread;
 
         public HoxisConnection(Socket socketArg)
         {
@@ -46,7 +47,8 @@ namespace DacLib.Hoxis.Server
             _socket = socketArg;
             _extractor = new HoxisBytesExtractor(readBufferSize);
             _extractor.onBytesExtracted += OnExtract;
-            BeginReceive();
+            LoopReceive();
+            //BeginReceive();
         }
 
         /// <summary>
@@ -63,6 +65,21 @@ namespace DacLib.Hoxis.Server
 
             }
             catch (Exception e) { Console.WriteLine("[error]Begin receive @{0}: {1}", remoteEndPoint, e.Message); }
+        }
+
+        /// <summary>
+        /// Loop receiving data synchronously
+        /// </summary>
+        public void LoopReceive()
+        {
+            _receiveThread = new Thread(() => {
+                while (true)
+                {
+                    int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None);
+                    _extractor.Extract(len);
+                }
+            });
+            _receiveThread.Start();
         }
 
         /// <summary>
@@ -97,6 +114,7 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public void Close()
         {
+            if (_receiveThread != null) _receiveThread.Abort();
             if (_socket == null) return;
             if (!isConnected) return;
             try

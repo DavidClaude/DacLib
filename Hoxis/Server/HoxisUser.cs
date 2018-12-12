@@ -24,7 +24,6 @@ namespace DacLib.Hoxis.Server
         #endregion
 
         public static int requestTimeoutSec { get; set; }
-        public static int heartbeatInterval { get; set; }
         public static int heartbeatTimeout { get; set; }
 
         /// <summary>
@@ -75,7 +74,7 @@ namespace DacLib.Hoxis.Server
         private HoxisRealtimeStatus _realtimeStatus = HoxisRealtimeStatus.undef;
         private HoxisCluster _superiorCluster = null;
         private HoxisTeam _superiorTeam = null;
-        private HoxisHeartbeat _heartbeat = new HoxisHeartbeat(heartbeatTimeout, heartbeatInterval);
+        private HoxisHeartbeat _heartbeat = new HoxisHeartbeat(heartbeatTimeout);
         private DebugRecorder _logger = null;
 
         public HoxisUser()
@@ -89,7 +88,9 @@ namespace DacLib.Hoxis.Server
             _heartbeat.onTimeout += (int time) =>
             {
                 connection.Close();
+                // If user has realtime status, set state to reconnectinng
                 if (userState == UserState.Served) userState = UserState.Reconnecting;
+                // If don't, stop serving
                 else { HoxisServer.ReleaseUser(this); }
                 _heartbeat.Reset();
             };
@@ -122,9 +123,10 @@ namespace DacLib.Hoxis.Server
         /// <param name="data"></param>
         public void ProtocolEntry(byte[] data)
         {
-            string json = FormatFunc.BytesToString(data);
+            string json = FF.BytesToString(data);
+            Console.WriteLine(json);
             Ret ret;
-            HoxisProtocol proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
+            HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json, out ret);
             if (ret.code != 0) return;
             switch (proto.type)
             {
@@ -183,7 +185,11 @@ namespace DacLib.Hoxis.Server
                 connection = conn;
                 connection.onExtract += ProtocolEntry;
             }
-            if (userState == UserState.Reconnecting) userState = UserState.Served;
+            if (userState == UserState.Reconnecting)
+            {
+                userState = UserState.Served;
+                _heartbeat.Start();
+            }
         }
 
         /// <summary>
@@ -271,6 +277,13 @@ namespace DacLib.Hoxis.Server
         }
 
         #region reflection functions: response
+
+        /// <summary>
+        /// Make sure that the client is connected
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
         {
             if (_heartbeat == null) return ResponseError(handle, "heartbeat is null");
@@ -279,10 +292,16 @@ namespace DacLib.Hoxis.Server
             return ResponseSuccess(handle, "RefreshHeartbeatCb");
         }
 
+        /// <summary>
+        /// Bind an unique user with this service object
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         private bool SignIn(string handle, HoxisProtocolArgs args)
         {
-            long uid = FormatFunc.StringToLong(args["uid"]);
-            List<HoxisUser> workers = HoxisServer.GetWorkers();
+            long uid = FF.StringToLong(args["uid"]);
+            List<HoxisUser> workers = HoxisServer.GetWorkingUsers();
             foreach (HoxisUser w in workers)
             {
                 if (w.userID == uid && uid > 0)
