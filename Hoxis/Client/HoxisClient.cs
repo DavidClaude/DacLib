@@ -46,7 +46,7 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Hoxis client basic direction
         /// </summary>
-        public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis"; } }
+        public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis/"; } }
 
         /// <summary>
         /// Event of bytes extracted

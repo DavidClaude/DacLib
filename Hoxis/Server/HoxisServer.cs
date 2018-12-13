@@ -172,7 +172,7 @@ namespace DacLib.Hoxis.Server
             Ret ret;
             HoxisUser user = _userReception.Request(socket, out ret);
             if (ret.code != 0) { _logger.LogWarning(ret.desc, socket.RemoteEndPoint.ToString()); return; }
-            _logger.LogInfo("request successful", socket.RemoteEndPoint.ToString());
+            _logger.LogInfo("request successful", user.connection.remoteEndPoint.ToString());
         }
 
         /// <summary>

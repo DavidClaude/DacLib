@@ -33,6 +33,8 @@ namespace DacLib.Hoxis.Client
             HoxisClient.InitConfig(clientConfigPath);
             HoxisClient.onExtract += ProtocolEntry;
             _agentSearcher = new Dictionary<HoxisAgentID, HoxisAgent>();
+
+            UnityEngine.Debug.Log("Director init ok");
         }
 
         /// <summary>
@@ -128,9 +130,11 @@ namespace DacLib.Hoxis.Client
         public static void ProtocolEntry(byte[] data)
         {
             string json = FormatFunc.BytesToString(data);
-            UnityEngine.Debug.Log(json);
             Ret ret;
             HoxisProtocol proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
+
+            TestGO.Ins.queue.Enqueue(proto.action);
+
             if (ret.code != 0)
             {
                 // todo LOG
@@ -147,6 +151,9 @@ namespace DacLib.Hoxis.Client
                     break;
                 case ProtocolType.Response:
                     RespChannelEntry(proto);
+                    break;
+                case ProtocolType.Proclamation:
+
                     break;
             }
         }
@@ -207,7 +214,8 @@ namespace DacLib.Hoxis.Client
         /// <param name="proto"></param>
         private static void RespChannelEntry(HoxisProtocol proto)
         {
-
+            
+            
         }
 
         #endregion

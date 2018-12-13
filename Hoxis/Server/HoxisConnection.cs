@@ -24,7 +24,7 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Information of connection
         /// </summary>
-        public string remoteEndPoint { get; private set; }
+        public string remoteEndPoint { get;}
 
         /// <summary>
         /// Is the client connected ?

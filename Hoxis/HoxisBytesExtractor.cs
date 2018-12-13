@@ -46,8 +46,6 @@ namespace DacLib.Hoxis
             readCount = 0;
         }
 
-        int index = 0;
-
         /// <summary>
         /// Extract the meaningful protocol data 
         /// </summary>

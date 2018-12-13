@@ -48,7 +48,7 @@ namespace DacLib.Hoxis.Client
         // Use this for initialization
         void Start()
         {
-
+            CoFunc(AgentType.None, new HoxisAgentID("g", 1));
 
         }
 
@@ -58,9 +58,9 @@ namespace DacLib.Hoxis.Client
         /// <param name="hoxisTypeArg"></param>
         /// <param name="hoxisIDArg"></param>
         /// <param name="autoSynArg"></param>
-        public void CoFunc(AgentType hoxisTypeArg, HoxisAgentID idArg, bool autoSynArg = true)
+        public void CoFunc(AgentType agentTypeArg, HoxisAgentID idArg, bool autoSynArg = true)
         {
-            hoxisType = hoxisTypeArg;
+            hoxisType = agentTypeArg;
             id = idArg;
             autoSyn = autoSynArg;
             isPlayer = (hoxisType == AgentType.Host ? true : false);
