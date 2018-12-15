@@ -41,6 +41,8 @@ namespace DacLib.Hoxis.Client
             if (Ins == null) Ins = this;
             _agentSearcher = new Dictionary<HoxisAgentID, HoxisAgent>();
             _protocolQueue = new Queue<HoxisProtocol>(protocolQueueCapacity);
+            respCbTable.Add("SignInCb", SignInCb);
+            respCbTable.Add("RefreshHeartbeatCb", RefreshHeartbeatCb);
         }
 
         void Update()
@@ -193,6 +195,12 @@ namespace DacLib.Hoxis.Client
             else {
                 // todo 成功
             }
+            Debug.Log("SignInCb code: " + code);
+        }
+        private void RefreshHeartbeatCb(HoxisProtocolArgs args)
+        {
+            string code = args["code"];
+            Debug.Log("RefreshHeartbeatCb code: " + code);
         }
         #endregion
     }
