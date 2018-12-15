@@ -21,20 +21,6 @@ namespace DacLib.Hoxis
         };
 
         /// <summary>
-        /// Heartbeat protocol
-        /// </summary>
-        public static readonly HoxisProtocol heartbeat = new HoxisProtocol
-        {
-            type = ProtocolType.Proclamation,
-            handle = string.Empty,
-            err = false,
-            receiver = HoxisProtocolReceiver.undef,
-            sender = HoxisProtocolSender.undef,
-            action = new HoxisProtocolAction("HeartBeat"),
-            desc = string.Empty
-        };
-
-        /// <summary>
         /// Which intention of this protocol, synchronization, request or response ?
         /// </summary>
         public ProtocolType type;
@@ -71,7 +57,7 @@ namespace DacLib.Hoxis
     }
     public struct HoxisProtocolReceiver
     {
-        public static readonly HoxisProtocolReceiver undef = new HoxisProtocolReceiver { type = ReceiverType.None, hid = HoxisAgentID.undef };
+        public static readonly HoxisProtocolReceiver undef = new HoxisProtocolReceiver { type = ReceiverType.None, uid = 0 };
 
         /// <summary>
         /// Server, cluster of current game, teammates, or some player ?
@@ -79,33 +65,39 @@ namespace DacLib.Hoxis
         public ReceiverType type;
         
         /// <summary>
-        /// If to some player, what's his HoxisID
+        /// If to some player, what's his user id
         /// </summary>
-        public HoxisAgentID hid;
+        public long uid;
 
-        public HoxisProtocolReceiver(ReceiverType typeArg, HoxisAgentID id)
+        public HoxisProtocolReceiver(ReceiverType typeArg, long uidArg)
         {
             type = typeArg;
-            hid = id;
+            uid = uidArg;
         }
     }
     public struct HoxisProtocolSender
     {
-        public static readonly HoxisProtocolSender undef = new HoxisProtocolSender { hid = HoxisAgentID.undef, loopback = true };
+        public static readonly HoxisProtocolSender undef = new HoxisProtocolSender { uid = 0, aid = HoxisAgentID.undef, loopback = true };
 
         /// <summary>
-        /// HoxisID of sender
+        /// user id of sender
         /// </summary>
-        public HoxisAgentID hid;
+        public long uid;
+
+        /// <summary>
+        /// HoxisAgentID of sender
+        /// </summary>
+        public HoxisAgentID aid;
 
         /// <summary>
         /// Should server return this protocol when broadcasting ?
         /// </summary>
         public bool loopback;
 
-        public HoxisProtocolSender(HoxisAgentID id, bool loopbackArg = true)
+        public HoxisProtocolSender(long uidArg, HoxisAgentID aidArg, bool loopbackArg = true)
         {
-            hid = id;
+            uid = uidArg;
+            aid = aidArg;
             loopback = loopbackArg;
         }
     }

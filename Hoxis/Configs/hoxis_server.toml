@@ -1,6 +1,9 @@
 [server]
 port = 10086
-max_conn_user = 2048
+max_conn = 2048
+
+[conn]
+read_buffer_size = 1024
 
 [cluster]
 max_user = 100
@@ -12,6 +15,3 @@ max_user = 5
 request_timeout = 10
 heartbeat_timeout = 5000
 heartbeat_interval = 200
-
-[conn]
-read_buffer_size = 1024

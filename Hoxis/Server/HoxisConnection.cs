@@ -8,63 +8,63 @@ using DacLib.Generic;
 
 namespace DacLib.Hoxis.Server
 {
-    public class HoxisConnection
+    public class HoxisConnection : IReusable
     {
         #region ret codes
         public const byte RET_DISCONNECTED = 1;
         public const string ERR_MSG_DISCONNECTED = "Socket is disconnected";
         #endregion
 
+        #region reusable
+        public int localID { get; set; }
+        public bool isOccupied { get; set; }
+        #endregion
+
         /// <summary>
         /// The size of read buffer
-        /// Set by HoxisServer when initializing
         /// </summary>
         public static int readBufferSize { get; set; }
 
         /// <summary>
-        /// Information of connection
+        /// Information of client
         /// </summary>
-        public string remoteEndPoint { get;}
+        public string clientIP { get; private set; }
 
         /// <summary>
         /// Is the client connected ?
         /// </summary>
         public bool isConnected { get { return _socket.Connected; } }
 
-        /// <summary>
-        /// Event of bytes extracted
-        /// Observed by superior HoxisUser
-        /// </summary>
-        public event BytesForVoid_Handler onExtract;
+        public HoxisUser user { get; private set; }
 
-        private Socket _socket;
         private HoxisBytesExtractor _extractor;
+        private Socket _socket;
         private Thread _receiveThread;
 
-        public HoxisConnection(Socket socketArg)
+        public HoxisConnection()
         {
-            remoteEndPoint = socketArg.RemoteEndPoint.ToString();
-            _socket = socketArg;
             _extractor = new HoxisBytesExtractor(readBufferSize);
-            _extractor.onBytesExtracted += OnExtract;
-            LoopReceive();
-            //BeginReceive();
         }
 
-        /// <summary>
-        /// Begin receiving data asynchronously
-        /// </summary>
-        public void BeginReceive()
+        public void OnRequest(object state)
         {
-            try
-            {
-                if (!isConnected) { throw new Exception(ERR_MSG_DISCONNECTED); }
-                _socket.BeginReceive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None, new AsyncCallback(ReceiveCb), null);
+            try { _socket = (Socket)state; }
+            catch (Exception e) { Console.WriteLine(e.Message); return; }
+            clientIP = _socket.RemoteEndPoint.ToString();
+            user = new HoxisUser();
+            _extractor.onBytesExtracted += user.ProtocolEntry;
+            user.onPost += Send;
+            LoopReceive();
+        }
 
-                Console.WriteLine("BeginReceive called");
-
-            }
-            catch (Exception e) { Console.WriteLine("[error]Begin receive @{0}: {1}", remoteEndPoint, e.Message); }
+        public void OnRelease()
+        {
+            Close();
+            clientIP = string.Empty;
+            _extractor.onBytesExtracted -= user.ProtocolEntry;
+            user.onPost -= Send;
+            user = null;
+            _extractor.Init();
         }
 
         /// <summary>
@@ -72,6 +72,7 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public void LoopReceive()
         {
+            if (_receiveThread != null) _receiveThread.Abort();
             _receiveThread = new Thread(() => {
                 while (true)
                 {
@@ -80,20 +81,6 @@ namespace DacLib.Hoxis.Server
                 }
             });
             _receiveThread.Start();
-        }
-
-        /// <summary>
-        /// Begin sending data asynchronously
-        /// </summary>
-        /// <param name="protoData"></param>
-        public void BeginSend(byte[] protoData)
-        {
-            int len = protoData.Length;
-            if (len <= 0) return;
-            byte[] header = FormatFunc.IntToBytes(len);
-            byte[] data = FormatFunc.BytesConcat(header, protoData);
-            try { _socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(SendCb), null); }
-            catch (Exception e) { Console.WriteLine("[error]Begin send @{0}: {1}", remoteEndPoint, e.Message); }
         }
 
         /// <summary>
@@ -122,43 +109,7 @@ namespace DacLib.Hoxis.Server
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }
-            catch (Exception e) { Console.WriteLine("[error]Socket close @{0}: {1}", remoteEndPoint, e.Message); }
+            catch (Exception e) { Console.WriteLine("[error]Socket close @{0}: {1}", clientIP, e.Message); }
         }
-
-        #region private functions
-
-        /// <summary>
-        /// Callback of receiving data
-        /// </summary>
-        /// <param name="ar"></param>
-        private void ReceiveCb(IAsyncResult ar)
-        {
-            Console.WriteLine("ReceiveCb called");
-            try
-            {
-                int len = _socket.EndReceive(ar);
-                _extractor.Extract(len);
-            }
-            catch (Exception e)
-            {
-                _extractor.Init();
-                Console.WriteLine("[error]End receive @{0}: {1}", remoteEndPoint, e.Message);
-            }
-            finally { BeginReceive(); }
-        }
-
-        /// <summary>
-        /// Callback of sending data
-        /// </summary>
-        /// <param name="ar"></param>
-        private void SendCb(IAsyncResult ar)
-        {
-            try { _socket.EndSend(ar); }
-            catch (Exception e) { Console.WriteLine("[error]End send @{0}: {1}", remoteEndPoint, e.Message); }
-        }
-
-        private void OnExtract(byte[] data) { if (onExtract == null) return; onExtract(data); }
-
-        #endregion
     }
 }

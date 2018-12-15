@@ -34,11 +34,11 @@ namespace DacLib.Hoxis {
         Proxied,
         Perpetual
     }
-    public enum UserState
+    public enum UserConnectionState
     {
         None = 0,       // Offline
-        Main,           // Default status
-        Served,         // With realtime status
+        Default,        // Default status
+        Active,         // With realtime status
         Reconnecting    // Disconnected (waiting for reconnection)
     }
     public enum ManageOperation

@@ -51,7 +51,7 @@ namespace DacLib.Hoxis.Server
             if (_users.Count >= maxUser) { ret = new Ret(LogLevel.Info, RET_ENOUGH_USERS, "Users are enough"); return; }
             if (_users.Contains(user)) { ret = new Ret(LogLevel.Warning, RET_USER_EXISTS, FF.StringFormat("User:{0} already exists", user.userID)); return; }
             _users.Add(user);
-            user.superiorCluster = this;
+            user.parentCluster = this;
             ret = Ret.ok;
         }
 
@@ -59,7 +59,7 @@ namespace DacLib.Hoxis.Server
         {
             if (!_users.Contains(user)) { ret = new Ret(LogLevel.Warning, RET_NO_USER, FF.StringFormat("User:{0} doesn't exist", user.userID)); return; }
             ManageTeam(ManageOperation.Leave, user);
-            user.superiorCluster = null;
+            user.parentCluster = null;
             _users.Remove(user);
             if (_users.Count == 0) { ret = new Ret(LogLevel.Info, RET_ALL_USERS_LEAVE, "All users have left"); return; }
             ret = Ret.ok;

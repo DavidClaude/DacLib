@@ -12,24 +12,14 @@ using SF = DacLib.Generic.SystemFunc;
 
 namespace DacLib.Hoxis.Server
 {
-    public class HoxisUser : IReusable
+    public class HoxisUser
     {
         #region ret codes
         public const byte RET_CHECK_ERROR = 1;
         #endregion
 
-        #region reusable
-        public int localID { get; set; }
-        public bool isOccupied { get; set; }
-        #endregion
-
         public static int requestTimeoutSec { get; set; }
         public static int heartbeatTimeout { get; set; }
-
-        /// <summary>
-        /// Socket connection manager
-        /// </summary>
-        public HoxisConnection connection { get; private set; }
 
         /// <summary>
         /// Unique ID of user
@@ -39,81 +29,36 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// State the server keeps which describes the connection
         /// </summary>
-        public UserState userState { get; private set; }
+        public UserConnectionState connectionState { get; private set; }
 
-        /// <summary>
-        /// Current cluster
-        /// </summary>
-        public HoxisCluster superiorCluster
-        {
-            get { return _superiorCluster; }
-            set
-            {
-                _superiorCluster = value;
-                if (_superiorCluster == null) { _realtimeStatus.clusterid = string.Empty; return; }
-                _realtimeStatus.clusterid = _superiorCluster.id;
-            }
-        }
+        #region realtime data
+        public HoxisCluster parentCluster { get; set; }
+        public HoxisTeam parentTeam { get; set; }
+        public HoxisAgentData hostData { get; private set; }
+        public List<HoxisAgentData> proxiesData { get; private set; }
+        #endregion
 
-        /// <summary>
-        /// Current team
-        /// </summary>
-        public HoxisTeam superiorTeam
-        {
-            get { return _superiorTeam; }
-            set
-            {
-                _superiorTeam = value;
-                if (_superiorTeam == null) { _realtimeStatus.teamid = string.Empty; return; }
-                _realtimeStatus.teamid = _superiorTeam.id;
-            }
-        }
-
+        public event BytesForVoid_Handler onPost;
+        //public event IntForVoid_Handler onHeartbeatStop;
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
 
-        private HoxisRealtimeStatus _realtimeStatus = HoxisRealtimeStatus.undef;
-        private HoxisCluster _superiorCluster = null;
-        private HoxisTeam _superiorTeam = null;
-        private HoxisHeartbeat _heartbeat = new HoxisHeartbeat(heartbeatTimeout);
-        private DebugRecorder _logger = null;
+        private HoxisHeartbeat _heartbeat;
+        private DebugRecorder _logger;
 
         public HoxisUser()
         {
-            #region register reflection table
+            userID = 0;
+            connectionState = UserConnectionState.None;
+            parentCluster = null;
+            parentTeam = null;
+            hostData = HoxisAgentData.undef;
+            proxiesData = new List<HoxisAgentData>();
             respTable.Add("SignIn", SignIn);
             respTable.Add("GetRealtimeStatus", GetRealtimeStatus);
             respTable.Add("LoadUserData", LoadUserData);
             respTable.Add("SaveUserData", SaveUserData);
-            #endregion
-            _heartbeat.onTimeout += (int time) =>
-            {
-                connection.Close();
-                // If user has realtime status, set state to reconnectinng
-                if (userState == UserState.Served) userState = UserState.Reconnecting;
-                // If don't, stop serving
-                else { HoxisServer.ReleaseUser(this); }
-                _heartbeat.Reset();
-            };
-        }
-
-        public void OnRequest(object state)
-        {
-            Socket s = (Socket)state;
-            HoxisConnection conn = new HoxisConnection(s);
-            TakeOverConnection(conn);
-        }
-
-        public void OnRelease()
-        {
-            connection = null;
-            userID = -1;
-            userState = UserState.None;
-            _realtimeStatus = HoxisRealtimeStatus.undef;
-            _superiorCluster = null;
-            _superiorTeam = null;
-            _heartbeat.Reset();
-            _logger.End();
-            _logger = null;
+            _heartbeat = new HoxisHeartbeat(heartbeatTimeout);
+            _heartbeat.onTimeout += OnHeartbeatStop;
         }
 
         /// <summary>
@@ -134,15 +79,16 @@ namespace DacLib.Hoxis.Server
                     switch (proto.receiver.type)
                     {
                         case ReceiverType.Cluster:
-                            if (_superiorCluster == null) return;
-                            _superiorCluster.ProtocolBroadcast(proto);
+                            if (parentCluster == null) return;
+                            parentCluster.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.Team:
-                            if (_superiorTeam == null) return;
-                            _superiorTeam.ProtocolBroadcast(proto);
+                            if (parentTeam == null) return;
+                            parentTeam.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.User:
-
+                            HoxisUser user = HoxisServer.GetUser(proto.receiver.uid);
+                            // todo send
                             break;
                     }
                     break;
@@ -175,21 +121,7 @@ namespace DacLib.Hoxis.Server
         {
             string json = FF.ObjectToJson(proto);
             byte[] data = FF.StringToBytes(json);
-            connection.BeginSend(data);
-        }
-
-        public void TakeOverConnection(HoxisConnection conn)
-        {
-            lock (this)
-            {
-                connection = conn;
-                connection.onExtract += ProtocolEntry;
-            }
-            if (userState == UserState.Reconnecting)
-            {
-                userState = UserState.Served;
-                _heartbeat.Start();
-            }
+            OnPost(data);
         }
 
         /// <summary>
@@ -271,10 +203,33 @@ namespace DacLib.Hoxis.Server
             if (handle.req != proto.action.method) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request name doesn't match method name"); return; }
             // Check if expired
             long ts = handle.ts;
-            int intv = (int)Math.Abs(SystemFunc.GetTimeStamp() - ts);
+            int intv = (int)Math.Abs(SF.GetTimeStamp() - ts);
             if (intv > requestTimeoutSec) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request is expired"); return; }
             ret = Ret.ok;
         }
+
+        /// <summary>
+        /// Reset this HoxisUser to the undefine user
+        /// </summary>
+        public void SignOut()
+        {
+            userID = 0;
+            connectionState = UserConnectionState.None;
+            parentCluster = null;
+            parentTeam = null;
+            hostData = HoxisAgentData.undef;
+            proxiesData = null;
+            _heartbeat.Reset();
+            _logger.LogInfo("signs out", "");
+            _logger.End();
+        }
+
+        private void OnHeartbeatStop(int time) {
+            connectionState = UserConnectionState.Reconnecting;
+            _heartbeat.Reset();
+        }
+
+        private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
 
         #region reflection functions: response
 
@@ -293,7 +248,7 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
-        /// Bind an unique user with this service object
+        /// Fill this HoxisUser with an connected user
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="args"></param>
@@ -301,32 +256,43 @@ namespace DacLib.Hoxis.Server
         private bool SignIn(string handle, HoxisProtocolArgs args)
         {
             long uid = FF.StringToLong(args["uid"]);
-            List<HoxisUser> workers = HoxisServer.GetWorkingUsers();
-            foreach (HoxisUser w in workers)
+            // Reconnect ?
+            List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
+            foreach (HoxisConnection w in workers)
             {
-                if (w.userID == uid && uid > 0)
+                if (w.user.userID == uid && uid > 0)
                 {
-                    if (w.userState == UserState.Reconnecting)
-                    {
-                        Response(handle, "SignInCb", new KVString("code", Consts.RESP_RECONNECT));
-                        connection.onExtract -= ProtocolEntry;
-                        w.TakeOverConnection(connection);
-                        HoxisServer.ReleaseUser(this);
-                        return true;
-                    }
-                    else { HoxisServer.ReleaseUser(w); }
+                    // Set this user by existed user
+                    userID = w.user.userID;
+                    connectionState = UserConnectionState.Active;
+                    parentCluster = w.user.parentCluster;
+                    parentTeam = w.user.parentTeam;
+                    hostData = w.user.hostData;
+                    proxiesData = w.user.proxiesData;
+                    _heartbeat.Start();
+                    // Release the existed one
+                    HoxisServer.ReleaseConnection(w);
+                    // Response success
+                    return Response(handle, "SignInCb", new KVString("code", Consts.RESP_RECONNECT));
                 }
             }
+            // New user
             userID = uid;
-            userState = UserState.Main;
+            connectionState = UserConnectionState.Default;
             _heartbeat.Start();
             Ret ret;
-            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\",
-                uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"), out ret);
-            _logger.Begin();
-            _logger.LogInfo("signs in", "");
+            string name = FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log");
+            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", name), out ret);
+            if (ret.code != 0) { Console.WriteLine(ret.desc); }
+            else
+            {
+                _logger.Begin();
+                _logger.LogInfo("signs in", "");
+            }
             return ResponseSuccess(handle, "SignInCb");
         }
+
+
 
         /// <summary>
         /// Called if client requests for reconnecting
@@ -336,8 +302,7 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
         {
-            string json = FF.ObjectToJson(_realtimeStatus);
-            return ResponseSuccess(handle, "GetRealtimeStatusCb", new KVString("status", json));
+            return false;
         }
 
         private bool LoadUserData(string handle, HoxisProtocolArgs args)

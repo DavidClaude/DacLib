@@ -36,14 +36,16 @@ namespace DacLib.Hoxis
         /// </summary>
         public event BytesForVoid_Handler onBytesExtracted;
 
-        private byte[] _headerBytes = new byte[HEADER_SIZE];
-        private int _protoLen = 0;
+        private byte[] _headerBytes;
+        private int _protoLen;
 
         public HoxisBytesExtractor(int readBufferSizeArg)
         {
             readBufferSize = readBufferSizeArg;
             readBytes = new byte[readBufferSize];
             readCount = 0;
+            _headerBytes = new byte[HEADER_SIZE];
+            _protoLen = 0;
         }
 
         /// <summary>
@@ -83,8 +85,10 @@ namespace DacLib.Hoxis
         /// </summary>
         public void Init()
         {
+            readBytes.Initialize();
             readCount = 0;
             _protoLen = 0;
+            _headerBytes.Initialize();
         }
 
         private void OnBytesExtracted(byte[] data) { if (onBytesExtracted == null) return; onBytesExtracted(data); }

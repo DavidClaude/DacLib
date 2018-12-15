@@ -20,7 +20,7 @@ namespace DacLib.Hoxis.Server
         public const string version = "0.0.0";
 
         #region ret codes
-        public const string ERR_MSG_CFG_UNINITIALIZED = "Configuration file should be initialized first";
+        public const string ERR_MSG_CFG_UNINITIALIZED = "configuration file should be initialized first";
         #endregion
 
         /// <summary>
@@ -44,9 +44,9 @@ namespace DacLib.Hoxis.Server
         public static int maxConn { get; private set; }
 
         /// <summary>
-        /// Remain count of user connection
+        /// Remain count of connections
         /// </summary>
-        public static int remainConn { get { return _userReception.remain; } }
+        public static int remainConn { get { return _connReception.remain; } }
 
         /// <summary>
         /// Basic direction of application
@@ -56,68 +56,68 @@ namespace DacLib.Hoxis.Server
         private static Socket _socket;
         private static DebugRecorder _logger;
         private static Thread _acceptThread;
-        private static CriticalPreformPool<HoxisUser> _userReception;
+        private static CriticalPreformPool<HoxisConnection> _connReception;
         private static Dictionary<string, HoxisCluster> _clusters;
 
         /// <summary>
         /// Init the configuration, such as the ip, port, socket and arguments
         /// </summary>
         /// <param name="configPath"></param>
-        public static void InitConfig(string configPath, out Ret ret)
+        public static void InitConfig(string configPath, string project, out Ret ret)
         {
             // Init and begin log recording
             _logger = new DebugRecorder(FF.StringAppend(basicPath, @"logs\server.log"), out ret);
             if (ret.code != 0) { Console.WriteLine(ret.desc); return; }
             _logger.Begin();
-            _logger.LogPattern("David.Claude", version, "Survival Mission");
+            _logger.LogPattern("David.Claude", version, project);
 
             // Init config
             string path;
             if (configPath != "") { path = configPath; }
             else { path = FF.StringAppend(basicPath, @"..\..\DacLib\Hoxis\Configs\hoxis_server.toml"); }
             config = new TomlConfiguration(path, out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init", true); return; }
-            _logger.LogInfo("read configuration success", "Init");
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server", true); return; }
+            _logger.LogInfo("read configuration success", "Server");
 
             // Assign ip, port and init the sokcet
             ip = SF.GetLocalIP(out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             port = config.GetInt("server", "port", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
-            _logger.LogInfo(FF.StringFormat("ip is {0}, port is {1}", ip, port.ToString()), "Init");
+            _logger.LogInfo(FF.StringFormat("ip is {0}, port is {1}", ip, port.ToString()), "Server");
 
-            // Init user reception
-            maxConn = config.GetInt("server", "max_conn_user", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _userReception = new CriticalPreformPool<HoxisUser>(maxConn);
-            _logger.LogInfo(FF.StringFormat("max connections is {0}", maxConn), "Init");
+            // Init connection reception
+            maxConn = config.GetInt("server", "max_conn", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _connReception = new CriticalPreformPool<HoxisConnection>(maxConn);
+            _logger.LogInfo(FF.StringFormat("max connections is {0}", maxConn), "Server");
+
+            // Init connection
+            HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("read buffer size of connection is {0}", HoxisConnection.readBufferSize), "Server");
 
             // Init cluster
             _clusters = new Dictionary<string, HoxisCluster>();
             HoxisCluster.maxUser = config.GetInt("cluster", "max_user", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("max users of cluster is {0}", HoxisCluster.maxUser), "Init");
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("max users of cluster is {0}", HoxisCluster.maxUser), "Server");
 
             // Init team
             HoxisTeam.maxUser = config.GetInt("team", "max_user", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("max users of team is {0}", HoxisTeam.maxUser), "Init");
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("max users of team is {0}", HoxisTeam.maxUser), "Server");
 
             // Init user
             HoxisUser.requestTimeoutSec = config.GetInt("user", "request_timeout", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("request timeout is {0}s", HoxisUser.requestTimeoutSec), "Init");
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("request timeout is {0}s", HoxisUser.requestTimeoutSec), "Server");
             HoxisUser.heartbeatTimeout = config.GetInt("user", "heartbeat_timeout", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0}ms", HoxisUser.heartbeatTimeout), "Init");
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0}ms", HoxisUser.heartbeatTimeout), "Server");
 
-            // Init connection
-            HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Init"); return; }
-            _logger.LogInfo(FF.StringFormat("read buffer size of connection is {0}", HoxisConnection.readBufferSize), "Init");
-
-            _logger.LogInfo("success", "Init", true);
+            _logger.LogInfo("init success", "Server", true);
         }
 
         /// <summary>
@@ -133,9 +133,9 @@ namespace DacLib.Hoxis.Server
                 _socket.Bind(ep);
                 int count = config.GetInt("socket", "max_client_count");
                 _socket.Listen(count);
-                _logger.LogInfo("success", "Listen", true);
+                _logger.LogInfo("listen successful", "Server", true);
             }
-            catch (Exception e) { _logger.LogError(e.Message, "Listen", true); }
+            catch (Exception e) { _logger.LogError(e.Message, "Server", true); }
         }
 
         /// <summary>
@@ -148,31 +148,34 @@ namespace DacLib.Hoxis.Server
                 while (true)
                 {
                     Socket socket = _socket.Accept();
-                    _logger.LogInfo(FF.StringAppend("new client: ", socket.RemoteEndPoint.ToString()), "Accept");
-                    RequestUser(socket);
+                    _logger.LogInfo(FF.StringAppend("accept new client: ", socket.RemoteEndPoint.ToString()), "Server");
+                    Ret ret;
+                    HoxisConnection conn = _connReception.Request(socket, out ret);
+                    if (ret.code != 0) { _logger.LogWarning(ret.desc, socket.RemoteEndPoint.ToString()); continue; }
+                    _logger.LogInfo("request successful", conn.clientIP);
                 }
             });
             _acceptThread.Start();
-            _logger.LogInfo("begin...", "Accept", true);
+            _logger.LogInfo("accept begin...", "Server", true);
         }
 
         #region management
         /// <summary>
-        /// Get all 
+        /// Get all working connections 
         /// </summary>
         /// <returns></returns>
-        public static List<HoxisUser> GetWorkingUsers() { return _userReception.GetOccupiedPreforms(); }
+        public static List<HoxisConnection> GetWorkingConnections() { return _connReception.GetOccupiedPreforms(); }
 
         /// <summary>
-        /// Request an user
+        ///  Get working user by uid
         /// </summary>
-        /// <param name="socket"></param>
-        public static void RequestUser(Socket socket)
+        /// <param name="uid"></param>
+        /// <returns></returns>
+        public static HoxisUser GetUser(long uid)
         {
-            Ret ret;
-            HoxisUser user = _userReception.Request(socket, out ret);
-            if (ret.code != 0) { _logger.LogWarning(ret.desc, socket.RemoteEndPoint.ToString()); return; }
-            _logger.LogInfo("request successful", user.connection.remoteEndPoint.ToString());
+            List<HoxisConnection> workers = GetWorkingConnections();
+            foreach (HoxisConnection w in workers) { if (w.user.userID == uid && uid > 0) return w.user; }
+            return null;
         }
 
         /// <summary>
@@ -180,12 +183,13 @@ namespace DacLib.Hoxis.Server
         /// Generally called when an user quits, reconnects or stops heartbeats
         /// </summary>
         /// <param name="user"></param>
-        public static void ReleaseUser(HoxisUser user)
+        public static void ReleaseConnection(HoxisConnection conn)
         {
             Ret ret;
-            _userReception.Release(user, out ret);
+            conn.user.SignOut();
+            _connReception.Release(conn, out ret);
             if (ret.code != 0) { _logger.LogWarning(ret.desc, ""); return; }
-            _logger.LogInfo("released successful", "");
+            _logger.LogInfo("released successful", "Server");
         }
 
         //public static bool ManageCluster(ManageOperation op, HoxisUser sponsor)
@@ -218,16 +222,6 @@ namespace DacLib.Hoxis.Server
         //}
 
         #endregion
-
-        public static void LogConfig()
-        {
-            Console.WriteLine("Server IP: {0}", ip);
-            Console.WriteLine("Server port: {0}", port.ToString());
-            Console.WriteLine("Max connecting user quantity: {0}", maxConn.ToString());
-            Console.WriteLine("Max cluster user quantity: {0}", HoxisCluster.maxUser.ToString());
-            Console.WriteLine("Max team user quantity: {0}", HoxisTeam.maxUser.ToString());
-            Console.WriteLine("Read buffer size: {0}", HoxisConnection.readBufferSize.ToString());
-        }
 
         /// <summary>
         /// Stop the service saftly
