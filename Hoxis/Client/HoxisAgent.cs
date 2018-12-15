@@ -71,12 +71,12 @@ namespace DacLib.Hoxis.Client
         }
 
         /// <summary>
-        /// **WITHIN THREAD**
-        /// Push an action into the queue
+        /// Call the behaviour-layer
         /// </summary>
         /// <param name="action"></param>
-        public void Implement(HoxisProtocolAction action) {  }
-        public void Implement(HoxisProtocol proto) { Implement(proto.action); }
+        public void CallBehaviour(HoxisProtocolAction action) { _behav.Act(action); }
+        public void CallBehaviour(HoxisProtocol proto) { _behav.Act(proto); }
+        public void CallBehaviour(object state) { _behav.Act((HoxisProtocolAction)state); }
 
         /// <summary>
         /// Report an action of this gameObject, generally syn
@@ -115,7 +115,7 @@ namespace DacLib.Hoxis.Client
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
-                args = new HoxisProtocolArgs { table = argsArg},
+                args = new HoxisProtocolArgs { values = argsArg},
             };
             Report(action);
         }
@@ -125,14 +125,5 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         /// <param name="proto"></param>
         public void Report(HoxisProtocol proto) { HoxisDirector.Ins.ProtocolPost(proto); }
-
-        /// <summary>
-        /// Call the behaviour-layer
-        /// </summary>
-        /// <param name="action"></param>
-        private void CallBehaviour(HoxisProtocolAction action) { _behav.Act(action); }
-        private void CallBehaviour(HoxisProtocol proto) { _behav.Act(proto); }
-        private void CallBehaviour(object state) { _behav.Act((HoxisProtocolAction)state); }
-
     }
 }

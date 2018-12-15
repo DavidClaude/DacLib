@@ -165,7 +165,7 @@ public class TS_Func : MonoBehaviour
                     method = "shoot",
                     args = new HoxisProtocolArgs
                     {
-                        table = new Dictionary<string, string> {
+                        values = new Dictionary<string, string> {
                             { "val","15"},
                             { "src","weapon"},
                         }

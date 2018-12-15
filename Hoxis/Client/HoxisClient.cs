@@ -96,11 +96,10 @@ namespace DacLib.Hoxis.Client
             _extractor.onBytesExtracted += OnExtract;
 
             // Init HoxisDirector
-            HoxisDirector.actionQueueCapacity = config.GetInt("director", "action_queue_capacity", out ret);
+            HoxisDirector.protocolQueueCapacity = config.GetInt("director", "protocol_queue_capacity", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
-            HoxisDirector.actionQueueProcessQuantity = config.GetShort("director", "action_queue_process_quantity", out ret);
+            HoxisDirector.protocolQueueProcessQuantity = config.GetShort("director", "protocol_queue_process_quantity", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
-            HoxisDirector.Ins.onPost += Send;
         }
 
         public static void Connect()
@@ -113,6 +112,7 @@ namespace DacLib.Hoxis.Client
                 _socket.Connect(ep);
                 OnConnected();
                 LoopReceive();
+                HoxisDirector.Ins.onPost += Send;
             }
             catch (Exception e) { OnConnectError(new Ret(LogLevel.Error, RET_CONNECT_EXCEPTION, e.Message)); }
         }
@@ -153,6 +153,7 @@ namespace DacLib.Hoxis.Client
             if (!isConnected) return;
             try
             {
+                HoxisDirector.Ins.onPost -= Send;
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }

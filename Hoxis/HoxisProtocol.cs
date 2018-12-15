@@ -141,17 +141,17 @@ namespace DacLib.Hoxis
     {
         public string this[string key] {
             get {
-                if (!table.ContainsKey(key)) return "";
-                return (table[key]);
+                if (!values.ContainsKey(key)) return "";
+                return (values[key]);
             }
         }
-        public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { table = new Dictionary<string, string>() };
-        public Dictionary<string, string> table;
-        public HoxisProtocolArgs(Dictionary<string, string> kvArg) { table = kvArg; }
+        public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { values = new Dictionary<string, string>() };
+        public Dictionary<string, string> values;
+        public HoxisProtocolArgs(Dictionary<string, string> kvArg) { values = kvArg; }
         public HoxisProtocolArgs(params KVString[] kvs)
         {
-            table = new Dictionary<string, string>();
-            foreach (KVString s in kvs) { table.Add(s.key, s.val); }
+            values = new Dictionary<string, string>();
+            foreach (KVString s in kvs) { values.Add(s.key, s.val); }
         }
     }
 }

@@ -28,28 +28,25 @@ namespace DacLib.Hoxis.Client
 
         public static HoxisDirector Ins { get; private set; }
 
-        public static int actionQueueCapacity { get; set; }
-        public static short actionQueueProcessQuantity { get; set; }
-
+        public static int protocolQueueCapacity { get; set; }
+        public static short protocolQueueProcessQuantity { get; set; }
         public event BytesForVoid_Handler onPost;
 
+        protected Dictionary<string, ActionArgsHandler> respCbTable = new Dictionary<string, ActionArgsHandler>();
         private Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
-        private FiniteProcessQueue<HoxisProtocol> _actionQueue;
+        private Queue<HoxisProtocol> _protocolQueue;
 
         void Awake()
         {
             if (Ins == null) Ins = this;
             _agentSearcher = new Dictionary<HoxisAgentID, HoxisAgent>();
-            _actionQueue = new FiniteProcessQueue<HoxisProtocol>(actionQueueCapacity, actionQueueProcessQuantity);
-            _actionQueue.onProcess += (object state) => {
-                HoxisProtocol proto = (HoxisProtocol)state;
-                Debug.Log(FF.ObjectToJson(proto));
-            };
+            _protocolQueue = new Queue<HoxisProtocol>(protocolQueueCapacity);
         }
 
         void Update()
         {
-            if (_actionQueue != null) { _actionQueue.ProcessInRound(); }
+            // Get protocols from queue and process
+            ProcessInRound();
         }
 
         /// <summary>
@@ -124,7 +121,7 @@ namespace DacLib.Hoxis.Client
         {
             string json = FF.BytesToString(data);
             HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json);
-            lock (_actionQueue) { _actionQueue.Enqueue(proto); }
+            lock (_protocolQueue) { _protocolQueue.Enqueue(proto); }
         }
 
         /// <summary>
@@ -153,8 +150,50 @@ namespace DacLib.Hoxis.Client
 
         #region private functions
 
+        private void ProcessInRound()
+        {
+            if (_protocolQueue.Count <= 0) return;
+            short count = 0;
+            while (count < protocolQueueProcessQuantity)
+            {
+                if (_protocolQueue.Count <= 0) break;
+                HoxisProtocol proto = _protocolQueue.Dequeue();
+                switch (proto.type) {
+                    case ProtocolType.Response:
+                        ReqHandle handle = FF.JsonToObject<ReqHandle>(proto.handle);
+                        // todo 消除等待
+                        // todo 处理错误
+                        if (proto.err) { }
+                        respCbTable[proto.action.method](proto.action.args);
+                        break;
+                    case ProtocolType.Synchronization:
+                        HoxisAgent agent = GetAgent(proto.sender.aid);
+                        if (agent != null) agent.CallBehaviour(proto.action);
+                        break;
+                    case ProtocolType.Proclamation:
+
+                        break;
+                }
+                count++;
+            }
+        }
+
         private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
 
+        #endregion
+
+        #region response callbacks
+        private void SignInCb(HoxisProtocolArgs args)
+        {
+            string code = args["code"];
+            if (code == Consts.RESP_RECONNECT)
+            {
+                // todo 提示重连
+            }
+            else {
+                // todo 成功
+            }
+        }
         #endregion
     }
 }
