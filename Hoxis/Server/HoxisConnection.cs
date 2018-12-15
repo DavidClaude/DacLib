@@ -94,6 +94,9 @@ namespace DacLib.Hoxis.Server
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
             _socket.Send(data);
+
+            Console.WriteLine(FormatFunc.BytesToString(protoData));
+
         }
 
         /// <summary>
