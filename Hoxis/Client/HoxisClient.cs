@@ -100,6 +100,7 @@ namespace DacLib.Hoxis.Client
             if (ret.code != 0) { OnInitError(ret); return; }
             HoxisDirector.actionQueueProcessQuantity = config.GetShort("director", "action_queue_process_quantity", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
+            HoxisDirector.Ins.onPost += Send;
         }
 
         public static void Connect()

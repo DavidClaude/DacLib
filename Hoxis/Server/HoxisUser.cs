@@ -70,9 +70,8 @@ namespace DacLib.Hoxis.Server
         {
             string json = FF.BytesToString(data);
             Console.WriteLine(json);
-            Ret ret;
-            HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json, out ret);
-            if (ret.code != 0) return;
+
+            HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json);
             switch (proto.type)
             {
                 case ProtocolType.Synchronization:
@@ -94,13 +93,11 @@ namespace DacLib.Hoxis.Server
                     break;
                 case ProtocolType.Request:
                     // Request check
-                    Ret retCheck;
-                    CheckRequest(proto, out retCheck);
-                    if (retCheck.code != 0)
+                    Ret ret;
+                    CheckRequest(proto, out ret);
+                    if (ret.code != 0)
                     {
-                        ResponseError(proto.handle, retCheck.desc);
-                        _logger.LogError(retCheck.desc, userID.ToString());
-                        _logger.End();
+                        ResponseError(proto.handle, ret.desc);
                         return;
                     }
                     // Check ok
