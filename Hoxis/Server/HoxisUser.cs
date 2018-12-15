@@ -54,9 +54,7 @@ namespace DacLib.Hoxis.Server
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
             respTable.Add("SignIn", SignIn);
-            respTable.Add("GetRealtimeStatus", GetRealtimeStatus);
-            respTable.Add("LoadUserData", LoadUserData);
-            respTable.Add("SaveUserData", SaveUserData);
+            respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
             _heartbeat = new HoxisHeartbeat(heartbeatTimeout);
             _heartbeat.onTimeout += OnHeartbeatStop;
         }
@@ -102,7 +100,6 @@ namespace DacLib.Hoxis.Server
                     }
                     // Check ok
                     respTable[proto.action.method](proto.handle, proto.action.args);
-                    _logger.LogInfo(proto.action.method, userID.ToString());
                     break;
                 default:
                     ResponseError(proto.handle, "invalid type of protocol");
