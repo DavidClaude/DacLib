@@ -110,9 +110,9 @@ namespace DacLib.Hoxis.Server
             _logger.LogInfo(FF.StringFormat("max users of team is {0}", HoxisTeam.maxUser), "Server");
 
             // Init user
-            HoxisUser.requestTimeoutSec = config.GetInt("user", "request_timeout", out ret);
+            HoxisUser.requestTTL = config.GetLong("user", "request_ttl", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
-            _logger.LogInfo(FF.StringFormat("request timeout is {0}s", HoxisUser.requestTimeoutSec), "Server");
+            _logger.LogInfo(FF.StringFormat("request timeout is {0}s", HoxisUser.requestTTL), "Server");
             HoxisUser.heartbeatTimeout = config.GetInt("user", "heartbeat_timeout", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0}ms", HoxisUser.heartbeatTimeout), "Server");

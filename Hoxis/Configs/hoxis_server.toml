@@ -12,6 +12,6 @@ max_user = 100
 max_user = 5
 
 [user]
-request_timeout = 10
-heartbeat_timeout = 5000
+request_ttl = 5000
+heartbeat_timeout = 10000
 heartbeat_interval = 200

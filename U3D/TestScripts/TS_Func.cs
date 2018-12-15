@@ -153,11 +153,11 @@ public class TS_Func : MonoBehaviour
                 receiver = new HoxisProtocolReceiver
                 {
                     type = ReceiverType.Cluster,
-                    hid = new HoxisAgentID("survivor", 5),
+                    uid = 0,
                 },
                 sender = new HoxisProtocolSender
                 {
-                    hid = new HoxisAgentID("soldier", 10),
+                    aid = new HoxisAgentID("soldier", 10),
                     loopback = true,
                 },
                 action = new HoxisProtocolAction
@@ -179,7 +179,7 @@ public class TS_Func : MonoBehaviour
             Thread t = new Thread(() =>
             {
                 //Thread.Sleep(1000);
-                HoxisDirector.ProtocolEntry(data);
+                HoxisDirector.Ins.ProtocolEntry(data);
             });
             t.Start();
         }

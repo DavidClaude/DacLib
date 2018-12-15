@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using DacLib.Generic;
+using DacLib.Codex;
+
+using FF = DacLib.Generic.FormatFunc;
 
 namespace DacLib.Hoxis.Client
 {
@@ -11,10 +15,10 @@ namespace DacLib.Hoxis.Client
     /// -manage agents
     /// -search for a given agent or its gameObject
     /// -parse protocols from HoxisClient, then send them to correct agents
-    /// -wrapp and launch a protocol
+    /// -wrapp and post a protocol
     /// -etc.
     /// </summary>
-    public static class HoxisDirector
+    public class HoxisDirector :MonoBehaviour
     {
         #region ret codes
         public const byte RET_HID_EXISTS = 1;
@@ -22,19 +26,30 @@ namespace DacLib.Hoxis.Client
         public const byte RET_NO_HID = 3;
         #endregion
 
-        private static Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
+        public static HoxisDirector Ins { get; private set; }
 
-        /// <summary>
-        /// The original entrance of Hoxis in clients
-        /// </summary>
-        /// <param name="clientConfigPath"></param>
-        public static void Init(string clientConfigPath)
+        public static int actionQueueCapacity { get; set; }
+        public static short actionQueueProcessQuantity { get; set; }
+
+        public event BytesForVoid_Handler onPost;
+
+        private Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
+        private FiniteProcessQueue<HoxisProtocol> _actionQueue;
+
+        void Awake()
         {
-            HoxisClient.InitConfig(clientConfigPath);
-            HoxisClient.onExtract += ProtocolEntry;
+            if (Ins == null) Ins = this;
             _agentSearcher = new Dictionary<HoxisAgentID, HoxisAgent>();
+            _actionQueue = new FiniteProcessQueue<HoxisProtocol>(actionQueueCapacity, actionQueueProcessQuantity);
+            _actionQueue.onProcess += (object state) => {
+                HoxisProtocol proto = (HoxisProtocol)state;
+                Debug.Log(FF.ObjectToJson(proto));
+            };
+        }
 
-            UnityEngine.Debug.Log("Director init ok");
+        void Update()
+        {
+            if (_actionQueue != null) { _actionQueue.ProcessInRound(); }
         }
 
         /// <summary>
@@ -42,7 +57,7 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         /// <param name="agent"></param>
         /// <param name="ret"></param>
-        public static void Register(HoxisAgent agent, out Ret ret)
+        public void Register(HoxisAgent agent, out Ret ret)
         {
             HoxisAgentID hid = agent.id;
             if (_agentSearcher.ContainsKey(hid))
@@ -59,7 +74,7 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         /// <param name="id"></param>
         /// <param name="ret"></param>
-        public static void Remove(HoxisAgentID id, out Ret ret)
+        public void Remove(HoxisAgentID id, out Ret ret)
         {
             if (!_agentSearcher.ContainsKey(id))
             {
@@ -70,32 +85,10 @@ namespace DacLib.Hoxis.Client
             ret = Ret.ok;
         }
 
-        public static void Remove(HoxisAgent agent, out Ret ret)
+        public void Remove(HoxisAgent agent, out Ret ret)
         {
             HoxisAgentID hid = agent.id;
             Remove(hid, out ret);
-        }
-
-        /// <summary>
-        /// Get an unoccupied id of given group
-        /// Generally used when a GameObject with HoxisAgent instantiated
-        /// </summary>
-        /// <param name="group"></param>
-        /// <param name="ret"></param>
-        /// <returns></returns>
-        public static ushort GetUnoccupiedID(string group, out Ret ret)
-        {
-            int len = _agentSearcher.Count;
-            for (ushort i = 0; i <= ushort.MaxValue; i++)
-            {
-                HoxisAgentID hid = new HoxisAgentID(group, i);
-                if (_agentSearcher.ContainsKey(hid))
-                    continue;
-                ret = Ret.ok;
-                return i;
-            }
-            ret = new Ret(LogLevel.Warning, RET_NO_UNOCCUPIED_HID, "Can't figure out occupied id, there must be an error");
-            return 0;
         }
 
         /// <summary>
@@ -104,7 +97,7 @@ namespace DacLib.Hoxis.Client
         /// <param name="id"></param>
         /// <param name="ret"></param>
         /// <returns></returns>
-        public static HoxisAgent GetAgent(HoxisAgentID id, out Ret ret)
+        public HoxisAgent GetAgent(HoxisAgentID id, out Ret ret)
         {
             if (!_agentSearcher.ContainsKey(id))
             {
@@ -115,7 +108,7 @@ namespace DacLib.Hoxis.Client
             return _agentSearcher[id];
         }
 
-        public static HoxisAgent GetAgent(HoxisAgentID id)
+        public HoxisAgent GetAgent(HoxisAgentID id)
         {
             Ret ret;
             return GetAgent(id, out ret);
@@ -127,35 +120,11 @@ namespace DacLib.Hoxis.Client
         /// Called by HoxisClient
         /// </summary>
         /// <param name="data"></param>
-        public static void ProtocolEntry(byte[] data)
+        public void ProtocolEntry(byte[] data)
         {
-            string json = FormatFunc.BytesToString(data);
-            Ret ret;
-            HoxisProtocol proto = FormatFunc.JsonToObject<HoxisProtocol>(json, out ret);
-
-            TestGO.Ins.queue.Enqueue(proto.action);
-
-            if (ret.code != 0)
-            {
-                // todo LOG
-                UnityEngine.Debug.Log(ret.desc);
-                return;
-            }
-            switch (proto.type)
-            {
-                case ProtocolType.Synchronization:
-                    SynChannelEntry(proto);
-                    break;
-                case ProtocolType.Request:
-                    ReqChannelEntry(proto);
-                    break;
-                case ProtocolType.Response:
-                    RespChannelEntry(proto);
-                    break;
-                case ProtocolType.Proclamation:
-
-                    break;
-            }
+            string json = FF.BytesToString(data);
+            HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json);
+            lock (_actionQueue) { _actionQueue.Enqueue(proto); }
         }
 
         /// <summary>
@@ -163,7 +132,7 @@ namespace DacLib.Hoxis.Client
         /// Convert protocol to protocol bytes
         /// </summary>
         /// <param name="proto"></param>
-        public static void ProtocolPost(HoxisProtocol proto)
+        public void ProtocolPost(HoxisProtocol proto)
         {
             switch (proto.type)
             {
@@ -177,46 +146,14 @@ namespace DacLib.Hoxis.Client
                     
                     break;
             }
-            string json = FormatFunc.ObjectToJson(proto);
-            byte[] data = FormatFunc.StringToBytes(json);
-            HoxisClient.BeginSend(data);
+            string json = FF.ObjectToJson(proto);
+            byte[] data = FF.StringToBytes(json);
+            OnPost(data);
         }
 
         #region private functions
 
-        /// <summary>
-        /// **WITHIN THREAD**
-        /// The entrance of synchronization protocol
-        /// </summary>
-        /// <param name="proto"></param>
-        private static void SynChannelEntry(HoxisProtocol proto)
-        {
-            HoxisAgentID hid = proto.sender.hid;
-            HoxisAgent agent = GetAgent(hid);            
-            agent.Implement(proto.action);
-        }
-
-        /// <summary>
-        /// **WITHIN THREAD**
-        /// The entrance of request protocol
-        /// </summary>
-        /// <param name="proto"></param>
-        private static void ReqChannelEntry(HoxisProtocol proto)
-        {
-            // todo
-        }
-
-        /// <summary>
-        /// **WITHIN THREAD**
-        /// The entrance of response protocol
-        /// Elimate the waiting state of request in reception
-        /// </summary>
-        /// <param name="proto"></param>
-        private static void RespChannelEntry(HoxisProtocol proto)
-        {
-            
-            
-        }
+        private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
 
         #endregion
     }

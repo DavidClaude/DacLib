@@ -18,7 +18,7 @@ namespace DacLib.Hoxis.Server
         public const byte RET_CHECK_ERROR = 1;
         #endregion
 
-        public static int requestTimeoutSec { get; set; }
+        public static long requestTTL { get; set; }
         public static int heartbeatTimeout { get; set; }
 
         /// <summary>
@@ -197,14 +197,14 @@ namespace DacLib.Hoxis.Server
         /// <param name="ret"></param>
         public void CheckRequest(HoxisProtocol proto, out Ret ret)
         {
-            ReqHandle handle = FormatFunc.JsonToObject<ReqHandle>(proto.handle, out ret);
+            ReqHandle handle = FF.JsonToObject<ReqHandle>(proto.handle, out ret);
             if (ret.code != 0) return;
             // Check if request name matches method name
             if (handle.req != proto.action.method) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request name doesn't match method name"); return; }
             // Check if expired
             long ts = handle.ts;
-            int intv = (int)Math.Abs(SF.GetTimeStamp() - ts);
-            if (intv > requestTimeoutSec) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request is expired"); return; }
+            long intv = Math.Abs(SF.GetTimeStamp(TimeUnit.Millisecond) - ts);
+            if (intv > requestTTL) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request is expired"); return; }
             ret = Ret.ok;
         }
 

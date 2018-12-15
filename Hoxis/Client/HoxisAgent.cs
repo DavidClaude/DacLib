@@ -43,12 +43,10 @@ namespace DacLib.Hoxis.Client
         public bool isPlayer { get; private set; }
 
         private HoxisBehaviour _behav;
-        private FiniteProcessQueue<HoxisProtocolAction> _actionQueue;
 
         // Use this for initialization
         void Start()
         {
-            CoFunc(AgentType.None, new HoxisAgentID("g", 1));
 
         }
 
@@ -58,27 +56,17 @@ namespace DacLib.Hoxis.Client
         /// <param name="hoxisTypeArg"></param>
         /// <param name="hoxisIDArg"></param>
         /// <param name="autoSynArg"></param>
-        public void CoFunc(AgentType agentTypeArg, HoxisAgentID idArg, bool autoSynArg = true)
+        public void Initialize(AgentType agentTypeArg, HoxisAgentID idArg, bool autoSynArg = true)
         {
             hoxisType = agentTypeArg;
             id = idArg;
             autoSyn = autoSynArg;
             isPlayer = (hoxisType == AgentType.Host ? true : false);
             _behav = GetComponent<HoxisBehaviour>();
-            // Init the action queue by HoxisClient.config
-            Ret ret;
-            int capacity = HoxisClient.config.GetInt("protocol", "action_queue_capacity", out ret);
-            if (ret.code != 0) { capacity = 32; }
-            short quantity = HoxisClient.config.GetShort("protocol", "processing_quantity", out ret);
-            if (ret.code != 0) { quantity = 5; }
-            _actionQueue = new FiniteProcessQueue<HoxisProtocolAction>(capacity, quantity);
-            _actionQueue.onProcess += CallBehaviour;
         }
 
         void Update()
         {
-            _actionQueue.ProcessInRound();
-
             // todo autosyn, distance detection
         }
 
@@ -87,7 +75,7 @@ namespace DacLib.Hoxis.Client
         /// Push an action into the queue
         /// </summary>
         /// <param name="action"></param>
-        public void Implement(HoxisProtocolAction action) { _actionQueue.Enqueue(action); }
+        public void Implement(HoxisProtocolAction action) {  }
         public void Implement(HoxisProtocol proto) { Implement(proto.action); }
 
         /// <summary>
@@ -100,30 +88,24 @@ namespace DacLib.Hoxis.Client
             {
                 type = ProtocolType.Synchronization,
                 handle = "",
-                receiver = new HoxisProtocolReceiver
-                {
-                    type = ReceiverType.Cluster,
-                    hid = HoxisAgentID.undef,
-                },
+                receiver = HoxisProtocolReceiver.cluster,
                 sender = new HoxisProtocolSender
                 {
-                    hid = id,
+                    aid = id,
                     loopback = true,
                 },
                 action = actionArg,
                 desc = "",
             };
-            HoxisDirector.ProtocolPost(proto);
+            Report(proto);
         }
 
         public void Report(string methodArg, params KVString[] kvs)
         {
-            Dictionary<string, string> argsArg = new Dictionary<string, string>();
-            foreach (KVString kv in kvs) { argsArg.Add(kv.key, kv.val); }
             HoxisProtocolAction action = new HoxisProtocolAction
             {
                 method = methodArg,
-                args = new HoxisProtocolArgs { table = argsArg},
+                args = new HoxisProtocolArgs(kvs),
             };
             Report(action);
         }
@@ -142,7 +124,7 @@ namespace DacLib.Hoxis.Client
         /// Build custom protocol to report
         /// </summary>
         /// <param name="proto"></param>
-        public void Report(HoxisProtocol proto) { HoxisDirector.ProtocolPost(proto); }
+        public void Report(HoxisProtocol proto) { HoxisDirector.Ins.ProtocolPost(proto); }
 
         /// <summary>
         /// Call the behaviour-layer

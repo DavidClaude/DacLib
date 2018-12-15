@@ -49,13 +49,13 @@ namespace DacLib.Codex
         /// <param name="handle"></param>
         public void ProcessInRound()
         {
-            short q = 0;
-            while (q < processingQuantity)
+            short i = 0;
+            while (i < processingQuantity)
             {
                 if (_queue.Count <= 0) break;
                 T affair = _queue.Dequeue();
                 onProcess(affair);
-                q++;
+                i++;
             }
         }
     }

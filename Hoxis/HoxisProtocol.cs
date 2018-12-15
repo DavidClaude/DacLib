@@ -58,6 +58,16 @@ namespace DacLib.Hoxis
     public struct HoxisProtocolReceiver
     {
         public static readonly HoxisProtocolReceiver undef = new HoxisProtocolReceiver { type = ReceiverType.None, uid = 0 };
+        public static readonly HoxisProtocolReceiver cluster = new HoxisProtocolReceiver
+        {
+            type = ReceiverType.Cluster,
+            uid = 0
+        };
+        public static readonly HoxisProtocolReceiver team = new HoxisProtocolReceiver
+        {
+            type = ReceiverType.Team,
+            uid = 0
+        };
 
         /// <summary>
         /// Server, cluster of current game, teammates, or some player ?
