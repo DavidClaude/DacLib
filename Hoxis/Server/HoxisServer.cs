@@ -112,7 +112,7 @@ namespace DacLib.Hoxis.Server
             // Init user
             HoxisUser.requestTTL = config.GetLong("user", "request_ttl", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
-            _logger.LogInfo(FF.StringFormat("request timeout is {0}s", HoxisUser.requestTTL), "Server");
+            _logger.LogInfo(FF.StringFormat("request time to live is {0}ms", HoxisUser.requestTTL), "Server");
             HoxisUser.heartbeatTimeout = config.GetInt("user", "heartbeat_timeout", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             _logger.LogInfo(FF.StringFormat("heartbeat timeout is {0}ms", HoxisUser.heartbeatTimeout), "Server");

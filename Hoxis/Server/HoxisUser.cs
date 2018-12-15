@@ -257,7 +257,7 @@ namespace DacLib.Hoxis.Server
             List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
             foreach (HoxisConnection w in workers)
             {
-                if (w.user.userID == uid && uid > 0)
+                if (w.user != this && w.user.userID == uid && uid > 0)
                 {
                     // Set this user by existed user
                     userID = w.user.userID;
