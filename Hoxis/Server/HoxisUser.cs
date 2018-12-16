@@ -227,24 +227,33 @@ namespace DacLib.Hoxis.Server
             //_heartbeatMonitor.Reset();
         }
 
+        /// <summary>
+        /// **WITHIN THREAD**
+        /// Called when remote socket is closed or heartbeat stopped
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="desc"></param>
         public void ProcessNetworkAnormaly(int code, string desc)
         {
-            switch (connectionState)
+            lock (this)
             {
-                case UserConnectionState.None:
-                    // wait for being released
-                    break;
-                case UserConnectionState.Default:
-                    connectionState = UserConnectionState.None;
-                    break;
-                case UserConnectionState.Active:
-                    connectionState = UserConnectionState.Disconnected;
-                    break;
-                case UserConnectionState.Disconnected:
-                    // wait for reconnecting
-                    break;
+                switch (connectionState)
+                {
+                    case UserConnectionState.None:
+                        // wait for being released
+                        break;
+                    case UserConnectionState.Default:
+                        connectionState = UserConnectionState.None;
+                        break;
+                    case UserConnectionState.Active:
+                        connectionState = UserConnectionState.Disconnected;
+                        break;
+                    case UserConnectionState.Disconnected:
+                        // wait for reconnecting
+                        break;
+                }
+                if (logEnable) { _logger.LogError(FF.StringFormat("network anormaly: code is {0}, message is {1}", code, desc), "", true); }
             }
-            if (logEnable) { _logger.LogError(FF.StringFormat("network anormaly: code is {0}, message is {1}", code, desc), "", true); }
         }
 
         /// <summary>
