@@ -40,7 +40,7 @@ namespace DacLib.Hoxis {
         None = 0,       // Offline
         Default,        // Default status
         Active,         // With realtime status
-        Reconnecting    // Disconnected (waiting for reconnection)
+        Disconnected    // Waiting for reconnection
     }
     public enum ManageOperation
     {

@@ -55,7 +55,7 @@ namespace DacLib.Hoxis.Server
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
             _heartbeatMonitor = new HoxisHeartbeatMonitor(heartbeatTimeout);
-            _heartbeatMonitor.onTimeout += OnHeartbeatStop;
+            _heartbeatMonitor.onTimeout += OnDisconnect;
             respTable.Add("QueryConnectionState", QueryConnectionState);
             respTable.Add("SignIn", SignIn);
             respTable.Add("SignOut", SignOut);
@@ -158,7 +158,7 @@ namespace DacLib.Hoxis.Server
         public bool ResponseSuccess(string handleArg, string methodArg, params KVString[] kvs)
         {
             Dictionary<string, string> argsArg = new Dictionary<string, string>();
-            argsArg.Add("code", Consts.RESP_SUCCESS);
+            argsArg.Add("code", C.RESP_SUCCESS);
             foreach (KVString kv in kvs) { argsArg.Add(kv.key, kv.val); }
             HoxisProtocolAction action = new HoxisProtocolAction(methodArg, new HoxisProtocolArgs(argsArg));
             return Response(handleArg, action);
@@ -225,11 +225,11 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         public static string GenerateUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
 
-        private void OnHeartbeatStop(int time) {
-            connectionState = UserConnectionState.Reconnecting;
+        private void OnDisconnect(int time) {
+            connectionState = UserConnectionState.Disconnected;
             _heartbeatMonitor.Reset();
-            _logger.LogWarning("hearbeat stopped", "");
-            _logger.End();
+            _logger.LogWarning("disconnected", "");
+            //_logger.End();
         }
 
         private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
@@ -269,7 +269,7 @@ namespace DacLib.Hoxis.Server
             else
             {
                 _logger.Begin();
-                _logger.LogInfo("signs in", "");
+                _logger.LogInfo("sign in", "");
             }
             return ResponseSuccess(handle, "SignInCb");
         }
@@ -277,7 +277,7 @@ namespace DacLib.Hoxis.Server
         private bool SignOut(string handle, HoxisProtocolArgs args)
         {
             Initialize();
-            if (_logger.enable) { _logger.LogInfo("signs out", ""); }
+            if (_logger.enable) { _logger.LogInfo("sign out", ""); }
             _logger.End();
             return ResponseSuccess(handle, "SignOutCb");
         }
@@ -301,12 +301,16 @@ namespace DacLib.Hoxis.Server
                     hostData = w.user.hostData;
                     proxiesData = w.user.proxiesData;
                     _heartbeatMonitor.Start();
-                    _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
-                    if (ret.code != 0) { Console.WriteLine(ret.desc); }
+                    if (_logger.enable) { _logger.LogInfo("reconnect", ""); }
                     else
                     {
-                        _logger.Begin();
-                        _logger.LogInfo("reconnect", "");
+                        _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
+                        if (ret.code != 0) { Console.WriteLine(ret.desc); }
+                        else
+                        {
+                            _logger.Begin();
+                            _logger.LogInfo("reconnect", "");
+                        }
                     }
                     HoxisServer.ReleaseConnection(w);
                     return ResponseSuccess(handle, "ReconnectCb");
