@@ -37,10 +37,10 @@ namespace DacLib.Hoxis {
     }
     public enum UserConnectionState
     {
-        None = 0,       // Offline
-        Default,        // Default status
-        Active,         // With realtime status
-        Disconnected    // Waiting for reconnection
+        None = 0,       // Offline or connected but no user information
+        Default,        // Signed in but not necessary to record realtime data, it means that server won't recover its realtime data if reconnecting
+        Active,         // Necessary to record realtime data
+        Disconnected    // Network anormaly, waiting for reconnecting
     }
     public enum ManageOperation
     {

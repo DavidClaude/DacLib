@@ -41,17 +41,14 @@ namespace DacLib.Hoxis.Server
         private Socket _socket;
         private Thread _receiveThread;
 
-        public HoxisConnection()
-        {
-            _extractor = new HoxisBytesExtractor(readBufferSize);
-        }
+        public HoxisConnection(){ _extractor = new HoxisBytesExtractor(readBufferSize); }
 
         public void OnRequest(object state)
         {
             try { _socket = (Socket)state; }
             catch (Exception e) { Console.WriteLine(e.Message); return; }
             clientIP = _socket.RemoteEndPoint.ToString();
-            user = new HoxisUser();
+            if (user == null) user = new HoxisUser();
             _extractor.onBytesExtracted += user.ProtocolEntry;
             user.onPost += Send;
             LoopReceive();
@@ -59,12 +56,10 @@ namespace DacLib.Hoxis.Server
 
         public void OnRelease()
         {
-            Close();
             clientIP = string.Empty;
-            _extractor.onBytesExtracted -= user.ProtocolEntry;
-            user.onPost -= Send;
-            user = null;
-            _extractor.Init();
+            user.Initialize();
+            _extractor.Initialize();
+            Close();
         }
 
         /// <summary>
@@ -73,11 +68,12 @@ namespace DacLib.Hoxis.Server
         public void LoopReceive()
         {
             if (_receiveThread != null) _receiveThread.Abort();
-            _receiveThread = new Thread(() => {
+            _receiveThread = new Thread(() =>
+            {
                 while (true)
                 {
-                    int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None);
-                    _extractor.Extract(len);
+                    try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
+                    catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); }
                 }
             });
             _receiveThread.Start();
@@ -93,7 +89,9 @@ namespace DacLib.Hoxis.Server
             if (len <= 0) return;
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
-            _socket.Send(data);
+            try { _socket.Send(data); }
+            catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); }
+
         }
 
         /// <summary>
@@ -109,7 +107,7 @@ namespace DacLib.Hoxis.Server
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }
-            catch (Exception e) { Console.WriteLine("[error]Socket close @{0}: {1}", clientIP, e.Message); }
+            catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); }
         }
     }
 }

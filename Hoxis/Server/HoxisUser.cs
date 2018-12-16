@@ -32,6 +32,8 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public UserConnectionState connectionState { get; private set; }
 
+        public bool logEnable { get { if (_logger == null) return false; return _logger.enable; } }
+
         #region realtime data
         public HoxisCluster parentCluster { get; set; }
         public HoxisTeam parentTeam { get; set; }
@@ -43,7 +45,7 @@ namespace DacLib.Hoxis.Server
         //public event IntForVoid_Handler onHeartbeatStop;
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
 
-        private HoxisHeartbeatMonitor _heartbeatMonitor;
+        //private HoxisHeartbeatMonitor _heartbeatMonitor;
         private DebugRecorder _logger;
 
         public HoxisUser()
@@ -54,13 +56,13 @@ namespace DacLib.Hoxis.Server
             parentTeam = null;
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
-            _heartbeatMonitor = new HoxisHeartbeatMonitor(heartbeatTimeout);
-            _heartbeatMonitor.onTimeout += OnDisconnect;
+            //_heartbeatMonitor = new HoxisHeartbeatMonitor(heartbeatTimeout);
+            //_heartbeatMonitor.onTimeout += OnDisconnect;
             respTable.Add("QueryConnectionState", QueryConnectionState);
             respTable.Add("SignIn", SignIn);
             respTable.Add("SignOut", SignOut);
             respTable.Add("Reconnect", Reconnect);
-            respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
+            //respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
         }
 
         /// <summary>
@@ -71,6 +73,9 @@ namespace DacLib.Hoxis.Server
         public void ProtocolEntry(byte[] data)
         {
             string json = FF.BytesToString(data);
+
+            Console.WriteLine(json);
+
             HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json);
             switch (proto.type)
             {
@@ -101,10 +106,16 @@ namespace DacLib.Hoxis.Server
                         return;
                     }
                     // Check ok
+                    if (!respTable.ContainsKey(proto.action.method))
+                    {
+                        if (logEnable) _logger.LogError(FF.StringFormat("invalid request: {0}", proto.action.method), "", true);
+                        ResponseError(proto.handle, C.RESP_CHECK_FAILED, FF.StringFormat("invalid request: {0}", proto.action.method));
+                        return;
+                    }
                     respTable[proto.action.method](proto.handle, proto.action.args);
                     break;
                 default:
-                    ResponseError(proto.handle, C.RESP_CHECK_FAILED, "invalid type of protocol");
+                    if (logEnable) _logger.LogError(FF.StringFormat("invalid protocol type: {0}", proto.type), "");
                     break;
             }
         }
@@ -215,7 +226,31 @@ namespace DacLib.Hoxis.Server
             parentTeam = null;
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
-            _heartbeatMonitor.Reset();
+            onPost = null;
+            //_heartbeatMonitor.Reset();
+        }
+
+        public void ProcessNetworkAnormaly(int code, string desc)
+        {
+
+            Console.WriteLine("code: {0}, desc: {1}", code, desc);
+
+            switch (connectionState)
+            {
+                case UserConnectionState.None:
+                    // wait for being released
+                    break;
+                case UserConnectionState.Default:
+                    connectionState = UserConnectionState.None;
+                    break;
+                case UserConnectionState.Active:
+                    connectionState = UserConnectionState.Disconnected;
+                    break;
+                case UserConnectionState.Disconnected:
+                    // wait for reconnecting
+                    break;
+            }
+            if (logEnable) { _logger.LogError(FF.StringFormat("network anormaly: code is {0}, message is {1}", code, desc), ""); }
         }
 
         /// <summary>
@@ -225,14 +260,15 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         public static string GenerateUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
 
-        private void OnDisconnect(int time) {
+        private void OnDisconnect(int time)
+        {
             connectionState = UserConnectionState.Disconnected;
-            _heartbeatMonitor.Reset();
+            //_heartbeatMonitor.Reset();
             _logger.LogWarning("disconnected", "");
             //_logger.End();
         }
 
-        private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
+        private void OnPost(byte[] data) { if (onPost == null) return; onPost(data); }
 
         #region reflection functions: response
 
@@ -263,7 +299,7 @@ namespace DacLib.Hoxis.Server
             long uid = FF.StringToLong(args["uid"]);
             userID = uid;
             connectionState = UserConnectionState.Default;
-            _heartbeatMonitor.Start();
+            //_heartbeatMonitor.Start();
             _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
             if (ret.code != 0) { Console.WriteLine(ret.desc); }
             else
@@ -277,7 +313,7 @@ namespace DacLib.Hoxis.Server
         private bool SignOut(string handle, HoxisProtocolArgs args)
         {
             Initialize();
-            if (_logger.enable) { _logger.LogInfo("sign out", ""); }
+            if (logEnable) { _logger.LogInfo("sign out", ""); }
             _logger.End();
             return ResponseSuccess(handle, "SignOutCb");
         }
@@ -300,8 +336,8 @@ namespace DacLib.Hoxis.Server
                     parentTeam = w.user.parentTeam;
                     hostData = w.user.hostData;
                     proxiesData = w.user.proxiesData;
-                    _heartbeatMonitor.Start();
-                    if (_logger.enable) { _logger.LogInfo("reconnect", ""); }
+                    //_heartbeatMonitor.Start();
+                    if (logEnable) { _logger.LogInfo("reconnect", ""); }
                     else
                     {
                         _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
@@ -319,19 +355,19 @@ namespace DacLib.Hoxis.Server
             return SignIn(handle, args);
         }
 
-        /// <summary>
-        /// Make sure that the client is connected
-        /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
-        {
-            if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is null");
-            if (!_heartbeatMonitor.enable) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is disable");
-            _heartbeatMonitor.Refresh();
-            return ResponseSuccess(handle, "RefreshHeartbeatCb");
-        }
+        ///// <summary>
+        ///// Make sure that the client is connected
+        ///// </summary>
+        ///// <param name="handle"></param>
+        ///// <param name="args"></param>
+        ///// <returns></returns>
+        //private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
+        //{
+        //    if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is null");
+        //    if (!_heartbeatMonitor.enable) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is disable");
+        //    _heartbeatMonitor.Refresh();
+        //    return ResponseSuccess(handle, "RefreshHeartbeatCb");
+        //}
 
         /// <summary>
         /// Called if client requests for reconnecting

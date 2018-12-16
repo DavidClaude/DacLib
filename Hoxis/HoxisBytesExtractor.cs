@@ -75,7 +75,7 @@ namespace DacLib.Hoxis
 
             // Detach the extracted data and initialize
             Array.Copy(readBytes, _protoLen + HEADER_SIZE, readBytes, 0, remain);
-            Init();
+            Initialize();
             // Loop above process until no more protocol could be extracted
             if (remain > 0) { Extract(remain); }
         }
@@ -83,8 +83,9 @@ namespace DacLib.Hoxis
         /// <summary>
         /// Initialize
         /// </summary>
-        public void Init()
+        public void Initialize()
         {
+            onBytesExtracted = null;
             readBytes.Initialize();
             readCount = 0;
             _protoLen = 0;
