@@ -47,22 +47,24 @@ namespace DacLib.Hoxis.Client
         public static event RetForVoid_Handler onInitError;
 
         /// <summary>
-        /// **WITHIN THREAD**
         /// Event of connecting success
         /// </summary>
         public static event NoneForVoid_Handler onConnected;
 
         /// <summary>
-        /// **WITHIN THREAD**
         /// Event of connecting error
         /// </summary>
         public static event RetForVoid_Handler onConnectError;
 
         /// <summary>
-        /// **WITHIN THREAD**
         /// Event of closing error
         /// </summary>
         public static event RetForVoid_Handler onCloseError;
+
+        /// <summary>
+        /// Event of network anomaly
+        /// </summary>
+        public static event SocketExceptionHandler onNetworkAnomaly;
 
         private static Socket _socket;
         private static HoxisBytesExtractor _extractor;
@@ -118,16 +120,18 @@ namespace DacLib.Hoxis.Client
         }
 
         /// <summary>
+        /// **WITHIN THREAD**
         /// Loop receiving data synchronously
         /// </summary>
         public static void LoopReceive()
         {
             if (_receiveThread != null) _receiveThread.Abort();
-            _receiveThread = new Thread(() => {
+            _receiveThread = new Thread(() =>
+            {
                 while (true)
                 {
-                    int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None);
-                    _extractor.Extract(len);
+                    try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
+                    catch (SocketException e) { OnNetworkAnomaly(e.ErrorCode, e.Message); break; }
                 }
             });
             _receiveThread.Start();
@@ -143,9 +147,13 @@ namespace DacLib.Hoxis.Client
             if (len <= 0) return;
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
-            _socket.Send(data);
+            try { _socket.Send(data); }
+            catch (SocketException e) { OnNetworkAnomaly(e.ErrorCode, e.Message); }
         }
 
+        /// <summary>
+        /// Close the socket
+        /// </summary>
         public static void Close()
         {
             if (_receiveThread != null) _receiveThread.Abort();
@@ -153,11 +161,10 @@ namespace DacLib.Hoxis.Client
             if (!isConnected) return;
             try
             {
-                HoxisDirector.Ins.onPost -= Send;
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }
-            catch (Exception e) { OnCloseError(new Ret(LogLevel.Error, RET_CLOSE_EXCEPTION, e.Message)); }
+            catch (SocketException e) { OnNetworkAnomaly(e.ErrorCode, e.Message); }
         }
 
         #region private functions
@@ -172,6 +179,7 @@ namespace DacLib.Hoxis.Client
         private static void OnConnected() { if (onConnected == null) return; onConnected(); }
         private static void OnConnectError(Ret ret) { if (onConnectError == null) return; onConnectError(ret); }
         private static void OnCloseError(Ret ret) { if (onCloseError == null) return; onCloseError(ret); }
+        private static void OnNetworkAnomaly(int code, string message) { if (onNetworkAnomaly == null) return;onNetworkAnomaly(code, message); }
         #endregion
     }
 }

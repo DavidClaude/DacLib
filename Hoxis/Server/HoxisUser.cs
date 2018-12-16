@@ -233,7 +233,7 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         /// <param name="code"></param>
         /// <param name="desc"></param>
-        public void ProcessNetworkAnormaly(int code, string desc)
+        public void ProcessNetworkAnomaly(int code, string desc)
         {
             lock (this)
             {
@@ -252,7 +252,7 @@ namespace DacLib.Hoxis.Server
                         // wait for reconnecting
                         break;
                 }
-                if (logEnable) { _logger.LogError(FF.StringFormat("network anormaly: code is {0}, message is {1}", code, desc), "", true); }
+                if (logEnable) { _logger.LogError(FF.StringFormat("network anomaly: code is {0}, message is {1}", code, desc), "", true); }
             }
         }
 

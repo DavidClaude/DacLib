@@ -63,6 +63,7 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
+        /// **WITHIN THREAD**
         /// Loop receiving data synchronously
         /// </summary>
         public void LoopReceive()
@@ -73,7 +74,7 @@ namespace DacLib.Hoxis.Server
                 while (true)
                 {
                     try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
-                    catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); break; }
+                    catch (SocketException e) { user.ProcessNetworkAnomaly(e.ErrorCode, e.Message); break; }
                 }
             });
             _receiveThread.Start();
@@ -90,8 +91,7 @@ namespace DacLib.Hoxis.Server
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
             try { _socket.Send(data); }
-            catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); }
-
+            catch (SocketException e) { user.ProcessNetworkAnomaly(e.ErrorCode, e.Message); }
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace DacLib.Hoxis.Server
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }
-            catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); }
+            catch (SocketException e) { user.ProcessNetworkAnomaly(e.ErrorCode, e.Message); }
         }
     }
 }

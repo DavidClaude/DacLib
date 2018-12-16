@@ -170,7 +170,7 @@ namespace DacLib.Hoxis.Client
                     case ProtocolType.Response:
                         ReqHandle handle = FF.JsonToObject<ReqHandle>(proto.handle);
                         // todo 消除等待
-                        if (proto.err != C.RESP_SUCCESS) { onResponseError(proto.err, proto.desc); continue; }
+                        if (proto.err != C.RESP_SUCCESS) { OnResponseError(proto.err, proto.desc); continue; }
                         respCbTable[proto.action.method](proto.action.args);
 
                         break;

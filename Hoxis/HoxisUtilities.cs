@@ -9,6 +9,7 @@ namespace DacLib.Hoxis {
     public delegate void ActionArgsHandler(HoxisProtocolArgs args);
     public delegate bool ResponseHandler(string handle, HoxisProtocolArgs args);
     public delegate void ErrorHandler(string err, string desc);
+    public delegate void SocketExceptionHandler(int code, string message);
     #endregion
 
     #region enums
@@ -40,7 +41,7 @@ namespace DacLib.Hoxis {
         None = 0,       // Offline or connected but no user information
         Default,        // Signed in but not necessary to record realtime data, it means that server won't recover its realtime data if reconnecting
         Active,         // Necessary to record realtime data
-        Disconnected    // Network anormaly, waiting for reconnecting
+        Disconnected    // Network anomaly, waiting for reconnecting
     }
     public enum ManageOperation
     {
