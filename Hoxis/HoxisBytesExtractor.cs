@@ -70,12 +70,10 @@ namespace DacLib.Hoxis
             Array.Copy(readBytes, HEADER_SIZE, data, 0, _protoLen);
             // Trigger the event on protocol data extracted
             OnBytesExtracted(data);
-
-
-
             // Detach the extracted data and initialize
             Array.Copy(readBytes, _protoLen + HEADER_SIZE, readBytes, 0, remain);
-            Initialize();
+            readCount = 0;
+            _protoLen = 0;
             // Loop above process until no more protocol could be extracted
             if (remain > 0) { Extract(remain); }
         }

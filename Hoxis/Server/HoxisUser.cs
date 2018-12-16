@@ -73,9 +73,6 @@ namespace DacLib.Hoxis.Server
         public void ProtocolEntry(byte[] data)
         {
             string json = FF.BytesToString(data);
-
-            Console.WriteLine(json);
-
             HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json);
             switch (proto.type)
             {
@@ -232,9 +229,6 @@ namespace DacLib.Hoxis.Server
 
         public void ProcessNetworkAnormaly(int code, string desc)
         {
-
-            Console.WriteLine("code: {0}, desc: {1}", code, desc);
-
             switch (connectionState)
             {
                 case UserConnectionState.None:
@@ -250,7 +244,7 @@ namespace DacLib.Hoxis.Server
                     // wait for reconnecting
                     break;
             }
-            if (logEnable) { _logger.LogError(FF.StringFormat("network anormaly: code is {0}, message is {1}", code, desc), ""); }
+            if (logEnable) { _logger.LogError(FF.StringFormat("network anormaly: code is {0}, message is {1}", code, desc), "", true); }
         }
 
         /// <summary>
@@ -313,8 +307,7 @@ namespace DacLib.Hoxis.Server
         private bool SignOut(string handle, HoxisProtocolArgs args)
         {
             Initialize();
-            if (logEnable) { _logger.LogInfo("sign out", ""); }
-            _logger.End();
+            if (logEnable) { _logger.LogInfo("sign out", ""); _logger.End(); }
             return ResponseSuccess(handle, "SignOutCb");
         }
 

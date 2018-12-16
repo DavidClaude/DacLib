@@ -73,7 +73,7 @@ namespace DacLib.Hoxis.Server
                 while (true)
                 {
                     try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
-                    catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); }
+                    catch (SocketException e) { user.ProcessNetworkAnormaly(e.ErrorCode, e.Message); break; }
                 }
             });
             _receiveThread.Start();
