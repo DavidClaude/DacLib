@@ -19,7 +19,7 @@ namespace DacLib.Hoxis.Client
     /// -wrapp and post a protocol
     /// -etc.
     /// </summary>
-    public class HoxisDirector :MonoBehaviour
+    public class HoxisDirector : MonoBehaviour
     {
         #region ret codes
         public const byte RET_HID_EXISTS = 1;
@@ -45,6 +45,7 @@ namespace DacLib.Hoxis.Client
             _protocolQueue = new Queue<HoxisProtocol>(protocolQueueCapacity);
             respCbTable.Add("QueryConnectionStateCb", QueryConnectionStateCb);
             respCbTable.Add("SignInCb", SignInCb);
+            respCbTable.Add("SignOutCb", SignOutCb);
             respCbTable.Add("ReconnectCb", ReconnectCb);
             respCbTable.Add("RefreshHeartbeatCb", RefreshHeartbeatCb);
         }
@@ -140,13 +141,13 @@ namespace DacLib.Hoxis.Client
             switch (proto.type)
             {
                 case ProtocolType.Synchronization:
-                    
+
                     break;
                 case ProtocolType.Request:
                     // todo wait
                     break;
                 case ProtocolType.Response:
-                    
+
                     break;
             }
             string json = FF.ObjectToJson(proto);
@@ -164,13 +165,14 @@ namespace DacLib.Hoxis.Client
             {
                 if (_protocolQueue.Count <= 0) break;
                 HoxisProtocol proto = _protocolQueue.Dequeue();
-                switch (proto.type) {
+                switch (proto.type)
+                {
                     case ProtocolType.Response:
                         ReqHandle handle = FF.JsonToObject<ReqHandle>(proto.handle);
                         // todo 消除等待
                         if (proto.err != C.RESP_SUCCESS) { onResponseError(proto.err, proto.desc); continue; }
                         respCbTable[proto.action.method](proto.action.args);
-                        
+
                         break;
                     case ProtocolType.Synchronization:
                         HoxisAgent agent = GetAgent(proto.sender.aid);
@@ -184,9 +186,9 @@ namespace DacLib.Hoxis.Client
             }
         }
 
-        private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
+        private void OnPost(byte[] data) { if (onPost == null) return; onPost(data); }
 
-        private void OnResponseError(string err, string desc) { if (onResponseError == null) return;onResponseError(err, desc); }
+        private void OnResponseError(string err, string desc) { if (onResponseError == null) return; onResponseError(err, desc); }
 
         #endregion
 
@@ -203,6 +205,12 @@ namespace DacLib.Hoxis.Client
         {
             string code = args["code"];
             Debug.Log("SignInCb code: " + code);
+        }
+
+        private void SignOutCb(HoxisProtocolArgs args)
+        {
+            string code = args["code"];
+            Debug.Log("SignOutCb code: " + code);
         }
 
         private void ReconnectCb(HoxisProtocolArgs args)
