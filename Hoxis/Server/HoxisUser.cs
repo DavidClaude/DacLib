@@ -54,10 +54,13 @@ namespace DacLib.Hoxis.Server
             parentTeam = null;
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
-            respTable.Add("SignIn", SignIn);
-            respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
             _heartbeatMonitor = new HoxisHeartbeatMonitor(heartbeatTimeout);
             _heartbeatMonitor.onTimeout += OnHeartbeatStop;
+            respTable.Add("QueryConnectionState", QueryConnectionState);
+            respTable.Add("SignIn", SignIn);
+            respTable.Add("SignOut", SignOut);
+            respTable.Add("Reconnect", Reconnect);
+            respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
         }
 
         /// <summary>
@@ -204,17 +207,15 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Reset this HoxisUser to the undefine user
         /// </summary>
-        public void SignOut()
+        public void Initialize()
         {
             userID = 0;
             connectionState = UserConnectionState.None;
             parentCluster = null;
             parentTeam = null;
             hostData = HoxisAgentData.undef;
-            proxiesData = null;
+            proxiesData = new List<HoxisAgentData>();
             _heartbeatMonitor.Reset();
-            _logger.LogInfo("signs out", "");
-            _logger.End();
         }
 
         /// <summary>
@@ -271,6 +272,14 @@ namespace DacLib.Hoxis.Server
                 _logger.LogInfo("signs in", "");
             }
             return ResponseSuccess(handle, "SignInCb");
+        }
+
+        private bool SignOut(string handle, HoxisProtocolArgs args)
+        {
+            Initialize();
+            if (_logger.enable) { _logger.LogInfo("signs out", ""); }
+            _logger.End();
+            return ResponseSuccess(handle, "SignOutCb");
         }
 
         private bool Reconnect(string handle, HoxisProtocolArgs args)

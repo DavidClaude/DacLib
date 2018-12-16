@@ -15,6 +15,8 @@ namespace DacLib.Codex
     {
         public const byte RET_STREAM_INIT_ERROR = 1;
 
+        public bool enable { get; private set; }
+
         private FileStream _stream;
         private StreamWriter _writer;
 
@@ -27,11 +29,24 @@ namespace DacLib.Codex
                 ret = Ret.ok;
             }
             catch (Exception e) { ret = new Ret(LogLevel.Error, RET_STREAM_INIT_ERROR, e.Message); }
+            enable = false;
         }
-        public void Begin() { _writer = new StreamWriter(_stream); }
+        public void Begin()
+        {
+            if (enable) return;
+            _writer = new StreamWriter(_stream);
+            enable = true;
+        }
         public void Flush() { _stream.Flush(); }
         public void Close() { _writer.Close(); _stream.Close(); }
-        public void End() { _writer.WriteLine(""); Flush(); Close(); }
+        public void End()
+        {
+            if (!enable) return;
+            _writer.WriteLine("");
+            Flush();
+            Close();
+            enable = false;
+        }
 
         public void Log(string content, bool console = false)
         {
