@@ -13,7 +13,7 @@ namespace DacLib.Hoxis
         {
             type = ProtocolType.None,
             handle = "",
-            err = false,
+            err = Consts.RESP_SUCCESS,
             receiver = HoxisProtocolReceiver.undef,
             sender = HoxisProtocolSender.undef,
             action = HoxisProtocolAction.undef,
@@ -33,7 +33,7 @@ namespace DacLib.Hoxis
         /// <summary>
         /// The flag if response succeeds, no use except response
         /// </summary>
-        public bool err;
+        public string err;
 
         /// <summary>
         /// Whom will receive this protocol

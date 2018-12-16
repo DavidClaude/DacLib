@@ -8,7 +8,7 @@ using DacLib.Generic;
 
 namespace DacLib.Hoxis.Server
 {
-    public class HoxisHeartbeat
+    public class HoxisHeartbeatMonitor
     {
         /// <summary>
         /// Threshold of timeout
@@ -28,7 +28,7 @@ namespace DacLib.Hoxis.Server
         private Thread _thread;
         private int _time = 0;
 
-        public HoxisHeartbeat(int timeoutArg)
+        public HoxisHeartbeatMonitor(int timeoutArg)
         {
             if (timeoutArg <= 0) { timeout = 5000; }
             else timeout = timeoutArg;

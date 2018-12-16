@@ -8,6 +8,7 @@ namespace DacLib.Hoxis {
     public delegate void ActionHandler(HoxisProtocolAction action);
     public delegate void ActionArgsHandler(HoxisProtocolArgs args);
     public delegate bool ResponseHandler(string handle, HoxisProtocolArgs args);
+    public delegate void ErrorHandler(string err, string desc);
     #endregion
 
     #region enums
@@ -59,7 +60,10 @@ namespace DacLib.Hoxis {
     #region constants
     public class Consts {
         public const string RESP_SUCCESS = "0";
-        public const string RESP_RECONNECT = "10001";
+        public const string RESP_NO_USER_INFO = "10001";
+        public const string RESP_RECONNECT = "10002";
+        public const string RESP_HEARTBEAT_UNAVAILABLE = "10003";
+        public const string RESP_CHECK_FAILED = "10004";
     }
     #endregion
 }

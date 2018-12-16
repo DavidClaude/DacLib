@@ -9,6 +9,7 @@ using DacLib.Codex;
 
 using FF = DacLib.Generic.FormatFunc;
 using SF = DacLib.Generic.SystemFunc;
+using C = DacLib.Hoxis.Consts;
 
 namespace DacLib.Hoxis.Server
 {
@@ -42,7 +43,7 @@ namespace DacLib.Hoxis.Server
         //public event IntForVoid_Handler onHeartbeatStop;
         protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
 
-        private HoxisHeartbeat _heartbeat;
+        private HoxisHeartbeatMonitor _heartbeatMonitor;
         private DebugRecorder _logger;
 
         public HoxisUser()
@@ -55,8 +56,8 @@ namespace DacLib.Hoxis.Server
             proxiesData = new List<HoxisAgentData>();
             respTable.Add("SignIn", SignIn);
             respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
-            _heartbeat = new HoxisHeartbeat(heartbeatTimeout);
-            _heartbeat.onTimeout += OnHeartbeatStop;
+            _heartbeatMonitor = new HoxisHeartbeatMonitor(heartbeatTimeout);
+            _heartbeatMonitor.onTimeout += OnHeartbeatStop;
         }
 
         /// <summary>
@@ -67,8 +68,6 @@ namespace DacLib.Hoxis.Server
         public void ProtocolEntry(byte[] data)
         {
             string json = FF.BytesToString(data);
-            Console.WriteLine(json);
-
             HoxisProtocol proto = FF.JsonToObject<HoxisProtocol>(json);
             switch (proto.type)
             {
@@ -95,14 +94,14 @@ namespace DacLib.Hoxis.Server
                     CheckRequest(proto, out ret);
                     if (ret.code != 0)
                     {
-                        ResponseError(proto.handle, ret.desc);
+                        ResponseError(proto.handle, C.RESP_CHECK_FAILED, ret.desc);
                         return;
                     }
                     // Check ok
                     respTable[proto.action.method](proto.handle, proto.action.args);
                     break;
                 default:
-                    ResponseError(proto.handle, "invalid type of protocol");
+                    ResponseError(proto.handle, C.RESP_CHECK_FAILED, "invalid type of protocol");
                     break;
             }
         }
@@ -130,7 +129,7 @@ namespace DacLib.Hoxis.Server
             {
                 type = ProtocolType.Response,
                 handle = handleArg,
-                err = false,
+                err = C.RESP_SUCCESS,
                 receiver = HoxisProtocolReceiver.undef,
                 sender = HoxisProtocolSender.undef,
                 action = actionArg,
@@ -168,13 +167,13 @@ namespace DacLib.Hoxis.Server
         /// <param name="handleArg"></param>
         /// <param name="descArg"></param>
         /// <returns></returns>
-        public bool ResponseError(string handleArg, string descArg)
+        public bool ResponseError(string handleArg, string errArg, string descArg)
         {
             HoxisProtocol proto = new HoxisProtocol
             {
                 type = ProtocolType.Response,
                 handle = handleArg,
-                err = true,
+                err = errArg,
                 receiver = HoxisProtocolReceiver.undef,
                 sender = HoxisProtocolSender.undef,
                 action = HoxisProtocolAction.undef,
@@ -213,32 +212,42 @@ namespace DacLib.Hoxis.Server
             parentTeam = null;
             hostData = HoxisAgentData.undef;
             proxiesData = null;
-            _heartbeat.Reset();
+            _heartbeatMonitor.Reset();
             _logger.LogInfo("signs out", "");
             _logger.End();
         }
 
+        /// <summary>
+        /// Generate log name of an user
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <returns></returns>
+        public static string GenerateUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
+
         private void OnHeartbeatStop(int time) {
             connectionState = UserConnectionState.Reconnecting;
-            _heartbeat.Reset();
+            _heartbeatMonitor.Reset();
+            _logger.LogWarning("hearbeat stopped", "");
+            _logger.End();
         }
 
         private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
 
         #region reflection functions: response
 
-        /// <summary>
-        /// Make sure that the client is connected
-        /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
+        private bool QueryConnectionState(string handle, HoxisProtocolArgs args)
         {
-            if (_heartbeat == null) return ResponseError(handle, "heartbeat is null");
-            if (!_heartbeat.enable) return ResponseError(handle, "heartbeat is disable");
-            _heartbeat.Refresh();
-            return ResponseSuccess(handle, "RefreshHeartbeatCb");
+            long uid = FF.StringToLong(args["uid"]);
+            List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
+            foreach (HoxisConnection w in workers)
+            {
+                // If already signed in, response the state to let user choose if reconnecting
+                if (w.user == this) continue;
+                if (w.user.userID <= 0) continue;
+                if (w.user.userID == uid)
+                    return ResponseSuccess(handle, "QueryConnectionStateCb", new KVString("state", w.user.connectionState.ToString()));
+            }
+            return Response(handle, "QueryConnectionStateCb", new KVString("code", Consts.RESP_NO_USER_INFO));
         }
 
         /// <summary>
@@ -249,34 +258,12 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         private bool SignIn(string handle, HoxisProtocolArgs args)
         {
+            Ret ret;
             long uid = FF.StringToLong(args["uid"]);
-            // Reconnect ?
-            List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
-            foreach (HoxisConnection w in workers)
-            {
-                if (w.user != this && w.user.userID == uid && uid > 0)
-                {
-                    // Set this user by existed user
-                    userID = w.user.userID;
-                    connectionState = UserConnectionState.Active;
-                    parentCluster = w.user.parentCluster;
-                    parentTeam = w.user.parentTeam;
-                    hostData = w.user.hostData;
-                    proxiesData = w.user.proxiesData;
-                    _heartbeat.Start();
-                    // Release the existed one
-                    HoxisServer.ReleaseConnection(w);
-                    // Response success
-                    return Response(handle, "SignInCb", new KVString("code", Consts.RESP_RECONNECT));
-                }
-            }
-            // New user
             userID = uid;
             connectionState = UserConnectionState.Default;
-            _heartbeat.Start();
-            Ret ret;
-            string name = FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log");
-            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", name), out ret);
+            _heartbeatMonitor.Start();
+            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
             if (ret.code != 0) { Console.WriteLine(ret.desc); }
             else
             {
@@ -286,7 +273,52 @@ namespace DacLib.Hoxis.Server
             return ResponseSuccess(handle, "SignInCb");
         }
 
+        private bool Reconnect(string handle, HoxisProtocolArgs args)
+        {
+            Ret ret;
+            long uid = FF.StringToLong(args["uid"]);
+            List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
+            foreach (HoxisConnection w in workers)
+            {
+                // If already signed in, response the state to let user choose if reconnecting
+                if (w.user == this) continue;
+                if (w.user.userID <= 0) continue;
+                if (w.user.userID == uid)
+                {
+                    userID = w.user.userID;
+                    connectionState = UserConnectionState.Active;
+                    parentCluster = w.user.parentCluster;
+                    parentTeam = w.user.parentTeam;
+                    hostData = w.user.hostData;
+                    proxiesData = w.user.proxiesData;
+                    _heartbeatMonitor.Start();
+                    _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
+                    if (ret.code != 0) { Console.WriteLine(ret.desc); }
+                    else
+                    {
+                        _logger.Begin();
+                        _logger.LogInfo("reconnect", "");
+                    }
+                    HoxisServer.ReleaseConnection(w);
+                    return ResponseSuccess(handle, "ReconnectCb");
+                }
+            }
+            return SignIn(handle, args);
+        }
 
+        /// <summary>
+        /// Make sure that the client is connected
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
+        {
+            if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is null");
+            if (!_heartbeatMonitor.enable) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is disable");
+            _heartbeatMonitor.Refresh();
+            return ResponseSuccess(handle, "RefreshHeartbeatCb");
+        }
 
         /// <summary>
         /// Called if client requests for reconnecting

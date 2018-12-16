@@ -6,6 +6,7 @@ using DacLib.Generic;
 using DacLib.Codex;
 
 using FF = DacLib.Generic.FormatFunc;
+using C = DacLib.Hoxis.Consts;
 
 namespace DacLib.Hoxis.Client
 {
@@ -31,6 +32,7 @@ namespace DacLib.Hoxis.Client
         public static int protocolQueueCapacity { get; set; }
         public static short protocolQueueProcessQuantity { get; set; }
         public event BytesForVoid_Handler onPost;
+        public event ErrorHandler onResponseError;
 
         protected Dictionary<string, ActionArgsHandler> respCbTable = new Dictionary<string, ActionArgsHandler>();
         private Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
@@ -41,7 +43,9 @@ namespace DacLib.Hoxis.Client
             if (Ins == null) Ins = this;
             _agentSearcher = new Dictionary<HoxisAgentID, HoxisAgent>();
             _protocolQueue = new Queue<HoxisProtocol>(protocolQueueCapacity);
+            respCbTable.Add("QueryConnectionStateCb", QueryConnectionStateCb);
             respCbTable.Add("SignInCb", SignInCb);
+            respCbTable.Add("ReconnectCb", ReconnectCb);
             respCbTable.Add("RefreshHeartbeatCb", RefreshHeartbeatCb);
         }
 
@@ -164,9 +168,9 @@ namespace DacLib.Hoxis.Client
                     case ProtocolType.Response:
                         ReqHandle handle = FF.JsonToObject<ReqHandle>(proto.handle);
                         // todo 消除等待
-                        // todo 处理错误
-                        if (proto.err) { }
+                        if (proto.err != C.RESP_SUCCESS) { onResponseError(proto.err, proto.desc); continue; }
                         respCbTable[proto.action.method](proto.action.args);
+                        
                         break;
                     case ProtocolType.Synchronization:
                         HoxisAgent agent = GetAgent(proto.sender.aid);
@@ -182,21 +186,31 @@ namespace DacLib.Hoxis.Client
 
         private void OnPost(byte[] data) { if (onPost == null) return;onPost(data); }
 
+        private void OnResponseError(string err, string desc) { if (onResponseError == null) return;onResponseError(err, desc); }
+
         #endregion
 
         #region response callbacks
+        private void QueryConnectionStateCb(HoxisProtocolArgs args)
+        {
+            string code = args["code"];
+            Debug.Log("QueryConnectionStateCb code: " + code);
+            if (code == C.RESP_SUCCESS)
+                Debug.Log(args["state"]);
+        }
+
         private void SignInCb(HoxisProtocolArgs args)
         {
             string code = args["code"];
-            if (code == Consts.RESP_RECONNECT)
-            {
-                // todo 提示重连
-            }
-            else {
-                // todo 成功
-            }
             Debug.Log("SignInCb code: " + code);
         }
+
+        private void ReconnectCb(HoxisProtocolArgs args)
+        {
+            string code = args["code"];
+            Debug.Log("ReconnectCb code: " + code);
+        }
+
         private void RefreshHeartbeatCb(HoxisProtocolArgs args)
         {
             string code = args["code"];

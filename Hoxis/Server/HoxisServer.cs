@@ -186,7 +186,6 @@ namespace DacLib.Hoxis.Server
         public static void ReleaseConnection(HoxisConnection conn)
         {
             Ret ret;
-            conn.user.SignOut();
             _connReception.Release(conn, out ret);
             if (ret.code != 0) { _logger.LogWarning(ret.desc, ""); return; }
             _logger.LogInfo("released successful", "Server");
@@ -230,6 +229,15 @@ namespace DacLib.Hoxis.Server
         {
             _logger.End();
             _acceptThread.Abort();
+        }
+
+        public static void LogConnectionStatus()
+        {
+            List<HoxisConnection> conns = _connReception.GetOccupiedPreforms();
+            foreach (HoxisConnection c in conns)
+            {
+                Console.WriteLine("Local ID: {0}\nState: {1}\n", c.localID, c.user.connectionState);
+            }
         }
     }
 }
