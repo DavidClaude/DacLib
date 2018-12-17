@@ -15,10 +15,6 @@ namespace DacLib.Hoxis.Server
 {
     public class HoxisUser
     {
-        #region ret codes
-        public const byte RET_CHECK_ERROR = 1;
-        #endregion
-
         public static long requestTTL { get; set; }
         public static int heartbeatTimeout { get; set; }
 
@@ -33,19 +29,16 @@ namespace DacLib.Hoxis.Server
         public UserConnectionState connectionState { get; private set; }
 
         public bool logEnable { get { if (_logger == null) return false; return _logger.enable; } }
-
         #region realtime data
         public HoxisCluster parentCluster { get; set; }
         public HoxisTeam parentTeam { get; set; }
         public HoxisAgentData hostData { get; private set; }
         public List<HoxisAgentData> proxiesData { get; private set; }
         #endregion
-
         public event BytesForVoid_Handler onPost;
-        //public event IntForVoid_Handler onHeartbeatStop;
-        protected Dictionary<string, ResponseHandler> respTable = new Dictionary<string, ResponseHandler>();
+        protected Dictionary<string, ResponseHandler> respTable;
 
-        //private HoxisHeartbeatMonitor _heartbeatMonitor;
+        private AsyncTimer _heartbeatMonitor;
         private DebugRecorder _logger;
 
         public HoxisUser()
@@ -56,13 +49,35 @@ namespace DacLib.Hoxis.Server
             parentTeam = null;
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
-            //_heartbeatMonitor = new HoxisHeartbeatMonitor(heartbeatTimeout);
-            //_heartbeatMonitor.onTimeout += OnDisconnect;
+
+            _heartbeatMonitor = new AsyncTimer(heartbeatTimeout);
+            _heartbeatMonitor.onTimeout += () =>
+            { ProcessNetworkAnomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket is disconnected exceptionally"); };
+            respTable = new Dictionary<string, ResponseHandler>();
             respTable.Add("QueryConnectionState", QueryConnectionState);
             respTable.Add("SignIn", SignIn);
             respTable.Add("SignOut", SignOut);
             respTable.Add("Reconnect", Reconnect);
             //respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
+        }
+
+        /// <summary>
+        /// Reset this HoxisUser to the undefine user
+        /// </summary>
+        public void Awake() { _heartbeatMonitor.Start(); }
+
+        /// <summary>
+        /// Reset
+        /// </summary>
+        public void Reset()
+        {
+            userID = 0;
+            connectionState = UserConnectionState.None;
+            parentCluster = null;
+            parentTeam = null;
+            hostData = HoxisAgentData.undef;
+            proxiesData = new List<HoxisAgentData>();
+            _heartbeatMonitor.Stop();
         }
 
         /// <summary>
@@ -204,27 +219,12 @@ namespace DacLib.Hoxis.Server
             ReqHandle handle = FF.JsonToObject<ReqHandle>(proto.handle, out ret);
             if (ret.code != 0) return;
             // Check if request name matches method name
-            if (handle.req != proto.action.method) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request name doesn't match method name"); return; }
+            if (handle.req != proto.action.method) { ret = new Ret(LogLevel.Info, 1, "request name doesn't match method name"); return; }
             // Check if expired
             long ts = handle.ts;
             long intv = Math.Abs(SF.GetTimeStamp(TimeUnit.Millisecond) - ts);
-            if (intv > requestTTL) { ret = new Ret(LogLevel.Info, RET_CHECK_ERROR, "request is expired"); return; }
+            if (intv > requestTTL) { ret = new Ret(LogLevel.Info, 1, "request is expired"); return; }
             ret = Ret.ok;
-        }
-
-        /// <summary>
-        /// Reset this HoxisUser to the undefine user
-        /// </summary>
-        public void Initialize()
-        {
-            userID = 0;
-            connectionState = UserConnectionState.None;
-            parentCluster = null;
-            parentTeam = null;
-            hostData = HoxisAgentData.undef;
-            proxiesData = new List<HoxisAgentData>();
-            onPost = null;
-            //_heartbeatMonitor.Reset();
         }
 
         /// <summary>
@@ -263,14 +263,6 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         public static string NewUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
 
-        private void OnDisconnect(int time)
-        {
-            connectionState = UserConnectionState.Disconnected;
-            //_heartbeatMonitor.Reset();
-            _logger.LogWarning("disconnected", "");
-            //_logger.End();
-        }
-
         private void OnPost(byte[] data) { if (onPost == null) return; onPost(data); }
 
         #region reflection functions: response
@@ -287,7 +279,7 @@ namespace DacLib.Hoxis.Server
                 if (w.user.userID == uid)
                     return ResponseSuccess(handle, "QueryConnectionStateCb", new KVString("state", w.user.connectionState.ToString()));
             }
-            return Response(handle, "QueryConnectionStateCb", new KVString("code", Consts.RESP_NO_USER_INFO));
+            return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
         }
 
         /// <summary>
@@ -315,7 +307,6 @@ namespace DacLib.Hoxis.Server
 
         private bool SignOut(string handle, HoxisProtocolArgs args)
         {
-            Initialize();
             if (logEnable) { _logger.LogInfo("sign out", ""); _logger.End(); }
             return ResponseSuccess(handle, "SignOutCb");
         }

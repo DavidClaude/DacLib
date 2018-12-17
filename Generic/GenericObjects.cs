@@ -43,7 +43,7 @@ namespace DacLib.Generic
             orig = origArg;
             min = minArg;
             max = maxArg;
-            OnUpdate();
+            Update();
         }
 
         /// <summary>
@@ -57,19 +57,13 @@ namespace DacLib.Generic
             switch (mode)
             {
                 case CalcMode.Const:
-                    if (!_constTraces.ContainsKey(name))
-                    {
-                        _constTraces.Add(name, valArg);
-                    }
+                    if (!_constTraces.ContainsKey(name)) { _constTraces.Add(name, valArg); }
                     break;
                 case CalcMode.Percentage:
-                    if (!_percTraces.ContainsKey(name))
-                    {
-                        _percTraces.Add(name, valArg);
-                    }
+                    if (!_percTraces.ContainsKey(name)) { _percTraces.Add(name, valArg); }
                     break;
             }
-            OnUpdate();
+            Update();
         }
 
         /// <summary>
@@ -78,39 +72,27 @@ namespace DacLib.Generic
         /// <param name="name">Name.</param>
         public void RemoveTrace(string name)
         {
-            if (_constTraces.ContainsKey(name))
-            {
-                _constTraces.Remove(name);
-            }
-            if (_percTraces.ContainsKey(name))
-            {
-                _percTraces.Remove(name);
-            }
-            OnUpdate();
+            if (_constTraces.ContainsKey(name)) { _constTraces.Remove(name); }
+            if (_percTraces.ContainsKey(name)) { _percTraces.Remove(name); }
+            Update();
         }
 
         /// <summary>
         /// Initialize
         /// </summary>
-        public void Init()
+        public void Initialize()
         {
-            _constTraces = new Dictionary<string, float>();
-            _percTraces = new Dictionary<string, float>();
-            OnUpdate();
+            _constTraces.Clear();
+            _percTraces.Clear();
+            Update();
         }
 
-        private void OnUpdate()
+        private void Update()
         {
             float c = 0f;
-            foreach (float v in _constTraces.Values)
-            {
-                c += v;
-            }
+            foreach (float v in _constTraces.Values) { c += v; }
             float p = 0f;
-            foreach (float v in _percTraces.Values)
-            {
-                p += v;
-            }
+            foreach (float v in _percTraces.Values) { p += v; }
             float fin = orig + orig * p + c;
             val = MathFunc.Clamp(fin, min, max);
         }
@@ -128,7 +110,7 @@ namespace DacLib.Generic
             Dictionary<string, object> table = FormatFunc.JsonToTable(json);
             _constTraces = FormatFunc.JsonToObject<Dictionary<string, float>>(table["_constTraces"].ToString());
             _percTraces = FormatFunc.JsonToObject<Dictionary<string, float>>(table["_percTraces"].ToString());
-            OnUpdate();
+            Update();
         }
     }
 
@@ -192,29 +174,15 @@ namespace DacLib.Generic
         /// Set the value
         /// </summary>
         /// <param name="valArg">Value argument.</param>
-        public void Set(float valArg)
-        {
-            val = MathFunc.Clamp(valArg, min, max);
-        }
+        public void Set(float valArg) { val = MathFunc.Clamp(valArg, min, max); }
 
         /// <summary>
         /// Initialize
         /// </summary>
-        public void Init()
-        {
-            val = MathFunc.Clamp(orig, min, max);
-        }
+        public void Initialize() { val = MathFunc.Clamp(orig, min, max); }
 
-        string IJsonable.ToJson()
-        {
-            return FormatFunc.JsonAppend("", new KV<string, object> { key = "val", val = val });
-        }
-
-        void IJsonable.LoadJson(string json)
-        {
-            Dictionary<string, object> table = FormatFunc.JsonToTable(json);
-            val = MathFunc.Clamp(float.Parse(table["val"].ToString()), min, max);
-        }
+        string IJsonable.ToJson() { return FormatFunc.JsonAppend("", new KV<string, object> { key = "val", val = val }); }
+        void IJsonable.LoadJson(string json) { Dictionary<string, object> table = FormatFunc.JsonToTable(json); val = MathFunc.Clamp(float.Parse(table["val"].ToString()), min, max); }
     }
 
     /// <summary>

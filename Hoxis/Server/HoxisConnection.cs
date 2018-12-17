@@ -49,6 +49,7 @@ namespace DacLib.Hoxis.Server
             catch (Exception e) { Console.WriteLine(e.Message); return; }
             clientIP = _socket.RemoteEndPoint.ToString();
             if (user == null) user = new HoxisUser();
+            user.Awake();
             _extractor.onBytesExtracted += user.ProtocolEntry;
             user.onPost += Send;
             LoopReceive();
@@ -57,7 +58,7 @@ namespace DacLib.Hoxis.Server
         public void OnRelease()
         {
             clientIP = string.Empty;
-            user.Initialize();
+            user.Reset();
             _extractor.Initialize();
             Close();
         }
@@ -68,7 +69,7 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public void LoopReceive()
         {
-            if (_receiveThread != null) _receiveThread.Abort();
+            if (_receiveThread.IsAlive) _receiveThread.Abort();
             _receiveThread = new Thread(() =>
             {
                 while (true)
@@ -99,7 +100,7 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public void Close()
         {
-            if (_receiveThread != null) _receiveThread.Abort();
+            if (_receiveThread.IsAlive) _receiveThread.Abort();
             if (_socket == null) return;
             if (!isConnected) return;
             try

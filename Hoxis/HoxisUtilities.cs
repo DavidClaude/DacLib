@@ -60,11 +60,14 @@ namespace DacLib.Hoxis {
 
     #region constants
     public class Consts {
-        public const string RESP_SUCCESS = "0";
-        public const string RESP_NO_USER_INFO = "10001";
-        public const string RESP_RECONNECT = "10002";
-        public const string RESP_HEARTBEAT_UNAVAILABLE = "10003";
-        public const string RESP_CHECK_FAILED = "10004";
+        // response codes
+        public const string RESP_SUCCESS = "0";                     // response success
+        public const string RESP_NO_USER_INFO = "10001";            // no user information on server
+        public const string RESP_HEARTBEAT_UNAVAILABLE = "10003";   // heartbeat has been stopped
+        public const string RESP_CHECK_FAILED = "10004";            // request is illegal
+
+        // exception codes
+        public const int CODE_HEARTBEAT_TIMEOUT = 20001;
     }
     #endregion
 }
