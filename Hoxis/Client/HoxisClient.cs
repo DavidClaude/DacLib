@@ -62,6 +62,11 @@ namespace DacLib.Hoxis.Client
         public static event RetForVoid_Handler onConnectError;
 
         /// <summary>
+        /// Event of closing success
+        /// </summary>
+        public static event NoneForVoid_Handler onClose;
+
+        /// <summary>
         /// Event of closing error
         /// </summary>
         public static event RetForVoid_Handler onCloseError;
@@ -106,6 +111,8 @@ namespace DacLib.Hoxis.Client
             HoxisDirector.protocolQueueCapacity = config.GetInt("director", "protocol_queue_capacity", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
             HoxisDirector.protocolQueueProcessQuantity = config.GetShort("director", "protocol_queue_process_quantity", out ret);
+            if (ret.code != 0) { OnInitError(ret); return; }
+            HoxisDirector.heartbeatInterval = config.GetFloat("director", "heartbeat_interval", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
         }
 
@@ -170,7 +177,8 @@ namespace DacLib.Hoxis.Client
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }
-            catch (SocketException e) { OnNetworkAnomaly(e.ErrorCode, e.Message); }
+            catch (SocketException e) { OnCloseError(new Ret(LogLevel.Error, RET_CLOSE_EXCEPTION, e.Message)); }
+            OnClose();
         }
 
         #region private functions
@@ -184,8 +192,10 @@ namespace DacLib.Hoxis.Client
         private static void OnInitError(Ret ret) { if (onInitError == null) return; onInitError(ret); }
         private static void OnConnected() { if (onConnected == null) return; onConnected(); }
         private static void OnConnectError(Ret ret) { if (onConnectError == null) return; onConnectError(ret); }
+        private static void OnNetworkAnomaly(int code, string message) { if (onNetworkAnomaly == null) return; onNetworkAnomaly(code, message); }
+        private static void OnClose() { if (onClose == null) return; onClose(); }
         private static void OnCloseError(Ret ret) { if (onCloseError == null) return; onCloseError(ret); }
-        private static void OnNetworkAnomaly(int code, string message) { if (onNetworkAnomaly == null) return;onNetworkAnomaly(code, message); }
+        
         #endregion
     }
 }

@@ -32,29 +32,42 @@ namespace DacLib.Hoxis.Client
 
         public static int protocolQueueCapacity { get; set; }
         public static short protocolQueueProcessQuantity { get; set; }
-        //public event BytesForVoid_Handler onPost;
+        public static float heartbeatInterval { get; set; }
         public event ErrorHandler onResponseError;
 
-        protected Dictionary<string, ActionArgsHandler> respCbTable = new Dictionary<string, ActionArgsHandler>();
+        protected Dictionary<string, ActionArgsHandler> respCbTable;
         private Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
         private Queue<HoxisProtocol> _protocolQueue;
+        private RegularTimer _heartbeatTimer;
 
         void Awake()
         {
             if (Ins == null) Ins = this;
+            respCbTable = new Dictionary<string, ActionArgsHandler>();
             _agentSearcher = new Dictionary<HoxisAgentID, HoxisAgent>();
             _protocolQueue = new Queue<HoxisProtocol>(protocolQueueCapacity);
+            _heartbeatTimer = new RegularTimer(heartbeatInterval, PostHeartbeat);
+            
+        }
+
+        void Start()
+        {
             respCbTable.Add("QueryConnectionStateCb", QueryConnectionStateCb);
             respCbTable.Add("SignInCb", SignInCb);
             respCbTable.Add("SignOutCb", SignOutCb);
             respCbTable.Add("ReconnectCb", ReconnectCb);
             respCbTable.Add("RefreshHeartbeatCb", RefreshHeartbeatCb);
+            HoxisClient.onConnected += () => { _heartbeatTimer.Start(); };
+            HoxisClient.onClose += () => { _heartbeatTimer.Stop(); };
         }
 
         void Update()
         {
             // Get protocols from queue and process
             ProcessInRound();
+
+            // Update heartbeat timer
+            _heartbeatTimer.Update(Time.deltaTime);
         }
 
         /// <summary>
@@ -139,30 +152,17 @@ namespace DacLib.Hoxis.Client
         /// <param name="proto"></param>
         public void ProtocolPost(HoxisProtocol proto)
         {
-            switch (proto.type)
-            {
-                case ProtocolType.Synchronization:
-
-                    break;
-                case ProtocolType.Request:
-                    // todo wait
-                    break;
-                case ProtocolType.Response:
-
-                    break;
-            }
             string json = FF.ObjectToJson(proto);
             byte[] data = FF.StringToBytes(json);
             HoxisClient.Send(data);
         }
 
         /// <summary>
-        /// Rapidly construct a request
+        /// Rapidly send a request protocol
         /// </summary>
         /// <param name="method"></param>
         /// <param name="kvs"></param>
-        /// <returns></returns>
-        public HoxisProtocol NewRequest(string method, params KVString[] kvs)
+        public void Request(string method, params KVString[] kvs)
         {
             HoxisProtocol proto = new HoxisProtocol
             {
@@ -174,10 +174,11 @@ namespace DacLib.Hoxis.Client
                 action = new HoxisProtocolAction(method, kvs),
                 desc = ""
             };
-            return proto;
+            ProtocolPost(proto);
+            // todo wait for response
         }
 
-        public HoxisProtocol NewRequest(string method){return NewRequest(method, null);}
+        public void Request(string method){ Request(method, null); }
 
         #region private functions
 
@@ -209,7 +210,7 @@ namespace DacLib.Hoxis.Client
                 count++;
             }
         }
-        private void PostHeartbeat(){ HoxisProtocol proto = NewRequest("RefreshHeartbeat");ProtocolPost(proto); }
+        private void PostHeartbeat(){ Request("RefreshHeartbeat"); }
         private void OnResponseError(string err, string desc) { if (onResponseError == null) return; onResponseError(err, desc); }
 
         #endregion
