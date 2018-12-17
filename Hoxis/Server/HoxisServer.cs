@@ -63,7 +63,7 @@ namespace DacLib.Hoxis.Server
         /// Init the configuration, such as the ip, port, socket and arguments
         /// </summary>
         /// <param name="configPath"></param>
-        public static void InitConfig(string configPath, string project, out Ret ret)
+        public static void InitializeConfig(string project, out Ret ret, string configPath = "")
         {
             // Init and begin log recording
             _logger = new DebugRecorder(FF.StringAppend(basicPath, @"logs\server.log"), out ret);

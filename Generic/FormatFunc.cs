@@ -81,7 +81,7 @@ namespace DacLib.Generic
         }
 
         /// <summary>
-        /// Quick generate string with tag like "{0}"
+        /// Rapidly construct string with tag like "{0}"
         /// </summary>
         /// <param name="str"></param>
         /// <param name="srcStrs"></param>

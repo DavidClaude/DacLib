@@ -73,7 +73,7 @@ namespace DacLib.Hoxis
         /// Server, cluster of current game, teammates, or some player ?
         /// </summary>
         public ReceiverType type;
-        
+
         /// <summary>
         /// If to some player, what's his user id
         /// </summary>
@@ -136,22 +136,30 @@ namespace DacLib.Hoxis
             method = methodArg;
             args = HoxisProtocolArgs.undef;
         }
+
+        public HoxisProtocolAction(string methodArg, params KVString[] kvs)
+        {
+            method = methodArg;
+            args = new HoxisProtocolArgs(kvs);
+        }
     }
     public struct HoxisProtocolArgs
     {
-        public string this[string key] {
-            get {
+        public string this[string key]
+        {
+            get
+            {
                 if (!values.ContainsKey(key)) return "";
                 return (values[key]);
             }
         }
         public static readonly HoxisProtocolArgs undef = new HoxisProtocolArgs { values = new Dictionary<string, string>() };
         public Dictionary<string, string> values;
-        public HoxisProtocolArgs(Dictionary<string, string> kvArg) { values = kvArg; }
+        public HoxisProtocolArgs(Dictionary<string, string> kvs) { values = kvs; }
         public HoxisProtocolArgs(params KVString[] kvs)
         {
             values = new Dictionary<string, string>();
-            foreach (KVString s in kvs) { values.Add(s.key, s.val); }
+            if (kvs != null) foreach (KVString kv in kvs) { values.Add(kv.key, kv.val); }
         }
     }
 }

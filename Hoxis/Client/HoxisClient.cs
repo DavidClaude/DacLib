@@ -10,6 +10,11 @@ namespace DacLib.Hoxis.Client
 {
     public static class HoxisClient
     {
+        /// <summary>
+        /// Ver.
+        /// </summary>
+        public const string version = "0.0.0";
+
         #region ret codes
         public const byte RET_CONNECT_EXCEPTION = 1;
         public const byte RET_CLOSE_EXCEPTION = 2;
@@ -74,7 +79,7 @@ namespace DacLib.Hoxis.Client
         /// Init the configuration, such as the ip, port, socket
         /// </summary>
         /// <param name="ret"></param>
-        public static void InitConfig(string configPath = "")
+        public static void InitializeConfig(string configPath = "")
         {
             Ret ret;
             // Read config file
@@ -114,7 +119,7 @@ namespace DacLib.Hoxis.Client
                 _socket.Connect(ep);
                 OnConnected();
                 LoopReceive();
-                HoxisDirector.Ins.onPost += Send;
+                //HoxisDirector.Ins.onPost += Send;
             }
             catch (Exception e) { OnConnectError(new Ret(LogLevel.Error, RET_CONNECT_EXCEPTION, e.Message)); }
         }
@@ -156,6 +161,7 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         public static void Close()
         {
+            //HoxisDirector.Ins.onPost -= Send;
             if (_receiveThread != null) _receiveThread.Abort();
             if (_socket == null) return;
             if (!isConnected) return;

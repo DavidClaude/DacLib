@@ -6,6 +6,7 @@ using DacLib.Generic;
 using DacLib.Codex;
 
 using FF = DacLib.Generic.FormatFunc;
+using SF = DacLib.Generic.SystemFunc;
 using C = DacLib.Hoxis.Consts;
 
 namespace DacLib.Hoxis.Client
@@ -31,7 +32,7 @@ namespace DacLib.Hoxis.Client
 
         public static int protocolQueueCapacity { get; set; }
         public static short protocolQueueProcessQuantity { get; set; }
-        public event BytesForVoid_Handler onPost;
+        //public event BytesForVoid_Handler onPost;
         public event ErrorHandler onResponseError;
 
         protected Dictionary<string, ActionArgsHandler> respCbTable = new Dictionary<string, ActionArgsHandler>();
@@ -152,8 +153,31 @@ namespace DacLib.Hoxis.Client
             }
             string json = FF.ObjectToJson(proto);
             byte[] data = FF.StringToBytes(json);
-            OnPost(data);
+            HoxisClient.Send(data);
         }
+
+        /// <summary>
+        /// Rapidly construct a request
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="kvs"></param>
+        /// <returns></returns>
+        public HoxisProtocol NewRequest(string method, params KVString[] kvs)
+        {
+            HoxisProtocol proto = new HoxisProtocol
+            {
+                type = ProtocolType.Request,
+                handle = FF.ObjectToJson(new ReqHandle { req = method, ts = SF.GetTimeStamp(TimeUnit.Millisecond) }),
+                err = "",
+                receiver = HoxisProtocolReceiver.undef,
+                sender = HoxisProtocolSender.undef,
+                action = new HoxisProtocolAction(method, kvs),
+                desc = ""
+            };
+            return proto;
+        }
+
+        public HoxisProtocol NewRequest(string method){return NewRequest(method, null);}
 
         #region private functions
 
@@ -185,9 +209,7 @@ namespace DacLib.Hoxis.Client
                 count++;
             }
         }
-
-        private void OnPost(byte[] data) { if (onPost == null) return; onPost(data); }
-
+        private void PostHeartbeat(){ HoxisProtocol proto = NewRequest("RefreshHeartbeat");ProtocolPost(proto); }
         private void OnResponseError(string err, string desc) { if (onResponseError == null) return; onResponseError(err, desc); }
 
         #endregion

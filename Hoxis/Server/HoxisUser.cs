@@ -257,11 +257,11 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
-        /// Generate log name of an user
+        /// New log name of an user
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static string GenerateUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
+        public static string NewUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
 
         private void OnDisconnect(int time)
         {
@@ -303,7 +303,7 @@ namespace DacLib.Hoxis.Server
             userID = uid;
             connectionState = UserConnectionState.Default;
             //_heartbeatMonitor.Start();
-            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
+            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(uid)), out ret);
             if (ret.code != 0) { Console.WriteLine(ret.desc); }
             else
             {
@@ -342,7 +342,7 @@ namespace DacLib.Hoxis.Server
                     if (logEnable) { _logger.LogInfo("reconnect", ""); }
                     else
                     {
-                        _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", GenerateUserLogName(uid)), out ret);
+                        _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(uid)), out ret);
                         if (ret.code != 0) { Console.WriteLine(ret.desc); }
                         else
                         {
