@@ -50,9 +50,12 @@ namespace DacLib.Hoxis.Server
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
 
-            _heartbeatMonitor = new AsyncTimer(heartbeatTimeout);
-            _heartbeatMonitor.onTimeout += () =>
-            { ProcessNetworkAnomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket is disconnected exceptionally"); _heartbeatMonitor.End(); };
+            _heartbeatMonitor = new AsyncTimer(heartbeatTimeout, new NoneForVoid_Handler(() =>
+                 {
+                     ProcessNetworkAnomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket is disconnected exceptionally");
+                     _heartbeatMonitor.End();
+                 })
+                );
             respTable = new Dictionary<string, ResponseHandler>();
             respTable.Add("QueryConnectionState", QueryConnectionState);
             respTable.Add("SignIn", SignIn);

@@ -51,6 +51,7 @@ namespace DacLib.Codex
             {
                 if (_queue.Count <= 0) break;
                 T affair = _queue.Dequeue();
+                
                 OnProcess(affair);
                 i++;
             }
