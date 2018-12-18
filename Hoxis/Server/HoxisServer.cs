@@ -164,7 +164,7 @@ namespace DacLib.Hoxis.Server
         /// Get all working connections 
         /// </summary>
         /// <returns></returns>
-        public static List<HoxisConnection> GetWorkingConnections() { return _connReception.GetOccupiedPreforms(); }
+        public static List<HoxisConnection> GetWorkingConnections() { return _connReception.GetWorkers(); }
 
         /// <summary>
         ///  Get working user by uid
@@ -233,7 +233,7 @@ namespace DacLib.Hoxis.Server
 
         public static void LogConnectionStatus()
         {
-            List<HoxisConnection> conns = _connReception.GetOccupiedPreforms();
+            List<HoxisConnection> conns = _connReception.GetWorkers();
             foreach (HoxisConnection c in conns)
             {
                 Console.WriteLine("Local ID: {0}\nState: {1}\n", c.localID, c.user.connectionState);
