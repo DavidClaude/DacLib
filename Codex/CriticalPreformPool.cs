@@ -7,6 +7,10 @@ using DacLib.Generic;
 
 namespace DacLib.Codex
 {
+    /// <summary>
+    /// Critical, reusable objects pool
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     class CriticalPreformPool<T> where T : class, IReusable, new()
     {
         #region ret codes
@@ -18,7 +22,7 @@ namespace DacLib.Codex
         /// <summary>
         /// The most preforms in pool
         /// </summary>
-        public int count { get; }
+        public int maxCount { get; }
 
         /// <summary>
         /// Get the count of null or unoccupied preforms
@@ -30,7 +34,8 @@ namespace DacLib.Codex
                 int r = 0;
                 foreach (T pf in _preforms)
                 {
-                    if (pf != null) { if (pf.isOccupied) continue; }
+                    if (pf == null) continue;
+                    if (pf.isOccupied) continue;
                     r++;
                 }
                 return r;
@@ -38,10 +43,11 @@ namespace DacLib.Codex
         }
 
         private T[] _preforms;
-        public CriticalPreformPool(int countArg)
+
+        public CriticalPreformPool(int maxCountArg)
         {
-            count = countArg;
-            _preforms = new T[count];
+            maxCount = maxCountArg;
+            _preforms = new T[maxCount];
         }
 
         /// <summary>
@@ -53,7 +59,7 @@ namespace DacLib.Codex
         /// <returns></returns>
         public T Request(object state, out Ret ret)
         {
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < maxCount; i++)
             {
                 // If null, init and use it
                 if (_preforms[i] == null)
@@ -62,7 +68,7 @@ namespace DacLib.Codex
                     _preforms[i].isOccupied = true;
                     _preforms[i].localID = i;
                     _preforms[i].OnRequest(state);
-                    ret = new Ret(LogLevel.Info, 0, "new object");
+                    ret = Ret.ok;
                     return _preforms[i];
                 }
                 // If not occupied, use it
@@ -75,7 +81,7 @@ namespace DacLib.Codex
                     return _preforms[i];
                 }
             }
-            ret = new Ret(LogLevel.Warning, RET_NO_UNOCCUPIED_PREFORM, "No unoccupied preform");
+            ret = new Ret(LogLevel.Warning, RET_NO_UNOCCUPIED_PREFORM, "no unoccupied preform");
             return null;
         }
 
@@ -88,11 +94,12 @@ namespace DacLib.Codex
         {
             if (preform == null)
             {
-                ret = new Ret(LogLevel.Error, RET_OBJECT_IS_NULL, "Preform is null");
+                ret = new Ret(LogLevel.Error, RET_OBJECT_IS_NULL, "preform is null");
                 return;
-            }     
-            if (!preform.isOccupied) {
-                ret = new Ret(LogLevel.Info, 0, "Already released");
+            }
+            if (!preform.isOccupied)
+            {
+                ret = new Ret(LogLevel.Info, 0, "already released");
                 return;
             }
             preform.OnRelease();
@@ -113,17 +120,6 @@ namespace DacLib.Codex
         }
 
         /// <summary>
-        /// Try to get the index of preform given
-        /// </summary>
-        /// <param name="preform"></param>
-        /// <returns></returns>
-        public int GetPreformIndex(T preform)
-        {
-            for (int i = 0; i < count; i++) { if (_preforms[i] == preform) return i; }
-            return -1;
-        }
-
-        /// <summary>
         /// Get the preform by index
         /// </summary>
         /// <param name="index"></param>
@@ -131,9 +127,9 @@ namespace DacLib.Codex
         /// <returns></returns>
         public T GetPreform(int index, out Ret ret)
         {
-            if (index < 0 || index > count - 1)
+            if (index < 0 || index > maxCount - 1)
             {
-                ret = new Ret(LogLevel.Error, 1, "Index:" + index + " is out of range");
+                ret = new Ret(LogLevel.Error, 1, "index:" + index + " is out of range");
                 return null;
             }
             T preform = _preforms[index];
@@ -145,10 +141,11 @@ namespace DacLib.Codex
         /// Get all occupied preforms
         /// </summary>
         /// <returns></returns>
-        public List<T> GetOccupiedPreforms()
+        public List<T> GetWorkers()
         {
             List<T> preforms = new List<T>();
-            foreach (T p in _preforms) {
+            foreach (T p in _preforms)
+            {
                 if (p == null) continue;
                 if (!p.isOccupied) continue;
                 preforms.Add(p);

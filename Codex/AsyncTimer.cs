@@ -6,11 +6,15 @@ using System.Threading;
 
 namespace DacLib.Generic
 {
+    /// <summary>
+    /// Asynchronous timer
+    /// Caller should register a callback on onTimeout
+    /// </summary>
     public class AsyncTimer
     {
         public int timeout { get; }
         public int time { get; private set; }
-        public bool enable { get { if (_thread == null) return false;return _thread.IsAlive; } }
+        public bool enable { get { if (_thread == null) return false; return _thread.IsAlive; } }
         public event NoneForVoid_Handler onTimeout;
         private Thread _thread;
 

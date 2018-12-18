@@ -1,4 +1,4 @@
-# Project Standard
+# 项目规范
 
 ## 一、文件命名规范
 
@@ -303,6 +303,11 @@ public class SampleClass
 
 ### 标准化设计：属性
 
+#### [enable]
+
+- 类型：bool
+- 说明：指明该对象的功能机制是否正在进行中，关键属性是否可访问，关键方法是否可调用
+
 ### 标准化设计：方法
 
 #### [Initialize]
@@ -331,7 +336,12 @@ public class SampleClass
 
 #### [SignIn - SignOut]
 
-- 说明：数据填充
+- 说明：用于为主体对象提供填充/卸载数据的方法
+- 场景：对象描述了对于某一事务模型的状态信息等，期望主动控制相关数据的填充与卸载
+- 实例：Hoxis中的User
 
 #### [Connect - Close]
 
+- 说明：Connect用于建立一条持续的对等的连接，Close用于关闭该连接
+- 场景：网络连接等
+- 实例：Hoxis中的Connection

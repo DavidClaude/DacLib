@@ -11,6 +11,9 @@ using SF = DacLib.Generic.SystemFunc;
 
 namespace DacLib.Codex
 {
+    /// <summary>
+    /// Record the logs to native files
+    /// </summary>
     public class DebugRecorder
     {
         public const byte RET_STREAM_INIT_ERROR = 1;

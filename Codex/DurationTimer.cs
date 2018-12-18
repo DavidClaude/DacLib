@@ -7,6 +7,9 @@ using DacLib.Generic;
 
 namespace DacLib.Codex
 {
+    /// <summary>
+    /// Timer for measuring time span 
+    /// </summary>
     public class DurationTimer : IInitializable 
     {
         public static readonly DurationTimer Ins = new DurationTimer();
@@ -22,7 +25,6 @@ namespace DacLib.Codex
             _startDT = DateTime.MinValue;
             _stopDT = DateTime.MinValue;
         }
-
         public void Start()
         {
             if (isActive) return;
@@ -37,9 +39,9 @@ namespace DacLib.Codex
         }
         public void Initialize()
         {
+            isActive = false;
             _startDT = DateTime.MinValue;
             _stopDT = DateTime.MinValue;
-            isActive = false;
         }
         public TimeSpan GetDuration() { return _stopDT - _startDT; }
         public TimeSpan Tag() { return DateTime.Now - _startDT; }
