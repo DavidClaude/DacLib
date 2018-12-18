@@ -52,13 +52,13 @@ namespace DacLib.Hoxis.Server
 
             _heartbeatMonitor = new AsyncTimer(heartbeatTimeout);
             _heartbeatMonitor.onTimeout += () =>
-            { ProcessNetworkAnomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket is disconnected exceptionally"); };
+            { ProcessNetworkAnomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket is disconnected exceptionally"); _heartbeatMonitor.End(); };
             respTable = new Dictionary<string, ResponseHandler>();
             respTable.Add("QueryConnectionState", QueryConnectionState);
             respTable.Add("SignIn", SignIn);
             respTable.Add("SignOut", SignOut);
             respTable.Add("Reconnect", Reconnect);
-            //respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
+            respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
         }
 
         #region IStatusControllable

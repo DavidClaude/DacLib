@@ -69,7 +69,6 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public void LoopReceive()
         {
-            if (_receiveThread.IsAlive) _receiveThread.Abort();
             _receiveThread = new Thread(() =>
             {
                 while (true)

@@ -25,7 +25,7 @@ namespace DacLib.Generic
         }
         public void Begin()
         {
-            if (_thread.IsAlive) return;
+            if (enable) return;
             _thread = new Thread(() =>
             {
                 while (true)
@@ -38,7 +38,7 @@ namespace DacLib.Generic
             _thread.Start();
         }
         public void Refresh() { lock (this) { time = 0; } }
-        public void End() { if (_thread.IsAlive) _thread.Abort(); }
+        public void End() { if (enable) _thread.Abort(); }
 
         private void OnTimeout() { if (onTimeout == null) return; onTimeout(); }
     }
