@@ -26,7 +26,7 @@ namespace DacLib.Codex
         public event ObjectForVoid_Handler onProcess;
 
         private Queue<T> _queue;
-        //private ActionHandler _handler;
+
         public FiniteProcessQueue(int capacityArg, short processingQuantityArg)
         {
             capacity = capacityArg;
