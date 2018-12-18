@@ -341,7 +341,7 @@ namespace DacLib.Hoxis.Server
                             _logger.LogInfo("reconnect", "");
                         }
                     }
-                    HoxisServer.ReleaseConnection(w);
+                    HoxisServer.AffairEntry("release connection", w);
                     return ResponseSuccess(handle, "ReconnectCb");
                 }
             }
