@@ -15,12 +15,11 @@ namespace DacLib.Generic
     /// <summary>
     /// Enable to be served by specific object, such as CriticalReception
     /// </summary>
-    public interface IReceivable
+    public interface INodal
     {
-        bool isUpdated { get; set; }
-        void OnAccept();
-        void OnService();
-        void OnDecline();
+        void OnEnter();
+        void OnStay();
+        void OnExit();
     }
 
     /// <summary>
@@ -32,5 +31,18 @@ namespace DacLib.Generic
         bool isOccupied { get; set; }
         void OnRequest(object state);
         void OnRelease();
+    }
+
+    public interface IStatusControllable
+    {
+        void Awake();
+        void Pause();
+        void Continue();
+        void Reset();
+    }
+
+    public interface IInitializable
+    {
+        void Initialize();
     }
 }

@@ -94,7 +94,7 @@ foreach (string s in layers) {}
 
 ## 四、编码设计规范
 
-### DacLib
+### 自建库文件层级
 
 - Generic为最底层库，只允许封装.Net和非开源动态库(.dll)；只允许Func文件引用Generic基础对象
 
@@ -104,7 +104,7 @@ foreach (string s in layers) {}
 
 ### 关键字使用策略
 
-#### [class或struct]
+#### [类与结构体]
 
 - 具有属性、方法的能够独立完成单元功能的对象使用class定义，引用类型能够避免不必要的复制
 
@@ -153,11 +153,11 @@ public static readonly Ret ok = new Ret(LogLevel.Info, 0, "");
 
 - 须指定报错级别
 
-		--INFO：信息，符合使用要求且不影响运行，使用者希望获取自定义信息
+   --INFO：信息，符合使用要求且不影响运行，使用者希望获取自定义信息
 
-		--WARNING：警告，不符合使用要求、运行时出现告警，但不影响运行
-	
-		--ERROR：错误，无法完成预期功能，甚至导致运行崩溃
+   --WARNING：警告，不符合使用要求、运行时出现告警，但不影响运行
+
+   --ERROR：错误，无法完成预期功能，甚至导致运行崩溃
 
 - 错误码以常量形式定义于相关类中，统一使用"RET"前缀
 
@@ -189,9 +189,7 @@ public class RetClass
 ```c#
 public void Try(string str, out Ret ret)
 {
-    try {
-        //...
-    }
+    try { /.../ }
     catch (Exception e)
     {
         ret = new Ret(LogLevel.Error, 1,"...\n" + e.Message);	//捕获错误时，Ret报错并返回
@@ -234,11 +232,7 @@ public class SampleClass
     #region properties
     public static int index {get;set;}
     public string name {get;private set;}
-    public int count {
-        get{
-            return _list.Count;
-        }
-    }
+    public int count { get{ return _list.Count; } }
     public event SampleHandler onEvent;
     #endregion
     
@@ -306,3 +300,38 @@ public class SampleClass
 - 层级：A为单例，单例间为平级关系
 - 规则：被调用时需保证“处理->输出”的过程，避免穿透，即B借助A的调用权限间接调用C
 - 实例：Hoxis中的Client与Director
+
+### 标准化设计：属性
+
+### 标准化设计：方法
+
+#### [Initialize]
+
+- 说明：实例被创建时会调用构造方法来初始化属性、字段，Initialize则是将实例还原至初始化状态
+- 场景：期望在不频繁创建、释放的情况下复用对象
+- 实例：某成员数组在构造函数中被创建，可在Initialize中使用初始化方法进行初始化
+
+#### [Awake - Pause - Continue - Reset]
+
+- 说明：Awake用于开启功能；Pause用于暂停运转，但须保持状态不变；Continue用于继续运转；Reset用于关闭功能，状态须重置
+- 场景：对象中包含多个可运转功能，需要依据主体状态控制其工作
+- 实例：Hoxis中User在被启用时需开启心跳检测，在停用时关闭
+
+#### [Start - Stop]
+
+- 说明：单一功能的开启与关闭
+- 场景：对象本身即为单一可运转功能的实现
+- 实例：时段计时器
+
+#### [Begin - End]
+
+- 说明：BeginXxx用于开启线程或开辟缓冲的操作；EndXxx用于结束该操作，并释放资源
+- 场景：期望实现需申请额外资源的操作，在Begin中初始化，在End中中止，保证资源回收
+- 实例：异步计时器、调试日志
+
+#### [SignIn - SignOut]
+
+- 说明：数据填充
+
+#### [Connect - Close]
+

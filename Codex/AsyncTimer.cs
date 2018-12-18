@@ -10,6 +10,7 @@ namespace DacLib.Generic
     {
         public int timeout { get; }
         public int time { get; private set; }
+        public bool enable { get { if (_thread == null) return false;return _thread.IsAlive; } }
         public event NoneForVoid_Handler onTimeout;
         private Thread _thread;
 
@@ -18,24 +19,23 @@ namespace DacLib.Generic
             if (timeoutArg <= 0) { timeout = 5000; }
             else timeout = timeoutArg;
         }
-        public void Start()
+        public void Begin()
         {
             if (_thread.IsAlive) return;
-            _thread = new Thread(Update);
+            _thread = new Thread(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(200);
+                    time += 200;
+                    if (time > timeout) { OnTimeout(); }
+                }
+            });
             _thread.Start();
         }
         public void Refresh() { lock (this) { time = 0; } }
-        public void Stop() { if (_thread.IsAlive) _thread.Abort(); }
+        public void End() { if (_thread.IsAlive) _thread.Abort(); }
 
-        private void Update()
-        {
-            while (true)
-            {
-                Thread.Sleep(200);
-                time += 200;
-                if (time > timeout) { OnTimeout(); }
-            }
-        }
         private void OnTimeout() { if (onTimeout == null) return; onTimeout(); }
     }
 }

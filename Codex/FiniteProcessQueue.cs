@@ -14,7 +14,7 @@ namespace DacLib.Codex
         /// Max quantity of affairs in queue
         /// </summary>
         public int capacity { get; }
-        
+
         /// <summary>
         /// The quantity of affairs processed in one round
         /// </summary>
@@ -38,10 +38,7 @@ namespace DacLib.Codex
         /// Enqueue an affair
         /// </summary>
         /// <param name="action"></param>
-        public void Enqueue(T affair)
-        {
-            lock (_queue) { _queue.Enqueue(affair); }
-        }
+        public void Enqueue(T affair) { lock (_queue) { _queue.Enqueue(affair); } }
 
         /// <summary>
         /// Generally called per frame

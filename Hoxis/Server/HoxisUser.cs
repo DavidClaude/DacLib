@@ -13,7 +13,7 @@ using C = DacLib.Hoxis.Consts;
 
 namespace DacLib.Hoxis.Server
 {
-    public class HoxisUser
+    public class HoxisUser : IStatusControllable
     {
         public static long requestTTL { get; set; }
         public static int heartbeatTimeout { get; set; }
@@ -61,14 +61,10 @@ namespace DacLib.Hoxis.Server
             //respTable.Add("RefreshHeartbeat", RefreshHeartbeat);
         }
 
-        /// <summary>
-        /// Reset this HoxisUser to the undefine user
-        /// </summary>
-        public void Awake() { _heartbeatMonitor.Start(); }
-
-        /// <summary>
-        /// Reset
-        /// </summary>
+        #region IStatusControllable
+        public void Awake() { _heartbeatMonitor.Begin(); }
+        public void Pause() { }
+        public void Continue() { }
         public void Reset()
         {
             userID = 0;
@@ -77,8 +73,9 @@ namespace DacLib.Hoxis.Server
             parentTeam = null;
             hostData = HoxisAgentData.undef;
             proxiesData = new List<HoxisAgentData>();
-            _heartbeatMonitor.Stop();
+            _heartbeatMonitor.End();
         }
+        #endregion
 
         /// <summary>
         /// **WITHIN THREAD**
@@ -348,19 +345,19 @@ namespace DacLib.Hoxis.Server
             return SignIn(handle, args);
         }
 
-        ///// <summary>
-        ///// Make sure that the client is connected
-        ///// </summary>
-        ///// <param name="handle"></param>
-        ///// <param name="args"></param>
-        ///// <returns></returns>
-        //private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
-        //{
-        //    if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is null");
-        //    if (!_heartbeatMonitor.enable) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is disable");
-        //    _heartbeatMonitor.Refresh();
-        //    return ResponseSuccess(handle, "RefreshHeartbeatCb");
-        //}
+        /// <summary>
+        /// Make sure that the client is connected
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
+        {
+            if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is null");
+            if (!_heartbeatMonitor.enable) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is disable");
+            _heartbeatMonitor.Refresh();
+            return ResponseSuccess(handle, "RefreshHeartbeatCb");
+        }
 
         /// <summary>
         /// Called if client requests for reconnecting
@@ -387,7 +384,6 @@ namespace DacLib.Hoxis.Server
             //todo 写入数据库
             return ResponseSuccess(handle, "SaveUserDataCb");
         }
-
         #endregion
     }
 }

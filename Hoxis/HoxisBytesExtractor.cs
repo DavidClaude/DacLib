@@ -86,8 +86,8 @@ namespace DacLib.Hoxis
             onBytesExtracted = null;
             readBytes.Initialize();
             readCount = 0;
-            _protoLen = 0;
             _headerBytes.Initialize();
+            _protoLen = 0;
         }
 
         private void OnBytesExtracted(byte[] data) { if (onBytesExtracted == null) return; onBytesExtracted(data); }

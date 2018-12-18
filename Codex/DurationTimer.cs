@@ -3,36 +3,47 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DacLib.Generic;
 
 namespace DacLib.Codex
 {
-    public class DurationTimer
+    public class DurationTimer : IInitializable 
     {
         public static readonly DurationTimer Ins = new DurationTimer();
 
-        private DateTime _startDT = DateTime.MinValue;
-        private DateTime _stopDT = DateTime.MinValue;
-        private bool _isRunning = false;
+        public bool isActive { get; private set; }
+
+        private DateTime _startDT;
+        private DateTime _stopDT;
+
+        public DurationTimer()
+        {
+            isActive = false;
+            _startDT = DateTime.MinValue;
+            _stopDT = DateTime.MinValue;
+        }
 
         public void Start()
         {
-            if (_isRunning) return;
+            if (isActive) return;
             _startDT = DateTime.Now;
-            _isRunning = true;
+            isActive = true;
         }
         public void Stop()
         {
-            if (!_isRunning) return;
+            if (!isActive) return;
             _stopDT = DateTime.Now;
-            _isRunning = false;
+            isActive = false;
         }
-        public void Reset()
+        public void Initialize()
         {
             _startDT = DateTime.MinValue;
             _stopDT = DateTime.MinValue;
-            _isRunning = false;
+            isActive = false;
         }
         public TimeSpan GetDuration() { return _stopDT - _startDT; }
         public TimeSpan Tag() { return DateTime.Now - _startDT; }
+
+        
     }
 }
