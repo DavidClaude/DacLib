@@ -13,59 +13,54 @@ namespace DacLib.Codex
         #endregion
 
         /// <summary>
-        /// 级别改变事件
+        /// Event of level switched
         /// </summary>
         public event IntForVoid_Handler onLevelChange;
 
         /// <summary>
-        /// 程度值
+        /// Value of degree
         /// </summary>
         /// <value>The degree.</value>
         public float degree { get; private set; }
 
         /// <summary>
-        /// 级别数
+        /// Count of levels
         /// </summary>
         public int count { get; }
 
         /// <summary>
-        /// 级别
+        /// The current level
         /// </summary>
         /// <value>The level.</value>
         public int level
         {
             get
             {
-                for (int i = 0; i < count; i++)
-                {
-                    if (degree <= _thresholds[i])
-                        return i;
-                }
+                for (int i = 0; i < count; i++) { if (degree <= _thresholds[i]) return i; }
                 return count - 1;
             }
         }
 
         /// <summary>
-        /// 进度(整体)
+        /// Overall progress
         /// </summary>
-        public float rate { get { return degree / max; } }
+        public float progress { get { return degree / max; } }
 
         /// <summary>
-        /// 进度(当前级别中)
+        /// Local progress
         /// </summary>
-        public float localRate
+        public float localProgress
         {
             get
             {
                 float start = 0;
-                if (level > 0)
-                    start = _thresholds[level - 1];
+                if (level > 0) start = _thresholds[level - 1];
                 return (degree - start) / (_thresholds[level] - start);
             }
         }
 
         /// <summary>
-        /// 最大阈值
+        /// Max threshold
         /// </summary>
         public float max { get { return _thresholds[count - 1]; } }
 
@@ -103,17 +98,22 @@ namespace DacLib.Codex
         /// <param name="ret"></param>
         public void CheckThresholds(out Ret ret)
         {
-            if (count == 0) {
-                ret = new Ret (LogLevel.Error, RET_COUNT_IS_0, "Thresholds count is 0");
+            if (count == 0)
+            {
+                ret = new Ret(LogLevel.Error, RET_COUNT_IS_0, "Thresholds count is 0");
                 return;
             }
-            for (int i = 0; i < count; i++) {
-                if (_thresholds[i] <= 0) {
+            for (int i = 0; i < count; i++)
+            {
+                if (_thresholds[i] <= 0)
+                {
                     ret = new Ret(LogLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_0, "Level:" + i + " threshold is less than or equal to 0");
                     return;
                 }
-                if ( i > 0) {
-                    if (_thresholds[i] <= _thresholds[i - 1]) {
+                if (i > 0)
+                {
+                    if (_thresholds[i] <= _thresholds[i - 1])
+                    {
                         ret = new Ret(LogLevel.Warning, RET_THRESHOLD_IS_LESS_EQUAL_PRE, "Level:" + i + " threshold is less than or equal to the previous one");
                         return;
                     }
@@ -128,7 +128,7 @@ namespace DacLib.Codex
         /// <param name="val">Value.</param>
         public void Extend(float val)
         {
-            
+
             degree += val;
             degree = MathFunc.Clamp(degree, 0, max);
             if (level != _lastLevel)

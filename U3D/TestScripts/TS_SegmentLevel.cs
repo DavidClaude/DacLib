@@ -45,13 +45,13 @@ public class TS_SegmentLevel : MonoBehaviour
         {
             sl.Extend(val);
             Debug.Log("Degree: " + sl.degree);
-            Debug.Log("Local rate: " + sl.localRate);
+            Debug.Log("Local rate: " + sl.localProgress);
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
             sl.Recover();
             Debug.Log("Degree: " + sl.degree);
-            Debug.Log("Local rate: " + sl.localRate);
+            Debug.Log("Local rate: " + sl.localProgress);
         }
     }
 }
