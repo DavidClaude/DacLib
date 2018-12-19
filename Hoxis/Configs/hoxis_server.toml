@@ -1,9 +1,9 @@
 [server]
 port = 10086
 max_conn = 2048
-affair_queue_capacity = 256
-affair_queue_process_quantity = 16
-affair_queue_process_interval = 50
+#affair_queue_capacity = 256
+#affair_queue_process_quantity = 16
+#affair_queue_process_interval = 50
 
 [conn]
 read_buffer_size = 1024

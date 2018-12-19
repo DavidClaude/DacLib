@@ -28,7 +28,6 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public UserConnectionState connectionState { get; private set; }
 
-        public bool logEnable { get { if (_logger == null) return false; return _logger.enable; } }
         #region realtime data
         public HoxisCluster parentCluster { get; set; }
         public HoxisTeam parentTeam { get; set; }
@@ -120,14 +119,14 @@ namespace DacLib.Hoxis.Server
                     // Check ok
                     if (!respTable.ContainsKey(proto.action.method))
                     {
-                        if (logEnable) _logger.LogError(FF.StringFormat("invalid request: {0}", proto.action.method), "", true);
+                        if (DebugRecorder.LogEnable(_logger)) _logger.LogError(FF.StringFormat("invalid request: {0}", proto.action.method), "", true);
                         ResponseError(proto.handle, C.RESP_CHECK_FAILED, FF.StringFormat("invalid request: {0}", proto.action.method));
                         return;
                     }
                     respTable[proto.action.method](proto.handle, proto.action.args);
                     break;
                 default:
-                    if (logEnable) _logger.LogError(FF.StringFormat("invalid protocol type: {0}", proto.type), "");
+                    if (DebugRecorder.LogEnable(_logger)) _logger.LogError(FF.StringFormat("invalid protocol type: {0}", proto.type), "");
                     break;
             }
         }
@@ -252,7 +251,7 @@ namespace DacLib.Hoxis.Server
                         // wait for reconnecting
                         break;
                 }
-                if (logEnable) { _logger.LogError(FF.StringFormat("network anomaly: code is {0}, message is {1}", code, desc), "", true); }
+                if (DebugRecorder.LogEnable(_logger)) { _logger.LogError(FF.StringFormat("network anomaly: code is {0}, message is {1}", code, desc), "", true); }
             }
         }
 
@@ -307,7 +306,7 @@ namespace DacLib.Hoxis.Server
 
         private bool SignOut(string handle, HoxisProtocolArgs args)
         {
-            if (logEnable) { _logger.LogInfo("sign out", ""); _logger.End(); }
+            if (DebugRecorder.LogEnable(_logger)) { _logger.LogInfo("sign out", ""); _logger.End(); }
             return ResponseSuccess(handle, "SignOutCb");
         }
 
@@ -330,7 +329,7 @@ namespace DacLib.Hoxis.Server
                     hostData = w.user.hostData;
                     proxiesData = w.user.proxiesData;
                     //_heartbeatMonitor.Start();
-                    if (logEnable) { _logger.LogInfo("reconnect", ""); }
+                    if (DebugRecorder.LogEnable(_logger)) { _logger.LogInfo("reconnect", ""); }
                     else
                     {
                         _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(uid)), out ret);
@@ -341,7 +340,7 @@ namespace DacLib.Hoxis.Server
                             _logger.LogInfo("reconnect", "");
                         }
                     }
-                    HoxisServer.AffairEntry("release connection", w);
+                    HoxisServer.AffairEntry(C.AFFAIR_RELEASE_CONNECTION, w);
                     return ResponseSuccess(handle, "ReconnectCb");
                 }
             }

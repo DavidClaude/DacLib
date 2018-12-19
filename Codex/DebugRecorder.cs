@@ -34,6 +34,14 @@ namespace DacLib.Codex
             catch (Exception e) { ret = new Ret(LogLevel.Error, RET_STREAM_INIT_ERROR, e.Message); }
             enable = false;
         }
+
+        /// <summary>
+        /// Get if enable sately
+        /// </summary>
+        /// <param name="recorder"></param>
+        /// <returns></returns>
+        public static bool LogEnable(DebugRecorder recorder) { if (recorder == null) return false;return recorder.enable; }
+
         public void Begin()
         {
             if (enable) return;

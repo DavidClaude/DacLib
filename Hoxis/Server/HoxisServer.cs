@@ -9,6 +9,7 @@ using DacLib.Codex;
 using FF = DacLib.Generic.FormatFunc;
 using MF = DacLib.Generic.MathFunc;
 using SF = DacLib.Generic.SystemFunc;
+using C = DacLib.Hoxis.Consts;
 
 namespace DacLib.Hoxis.Server
 {
@@ -39,11 +40,6 @@ namespace DacLib.Hoxis.Server
         public static int port { get; private set; }
 
         /// <summary>
-        /// Processing interval of affair queue
-        /// </summary>
-        public static int affairQueueProcessInterval { get; private set; }
-
-        /// <summary>
         /// The max count of user connection
         /// </summary>
         public static int maxConn { get; private set; }
@@ -61,8 +57,6 @@ namespace DacLib.Hoxis.Server
         private static Socket _socket;
         private static DebugRecorder _logger;
         private static Thread _acceptThread;
-        private static FiniteProcessQueue<KV<string, object>> _affairQueue;
-        private static Thread _affairThread;
         private static CriticalPreformPool<HoxisConnection> _connReception;
         private static Dictionary<string, HoxisCluster> _clusters;
 
@@ -93,23 +87,6 @@ namespace DacLib.Hoxis.Server
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
             _logger.LogInfo(FF.StringFormat("ip is {0}, port is {1}", ip, port.ToString()), "Server");
-
-            // Init affair queue
-            int affairQueueCapacity = config.GetInt("server", "affair_queue_capacity", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
-            short affairQueueProcessQuantity = config.GetShort("server", "affair_queue_process_quantity", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
-            affairQueueProcessInterval = config.GetInt("server", "affair_queue_process_interval", out ret);
-            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
-            _affairQueue = new FiniteProcessQueue<KV<string, object>>(affairQueueCapacity, affairQueueProcessQuantity);
-            _affairQueue.onProcess += ProcessAffair;
-            _logger.LogInfo(
-                FF.StringFormat("affair queue capacity is {0}, processing quantity is {1}, interval is {2}ms",
-                affairQueueCapacity,
-                affairQueueProcessQuantity,
-                affairQueueProcessInterval),
-                "Server"
-                );
 
             // Init connection reception
             maxConn = config.GetInt("server", "max_conn", out ret);
@@ -184,30 +161,14 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
-        /// Begin processing affairs with thread
+        /// Stop the service saftly
         /// </summary>
-        public static void BeginProcessAffair()
+        public static void Quit()
         {
-            _affairThread = new Thread(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(affairQueueProcessInterval);
-                    _affairQueue.ProcessInRound();
-                }
-            });
-            _affairThread.Start();
-            _logger.LogInfo("process affairs begin...", "Server", true);
+            _logger.End();
+            _acceptThread.Abort();
         }
 
-        /// <summary>
-        /// Entrance of affairs
-        /// </summary>
-        /// <param name="affair"></param>
-        public static void AffairEntry(KV<string,object> affair){ _affairQueue.Enqueue(affair); }
-        public static void AffairEntry(string name, object obj) { AffairEntry(new KV<string, object>(name, obj)); }
-
-        #region management
         /// <summary>
         /// Get all working connections 
         /// </summary>
@@ -226,12 +187,45 @@ namespace DacLib.Hoxis.Server
             return null;
         }
 
+        public static void LogConnectionStatus()
+        {
+            List<HoxisConnection> conns = _connReception.GetWorkers();
+            foreach (HoxisConnection c in conns)
+            {
+                Console.WriteLine("Local ID: {0}\nState: {1}\n", c.localID, c.user.connectionState);
+            }
+        }
+
+        /// <summary>
+        /// Entrance of affairs
+        /// </summary>
+        /// <param name="affair"></param>
+        public static void AffairEntry(KV<int, object> affair)
+        {
+            switch (affair.key)
+            {
+                case C.AFFAIR_RELEASE_CONNECTION:
+                    Ret ret;
+                    HoxisConnection conn = (HoxisConnection)affair.val;
+                    lock (conn) { _connReception.Release(conn, out ret); }
+                    if (ret.code != 0) { _logger.LogWarning(ret.desc, "Affair");return; }
+                    break;
+            }
+            _logger.LogInfo(FF.StringFormat("code {0}, object {1} processed",
+                affair.key,
+                affair.val == null ? "null" : affair.val.ToString()),
+                "Affair", true);
+        }
+        public static void AffairEntry(int code, object state) { AffairEntry(new KV<int, object>(code, state)); }
+
+        #region management
+
         /// <summary>
         /// Release an user
         /// Generally called when an user quits, reconnects or stops heartbeats
         /// </summary>
         /// <param name="user"></param>
-        public static void ReleaseConnection(HoxisConnection conn)
+        private static void ReleaseConnection(HoxisConnection conn)
         {
             Ret ret;
             _connReception.Release(conn, out ret);
@@ -269,39 +263,5 @@ namespace DacLib.Hoxis.Server
         //}
 
         #endregion
-
-        /// <summary>
-        /// Stop the service saftly
-        /// </summary>
-        public static void Quit()
-        {
-            _logger.End();
-            _acceptThread.Abort();
-            _affairThread.Abort();
-        }
-
-        public static void LogConnectionStatus()
-        {
-            List<HoxisConnection> conns = _connReception.GetWorkers();
-            foreach (HoxisConnection c in conns)
-            {
-                Console.WriteLine("Local ID: {0}\nState: {1}\n", c.localID, c.user.connectionState);
-            }
-        }
-
-        private static void ProcessAffair(object state)
-        {
-            KV<string, object> affair = (KV<string, object>)state;
-            switch (affair.key)
-            {
-                case "release connection":
-                    HoxisConnection conn = (HoxisConnection)affair.val;
-                    ReleaseConnection(conn);
-                    break;
-                default:
-                    Console.WriteLine("Unknown affair: {0}", affair.key);
-                    break;
-            }
-        }
     }
 }

@@ -55,8 +55,10 @@ namespace DacLib.Codex
             foreach (string line in lines)
             {
                 string lineTrim = line.Trim();
+                if (FF.RegexMatch(lineTrim, @"^#.*")) continue;
                 string[] vals = FF.RegexGetValue(lineTrim, @"^\[.+\]$", "[", "]");
-                if (vals != null) {
+                if (vals != null)
+                {
                     if (vals.Length == 1)
                     {
                         string section = vals[0];
@@ -65,11 +67,9 @@ namespace DacLib.Codex
                         continue;
                     }
                 }
-                if (curSec == "")
-                    continue;
+                if (curSec == "") continue;
                 string[] kv = lineTrim.Split('=');
-                if (kv.Length != 2)
-                    continue;
+                if (kv.Length != 2) continue;
                 _config[curSec].Add(kv[0].Trim(), kv[1].Trim());
             }
             ret = Ret.ok;

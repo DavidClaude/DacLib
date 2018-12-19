@@ -68,6 +68,9 @@ namespace DacLib.Hoxis {
 
         // exception codes
         public const int CODE_HEARTBEAT_TIMEOUT = 20001;
+
+        // server affairs
+        public const int AFFAIR_RELEASE_CONNECTION = 30001;
     }
     #endregion
 }
