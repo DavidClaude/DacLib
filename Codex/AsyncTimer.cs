@@ -14,7 +14,7 @@ namespace DacLib.Generic
     {
         public int timeout { get; }
         public int time { get; private set; }
-        public bool enable { get { if (_thread == null) return false; return _thread.IsAlive; } }
+        public bool active { get { if (_thread == null) return false; return _thread.IsAlive; } }
         public NoneForVoid_Handler timeoutCallback { get; }
         private Thread _thread;
 
@@ -26,7 +26,7 @@ namespace DacLib.Generic
         }
         public void Begin()
         {
-            if (enable) return;
+            if (active) return;
             _thread = new Thread(() =>
             {
                 while (true)
@@ -39,6 +39,6 @@ namespace DacLib.Generic
             _thread.Start();
         }
         public void Refresh() { lock (this) { time = 0; } }
-        public void End() { if (enable) _thread.Abort(); }
+        public void End() { if (active) _thread.Abort(); }
     }
 }

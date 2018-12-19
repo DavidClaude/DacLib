@@ -35,6 +35,7 @@ namespace DacLib.Hoxis.Server
         public List<HoxisAgentData> proxiesData { get; private set; }
         #endregion
         public event BytesForVoid_Handler onPost;
+        public event ExceptionHandler onNetworkAnomaly; 
         protected Dictionary<string, ResponseHandler> respTable;
 
         private AsyncTimer _heartbeatMonitor;
@@ -51,8 +52,7 @@ namespace DacLib.Hoxis.Server
 
             _heartbeatMonitor = new AsyncTimer(heartbeatTimeout, new NoneForVoid_Handler(() =>
                  {
-                     ProcessNetworkAnomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket is disconnected exceptionally");
-                     _heartbeatMonitor.End();
+                     OnNetworkAmomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket disconnected exceptionally");
                  })
                 );
             respTable = new Dictionary<string, ResponseHandler>();
@@ -226,34 +226,34 @@ namespace DacLib.Hoxis.Server
             ret = Ret.ok;
         }
 
-        /// <summary>
-        /// **WITHIN THREAD**
-        /// Called when remote socket is closed or heartbeat stopped
-        /// </summary>
-        /// <param name="code"></param>
-        /// <param name="desc"></param>
-        public void ProcessNetworkAnomaly(int code, string desc)
-        {
-            lock (this)
-            {
-                switch (connectionState)
-                {
-                    case UserConnectionState.None:
-                        // wait for being released
-                        break;
-                    case UserConnectionState.Default:
-                        connectionState = UserConnectionState.None;
-                        break;
-                    case UserConnectionState.Active:
-                        connectionState = UserConnectionState.Disconnected;
-                        break;
-                    case UserConnectionState.Disconnected:
-                        // wait for reconnecting
-                        break;
-                }
-                if (DebugRecorder.LogEnable(_logger)) { _logger.LogError(FF.StringFormat("network anomaly: code is {0}, message is {1}", code, desc), "", true); }
-            }
-        }
+        ///// <summary>
+        ///// **WITHIN THREAD**
+        ///// Called when remote socket is closed or heartbeat stopped
+        ///// </summary>
+        ///// <param name="code"></param>
+        ///// <param name="desc"></param>
+        //public void ProcessNetworkAnomaly(int code, string desc)
+        //{
+        //    lock (this)
+        //    {
+        //        switch (connectionState)
+        //        {
+        //            case UserConnectionState.None:                              // User hasn't signed in or has been already released, we should release it to avoid repeating being called
+                        
+        //                break;
+        //            case UserConnectionState.Default:
+        //                connectionState = UserConnectionState.None;
+        //                break;
+        //            case UserConnectionState.Active:
+        //                connectionState = UserConnectionState.Disconnected;
+        //                break;
+        //            case UserConnectionState.Disconnected:
+        //                // wait for reconnecting
+        //                break;
+        //        }
+        //        if (DebugRecorder.LogEnable(_logger)) { _logger.LogError(FF.StringFormat("network anomaly: code is {0}, message is {1}", code, desc), "", true); }
+        //    }
+        //}
 
         /// <summary>
         /// New log name of an user
@@ -263,22 +263,24 @@ namespace DacLib.Hoxis.Server
         public static string NewUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
 
         private void OnPost(byte[] data) { if (onPost == null) return; onPost(data); }
+        private void OnNetworkAmomaly(int code, string message) { if (onNetworkAnomaly == null) return;onNetworkAnomaly(code, message); }
 
         #region reflection functions: response
 
+        /// <summary>
+        /// Get the connection state if this user has already signed in
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         private bool QueryConnectionState(string handle, HoxisProtocolArgs args)
         {
             long uid = FF.StringToLong(args["uid"]);
-            List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
-            foreach (HoxisConnection w in workers)
-            {
-                // If already signed in, response the state to let user choose if reconnecting
-                if (w.user == this) continue;
-                if (w.user.userID <= 0) continue;
-                if (w.user.userID == uid)
-                    return ResponseSuccess(handle, "QueryConnectionStateCb", new KVString("state", w.user.connectionState.ToString()));
-            }
-            return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
+            if (uid <= 0) return ResponseError(handle, C.RESP_ILLEGAL_ARGUMENT, FF.StringFormat("illegal argument: {0}", args["uid"]));
+            HoxisUser user = HoxisServer.GetUser(uid);
+            if (user == null) return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
+            if (user == this) return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
+            return ResponseSuccess(handle, "QueryConnectionStateCb", new KVString("state", user.connectionState.ToString()));
         }
 
         /// <summary>
@@ -291,9 +293,9 @@ namespace DacLib.Hoxis.Server
         {
             Ret ret;
             long uid = FF.StringToLong(args["uid"]);
+            if (uid <= 0) return ResponseError(handle, C.RESP_ILLEGAL_ARGUMENT, FF.StringFormat("illegal argument: {0}", args["uid"]));
             userID = uid;
             connectionState = UserConnectionState.Default;
-            //_heartbeatMonitor.Start();
             _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(uid)), out ret);
             if (ret.code != 0) { Console.WriteLine(ret.desc); }
             else
@@ -328,7 +330,6 @@ namespace DacLib.Hoxis.Server
                     parentTeam = w.user.parentTeam;
                     hostData = w.user.hostData;
                     proxiesData = w.user.proxiesData;
-                    //_heartbeatMonitor.Start();
                     if (DebugRecorder.LogEnable(_logger)) { _logger.LogInfo("reconnect", ""); }
                     else
                     {
@@ -355,8 +356,8 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
         {
-            if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is null");
-            if (!_heartbeatMonitor.enable) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat is disable");
+            if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat monitor is null");
+            if (!_heartbeatMonitor.active) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat monitor is inactive");
             _heartbeatMonitor.Refresh();
             return ResponseSuccess(handle, "RefreshHeartbeatCb");
         }

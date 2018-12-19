@@ -9,7 +9,7 @@ namespace DacLib.Hoxis {
     public delegate void ActionArgsHandler(HoxisProtocolArgs args);
     public delegate bool ResponseHandler(string handle, HoxisProtocolArgs args);
     public delegate void ErrorHandler(string err, string desc);
-    public delegate void SocketExceptionHandler(int code, string message);
+    public delegate void ExceptionHandler(int code, string message);
     #endregion
 
     #region enums
@@ -62,7 +62,8 @@ namespace DacLib.Hoxis {
     public class Consts {
         // response codes
         public const string RESP_SUCCESS = "0";                     // response success
-        public const string RESP_NO_USER_INFO = "10001";            // no user information on server
+        public const string RESP_ILLEGAL_ARGUMENT = "10001";
+        public const string RESP_NO_USER_INFO = "10002";            // no user information on server
         public const string RESP_HEARTBEAT_UNAVAILABLE = "10003";   // heartbeat has been stopped
         public const string RESP_CHECK_FAILED = "10004";            // request is illegal
 

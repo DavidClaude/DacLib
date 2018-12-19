@@ -70,7 +70,7 @@ namespace DacLib.Hoxis.Server
             _logger = new DebugRecorder(FF.StringAppend(basicPath, @"logs\server.log"), out ret);
             if (ret.code != 0) { Console.WriteLine(ret.desc); return; }
             _logger.Begin();
-            _logger.LogPattern("David.Claude", version, project);
+            _logger.LogTitle("David.Claude", version, project);
 
             // Init config
             string path;
@@ -208,13 +208,10 @@ namespace DacLib.Hoxis.Server
                     Ret ret;
                     HoxisConnection conn = (HoxisConnection)affair.val;
                     lock (conn) { _connReception.Release(conn, out ret); }
-                    if (ret.code != 0) { _logger.LogWarning(ret.desc, "Affair");return; }
+                    if (ret.code != 0) { _logger.LogWarning(ret.desc, "Affair"); return; }
                     break;
             }
-            _logger.LogInfo(FF.StringFormat("code {0}, object {1} processed",
-                affair.key,
-                affair.val == null ? "null" : affair.val.ToString()),
-                "Affair", true);
+            _logger.LogInfo(FF.StringFormat("code {0}, processed", affair.key), "Affair", true);
         }
         public static void AffairEntry(int code, object state) { AffairEntry(new KV<int, object>(code, state)); }
 

@@ -49,12 +49,14 @@ namespace DacLib.Codex
             enable = true;
         }
         public void Flush() { _stream.Flush(); }
+        public void Dispose() { _writer.Dispose();_stream.Dispose(); }
         public void Close() { _writer.Close(); _stream.Close(); }
         public void End()
         {
             if (!enable) return;
             _writer.WriteLine("");
             Flush();
+            Dispose();
             Close();
             enable = false;
         }
@@ -76,7 +78,7 @@ namespace DacLib.Codex
         public void LogWarning(string content, string speaker, bool console = false) { LogTag(content, "Warning", speaker, console); }
         public void LogError(string content, string speaker, bool console = false) { LogTag(content, "Error", speaker, console); }
         public void LogFatal(string content, string speaker, bool console = false) { LogTag(content, "Fatal", speaker, console); End(); }
-        public void LogPattern(string copyright, string version, string project)
+        public void LogTitle(string copyright, string version, string project)
         {
             Log("=============== Hoxis Server ===============");
             Log("-- Copyright: " + copyright);

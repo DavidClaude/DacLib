@@ -49,6 +49,7 @@ namespace DacLib.Hoxis.Server
             catch (Exception e) { Console.WriteLine(e.Message); return; }
             clientIP = _socket.RemoteEndPoint.ToString();
             if (user == null) user = new HoxisUser();
+            user.onNetworkAnomaly += NetworkAnomalyCb;
             user.Awake();
             _extractor.onBytesExtracted += user.ProtocolEntry;
             user.onPost += Send;
@@ -74,7 +75,7 @@ namespace DacLib.Hoxis.Server
                 while (true)
                 {
                     try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
-                    catch (SocketException e) { user.ProcessNetworkAnomaly(e.ErrorCode, e.Message); break; }
+                    catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); break; }
                 }
             });
             _receiveThread.Start();
@@ -91,7 +92,7 @@ namespace DacLib.Hoxis.Server
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
             try { _socket.Send(data); }
-            catch (SocketException e) { user.ProcessNetworkAnomaly(e.ErrorCode, e.Message); }
+            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); }
         }
 
         /// <summary>
@@ -101,13 +102,30 @@ namespace DacLib.Hoxis.Server
         {
             if (_receiveThread.IsAlive) _receiveThread.Abort();
             if (_socket == null) return;
-            if (!isConnected) return;
+            //if (!isConnected) return;
             try
             {
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }
-            catch (SocketException e) { user.ProcessNetworkAnomaly(e.ErrorCode, e.Message); }
+            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); }
+        }
+
+        public void NetworkAnomalyCb(int code, string message)
+        {
+            switch (user.connectionState)
+            {
+                case UserConnectionState.None:
+                    HoxisServer.AffairEntry(Consts.AFFAIR_RELEASE_CONNECTION, this);
+                    break;
+                case UserConnectionState.Default:
+                    HoxisServer.AffairEntry(Consts.AFFAIR_RELEASE_CONNECTION, this);
+                    break;
+                case UserConnectionState.Active:
+                    break;
+                case UserConnectionState.Disconnected:
+                    break;
+            }
         }
     }
 }
