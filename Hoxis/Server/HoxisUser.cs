@@ -61,8 +61,15 @@ namespace DacLib.Hoxis.Server
             if (DebugRecorder.LogEnable(_logger)) _logger.End();
         }
         public void Continue() {
+            Ret ret;
             connectionState = UserConnectionState.Active;
             _heartbeatMonitor.Begin();
+            if (!DebugRecorder.LogEnable(_logger))
+            {
+                _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(userID)), out ret);
+                if (ret.code != 0) { Console.WriteLine(ret.desc); }
+                else { _logger.Begin(); }
+            }
         }
         public void Reset()
         {
@@ -325,17 +332,7 @@ namespace DacLib.Hoxis.Server
                     userID = w.user.userID;
                     realtimeData = w.user.realtimeData;
                     Continue();
-                    if (DebugRecorder.LogEnable(_logger)) { _logger.LogInfo("reconnect", ""); }
-                    else
-                    {
-                        _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(uid)), out ret);
-                        if (ret.code != 0) { Console.WriteLine(ret.desc); }
-                        else
-                        {
-                            _logger.Begin();
-                            _logger.LogInfo("reconnect", "");
-                        }
-                    }
+                    if (DebugRecorder.LogEnable(_logger)) _logger.LogInfo("reconnect", "");
                     HoxisServer.AffairEntry(C.AFFAIR_RELEASE_CONNECTION, w);
                     return ResponseSuccess(handle, "ReconnectCb");
                 }
