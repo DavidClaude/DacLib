@@ -27,13 +27,7 @@ namespace DacLib.Hoxis.Server
         /// State the server keeps which describes the connection
         /// </summary>
         public UserConnectionState connectionState { get; private set; }
-
-        #region realtime data
-        public HoxisCluster parentCluster { get; set; }
-        public HoxisTeam parentTeam { get; set; }
-        public HoxisAgentData hostData { get; private set; }
-        public List<HoxisAgentData> proxiesData { get; private set; }
-        #endregion
+        public HoxisUserRealtimeData realtimeData;
         public event BytesForVoid_Handler onPost;
         public event ExceptionHandler onNetworkAnomaly; 
         protected Dictionary<string, ResponseHandler> respTable;
@@ -45,11 +39,7 @@ namespace DacLib.Hoxis.Server
         {
             userID = 0;
             connectionState = UserConnectionState.None;
-            parentCluster = null;
-            parentTeam = null;
-            hostData = HoxisAgentData.undef;
-            proxiesData = new List<HoxisAgentData>();
-
+            realtimeData = HoxisUserRealtimeData.undef;
             _heartbeatMonitor = new AsyncTimer(heartbeatTimeout, new NoneForVoid_Handler(() =>
                  {
                      OnNetworkAmomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket disconnected exceptionally");
@@ -65,16 +55,20 @@ namespace DacLib.Hoxis.Server
 
         #region IStatusControllable
         public void Awake() { _heartbeatMonitor.Begin(); }
-        public void Pause() { }
-        public void Continue() { }
+        public void Pause() {
+            connectionState = UserConnectionState.Disconnected;
+            _heartbeatMonitor.End();
+            if (DebugRecorder.LogEnable(_logger)) _logger.End();
+        }
+        public void Continue() {
+            connectionState = UserConnectionState.Active;
+            _heartbeatMonitor.Begin();
+        }
         public void Reset()
         {
             userID = 0;
             connectionState = UserConnectionState.None;
-            parentCluster = null;
-            parentTeam = null;
-            hostData = HoxisAgentData.undef;
-            proxiesData = new List<HoxisAgentData>();
+            realtimeData = HoxisUserRealtimeData.undef;
             _heartbeatMonitor.End();
         }
         #endregion
@@ -94,12 +88,12 @@ namespace DacLib.Hoxis.Server
                     switch (proto.receiver.type)
                     {
                         case ReceiverType.Cluster:
-                            if (parentCluster == null) return;
-                            parentCluster.ProtocolBroadcast(proto);
+                            if (realtimeData.parentCluster == null) return;
+                            realtimeData.parentCluster.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.Team:
-                            if (parentTeam == null) return;
-                            parentTeam.ProtocolBroadcast(proto);
+                            if (realtimeData.parentTeam == null) return;
+                            realtimeData.parentTeam.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.User:
                             HoxisUser user = HoxisServer.GetUser(proto.receiver.uid);
@@ -296,12 +290,16 @@ namespace DacLib.Hoxis.Server
             if (uid <= 0) return ResponseError(handle, C.RESP_ILLEGAL_ARGUMENT, FF.StringFormat("illegal argument: {0}", args["uid"]));
             userID = uid;
             connectionState = UserConnectionState.Default;
-            _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(uid)), out ret);
-            if (ret.code != 0) { Console.WriteLine(ret.desc); }
+            if (DebugRecorder.LogEnable(_logger)) { _logger.LogInfo("sign in", ""); }
             else
             {
-                _logger.Begin();
-                _logger.LogInfo("sign in", "");
+                _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(uid)), out ret);
+                if (ret.code != 0) { Console.WriteLine(ret.desc); }
+                else
+                {
+                    _logger.Begin();
+                    _logger.LogInfo("sign in", "");
+                }
             }
             return ResponseSuccess(handle, "SignInCb");
         }
@@ -325,11 +323,8 @@ namespace DacLib.Hoxis.Server
                 if (w.user.userID == uid)
                 {
                     userID = w.user.userID;
-                    connectionState = UserConnectionState.Active;
-                    parentCluster = w.user.parentCluster;
-                    parentTeam = w.user.parentTeam;
-                    hostData = w.user.hostData;
-                    proxiesData = w.user.proxiesData;
+                    realtimeData = w.user.realtimeData;
+                    Continue();
                     if (DebugRecorder.LogEnable(_logger)) { _logger.LogInfo("reconnect", ""); }
                     else
                     {
@@ -345,7 +340,7 @@ namespace DacLib.Hoxis.Server
                     return ResponseSuccess(handle, "ReconnectCb");
                 }
             }
-            return SignIn(handle, args);
+            return Response(handle, "ReconnectCb", new KVString("code", C.RESP_NO_USER_INFO));
         }
 
         /// <summary>
@@ -362,16 +357,16 @@ namespace DacLib.Hoxis.Server
             return ResponseSuccess(handle, "RefreshHeartbeatCb");
         }
 
-        /// <summary>
-        /// Called if client requests for reconnecting
-        /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
-        {
-            return false;
-        }
+        ///// <summary>
+        ///// Called if client requests for reconnecting
+        ///// </summary>
+        ///// <param name="handle"></param>
+        ///// <param name="args"></param>
+        ///// <returns></returns>
+        //private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
+        //{
+        //    return false;
+        //}
 
         private bool LoadUserData(string handle, HoxisProtocolArgs args)
         {

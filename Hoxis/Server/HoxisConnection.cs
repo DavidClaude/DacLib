@@ -41,18 +41,20 @@ namespace DacLib.Hoxis.Server
         private Socket _socket;
         private Thread _receiveThread;
 
-        public HoxisConnection(){ _extractor = new HoxisBytesExtractor(readBufferSize); }
+        public HoxisConnection(){
+            _extractor = new HoxisBytesExtractor(readBufferSize);
+            user = new HoxisUser();
+            user.onNetworkAnomaly += NetworkAnomalyCb;
+            _extractor.onBytesExtracted += user.ProtocolEntry;
+            user.onPost += Send;
+        }
 
         public void OnRequest(object state)
         {
             try { _socket = (Socket)state; }
             catch (Exception e) { Console.WriteLine(e.Message); return; }
             clientIP = _socket.RemoteEndPoint.ToString();
-            if (user == null) user = new HoxisUser();
-            user.onNetworkAnomaly += NetworkAnomalyCb;
             user.Awake();
-            _extractor.onBytesExtracted += user.ProtocolEntry;
-            user.onPost += Send;
             LoopReceive();
         }
 
@@ -122,6 +124,7 @@ namespace DacLib.Hoxis.Server
                     HoxisServer.AffairEntry(Consts.AFFAIR_RELEASE_CONNECTION, this);
                     break;
                 case UserConnectionState.Active:
+                    user.Pause();
                     break;
                 case UserConnectionState.Disconnected:
                     break;
