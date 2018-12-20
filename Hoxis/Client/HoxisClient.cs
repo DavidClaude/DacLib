@@ -74,7 +74,7 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Event of network anomaly
         /// </summary>
-        public static event SocketExceptionHandler onNetworkAnomaly;
+        public static event ExceptionHandler onNetworkAnomaly;
 
         private static Socket _socket;
         private static HoxisBytesExtractor _extractor;

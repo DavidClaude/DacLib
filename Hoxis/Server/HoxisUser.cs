@@ -319,7 +319,6 @@ namespace DacLib.Hoxis.Server
 
         private bool Reconnect(string handle, HoxisProtocolArgs args)
         {
-            Ret ret;
             long uid = FF.StringToLong(args["uid"]);
             List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
             foreach (HoxisConnection w in workers)
