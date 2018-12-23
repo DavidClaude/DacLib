@@ -192,7 +192,7 @@ namespace DacLib.Hoxis.Server
             List<HoxisConnection> conns = _connReception.GetWorkers();
             foreach (HoxisConnection c in conns)
             {
-                Console.WriteLine("Local ID: {0}\nState: {1}\n", c.localID, c.user.connectionState);
+                Console.WriteLine("Local ID: {0}\nUser ID: {1}\nState: {2}\n", c.localID, c.user.userID, c.user.connectionState);
             }
         }
 

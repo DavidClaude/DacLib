@@ -313,6 +313,8 @@ namespace DacLib.Hoxis.Server
 
         private bool SignOut(string handle, HoxisProtocolArgs args)
         {
+            userID = 0;
+            connectionState = UserConnectionState.None;
             if (DebugRecorder.LogEnable(_logger)) { _logger.LogInfo("sign out", ""); _logger.End(); }
             return ResponseSuccess(handle, "SignOutCb");
         }
