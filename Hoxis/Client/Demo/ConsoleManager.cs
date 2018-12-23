@@ -7,6 +7,7 @@ using DacLib.Hoxis;
 using DacLib.Hoxis.Client;
 
 using FF = DacLib.Generic.FormatFunc;
+using SF = DacLib.Generic.SystemFunc;
 
 namespace DacLib.Hoxis.Client.Demo
 {
@@ -16,24 +17,24 @@ namespace DacLib.Hoxis.Client.Demo
         public GameObject logItemPrefab;
         public int maxLineCharacter = 100;
 
-        //[Header("ProtocolType")]
-        //public ProtocolType protoType;
-        //[Header("Handle")]
-        //public string request;
-        //[Header("Error")]
-        //public string error;
-        //[Header("HoxisProtocolReceiver")]
-        //public ReceiverType receiverType;
-        //public long ruid;
-        //[Header("HoxisProtocolSender")]
-        //public long suid;
-        //public HoxisAgentID said;
-        //public bool loopback;
-        //[Header("HoxisProtocolAction")]
-        //public string method;
-        //public KVString[] args;
-        //[Header("Description")]
-        //public string description;
+        [Header("ProtocolType")]
+        public ProtocolType protocolType;
+        [Header("Handle")]
+        public string request;
+        [Header("Error")]
+        public string error;
+        [Header("HoxisProtocolReceiver")]
+        public ReceiverType receiverType;
+        public long receiverUID;
+        [Header("HoxisProtocolSender")]
+        public long senderUID;
+        public HoxisAgentID senderAgentID;
+        public bool loopback;
+        [Header("HoxisProtocolAction")]
+        public string method;
+        public KVString[] arguments;
+        [Header("Description")]
+        public string description;
 
         private GameObject _logPanel;
         private bool _logPanelOn;
@@ -51,9 +52,7 @@ namespace DacLib.Hoxis.Client.Demo
         // Use this for initialization
         void Start()
         {
-            HoxisClient.InitializeConfig();
-            HoxisDirector.Ins.AwakeIns();
-            HoxisClient.onInitError += (ret) => { Log(ret.desc, LogLevel.Error); };
+            HoxisClient.onInitError += (ret) => { Debug.LogError(ret.desc); Log(ret.desc, LogLevel.Error); };
             HoxisClient.onConnectError += (ret) => { Log(ret.desc, LogLevel.Error); };
             HoxisClient.onConnected += () => { Log(FF.StringFormat("connect to {0}", HoxisClient.serverIP)); };
             HoxisClient.onCloseError += (ret) => { Log(ret.desc, LogLevel.Error); };
@@ -61,33 +60,45 @@ namespace DacLib.Hoxis.Client.Demo
             HoxisDirector.Ins.onResponseError += (err, desc) => { Log(FF.StringFormat("response err: {0}, {1}", err, desc), LogLevel.Error); };
             HoxisDirector.Ins.onProtocolEntry += (proto) => { Log(FF.StringFormat("protocol entry: {0}", FF.ObjectToJson(proto))); };
             HoxisDirector.Ins.onProtocolPost += (proto) => { Log(FF.StringFormat("protocol post: {0}", FF.ObjectToJson(proto))); };
+            HoxisDirector.Ins.onAffairConnected += () => { Log(FF.StringFormat("connect to {0}", HoxisClient.serverIP)); };
+            HoxisDirector.Ins.onAffairConnectError += (ret) => { Log(ret.desc, LogLevel.Error); };
 
             _logPanel.GetComponent<RectTransform>().localPosition = _logPanelOffPosition;
             _logPanelOn = false;
+
+            HoxisClient.InitializeConfig();
+            HoxisDirector.Ins.AwakeIns();
         }
 
         void Update()
         {
             _logPanel.GetComponent<RectTransform>().localPosition = Vector3.Lerp(_logPanel.GetComponent<RectTransform>().localPosition, _logPanelOn ? _logPanelOnPosition : _logPanelOffPosition, 20f * Time.deltaTime);
             if (Input.GetKeyDown(KeyCode.BackQuote)) { _logPanelOn = !_logPanelOn; }
-            if (Input.GetKeyDown(KeyCode.I)) { Log("information"); }
-            if (Input.GetKeyDown(KeyCode.W)) { Log("warning", LogLevel.Warning); }
-            if (Input.GetKeyDown(KeyCode.E)) { Log("error", LogLevel.Error); }
         }
 
         public void Connect() { HoxisClient.Connect(); }
+        public void BeginConnect() { HoxisClient.BeginConnnect(); }
         public void Close() { HoxisClient.Close(); }
         public void QueryStatus() { HoxisDirector.Ins.Request("QueryConnectionState", new KVString("uid", "123456789")); }
         public void SignIn() { HoxisDirector.Ins.Request("SignIn", new KVString("uid", "123456789")); }
         public void SignOut() { HoxisDirector.Ins.Request("SignOut"); }
         public void Reconnect() { HoxisDirector.Ins.Request("Reconnect", new KVString("uid", "123456789")); }
-        public void ClearLog()
+        public void ClearLog() { while (_logQueue.Count > 0) { GameObject item = _logQueue.Dequeue(); Destroy(item); } }
+        public void SendProtocol()
         {
-            while (_logQueue.Count > 0)
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            foreach (KVString kv in arguments) { args.Add(kv.key, kv.val); }
+            HoxisProtocol proto = new HoxisProtocol
             {
-                GameObject item = _logQueue.Dequeue();
-                Destroy(item);
-            }
+                type = protocolType,
+                handle = FF.ObjectToJson(new ReqHandle { req = method, ts = SF.GetTimeStamp(TimeUnit.Millisecond) }),
+                err = error,
+                receiver = new HoxisProtocolReceiver { type = receiverType, uid = receiverUID },
+                sender = new HoxisProtocolSender { uid = senderUID, aid = senderAgentID, loopback = loopback },
+                action = new HoxisProtocolAction(method, new HoxisProtocolArgs(args)),
+                desc = description
+            };
+            HoxisDirector.Ins.ProtocolPost(proto);
         }
 
         private void Log(string log, LogLevel level = LogLevel.Info)
@@ -104,7 +115,7 @@ namespace DacLib.Hoxis.Client.Demo
                 i.GetComponent<Text>().color -= new Color(0, 0, 0, 0.065f);
             }
 
-           
+
             switch (level)
             {
                 case LogLevel.Info:

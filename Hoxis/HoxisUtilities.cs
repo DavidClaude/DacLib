@@ -62,7 +62,7 @@ namespace DacLib.Hoxis {
     public class Consts {
         // response codes
         public const string RESP_SUCCESS = "0";                     // response success
-        public const string RESP_ILLEGAL_ARGUMENT = "10001";
+        public const string RESP_ILLEGAL_ARGUMENT = "10001";        // argument (in HoxisProtocolArgs) is illegal
         public const string RESP_NO_USER_INFO = "10002";            // no user information on server
         public const string RESP_HEARTBEAT_UNAVAILABLE = "10003";   // heartbeat has been stopped
         public const string RESP_CHECK_FAILED = "10004";            // request is illegal
@@ -72,6 +72,10 @@ namespace DacLib.Hoxis {
 
         // server affairs
         public const int AFFAIR_RELEASE_CONNECTION = 30001;
+
+        // client affairs
+        public const int AFFAIR_CONNECT = 31001;
+        public const int AFFAIR_CONNECT_ERROR = 31002;
     }
     #endregion
 }

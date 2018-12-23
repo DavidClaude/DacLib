@@ -6,5 +6,7 @@ read_buffer_size = 1024
 [director]
 protocol_queue_capacity = 256
 protocol_queue_process_quantity = 16
+affair_queue_capacity = 256
+affair_queue_process_quantity = 16
 heartbeat_interval = 2.0
 request_timeout = 5000

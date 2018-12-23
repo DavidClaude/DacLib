@@ -223,13 +223,13 @@ namespace DacLib.Generic
     [Serializable]
     public struct KVString
     {
+        public string key;
+        public string val;
         public KVString(string k, string v)
         {
             key = k;
             val = v;
         }
-        public string key;
-        public string val;
     }
 
     /// <summary>

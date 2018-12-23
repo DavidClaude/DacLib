@@ -6,6 +6,8 @@ using System.Threading;
 using DacLib.Generic;
 using DacLib.Codex;
 
+using C = DacLib.Hoxis.Consts;
+
 namespace DacLib.Hoxis.Client
 {
     public static class HoxisClient
@@ -46,34 +48,11 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis/"; } }
 
-        /// <summary>
-        /// Event of initializing error
-        /// </summary>
         public static event RetForVoid_Handler onInitError;
-
-        /// <summary>
-        /// Event of connecting success
-        /// </summary>
         public static event NoneForVoid_Handler onConnected;
-
-        /// <summary>
-        /// Event of connecting error
-        /// </summary>
         public static event RetForVoid_Handler onConnectError;
-
-        /// <summary>
-        /// Event of closing success
-        /// </summary>
         public static event NoneForVoid_Handler onClose;
-
-        /// <summary>
-        /// Event of closing error
-        /// </summary>
         public static event RetForVoid_Handler onCloseError;
-
-        /// <summary>
-        /// Event of network anomaly
-        /// </summary>
         public static event ExceptionHandler onNetworkAnomaly;
 
         private static Socket _socket;
@@ -112,6 +91,10 @@ namespace DacLib.Hoxis.Client
             if (ret.code != 0) { OnInitError(ret); return; }
             HoxisDirector.protocolQueueProcessQuantity = config.GetShort("director", "protocol_queue_process_quantity", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
+            HoxisDirector.affairQueueCapacity = config.GetInt("director", "affair_queue_capacity", out ret);
+            if (ret.code != 0) { OnInitError(ret); return; }
+            HoxisDirector.affairQueueProcessQuantity = config.GetShort("director", "affair_queue_process_quantity", out ret);
+            if (ret.code != 0) { OnInitError(ret); return; }
             HoxisDirector.heartbeatInterval = config.GetFloat("director", "heartbeat_interval", out ret);
             if (ret.code != 0) { OnInitError(ret); return; }
         }
@@ -126,9 +109,31 @@ namespace DacLib.Hoxis.Client
                 _socket.Connect(ep);
                 OnConnected();
                 LoopReceive();
-                //HoxisDirector.Ins.onPost += Send;
             }
             catch (Exception e) { OnConnectError(new Ret(LogLevel.Error, RET_CONNECT_EXCEPTION, e.Message)); }
+        }
+
+        public static void BeginConnnect()
+        {
+            try
+            {
+                IPAddress addr = IPAddress.Parse(serverIP);
+                IPEndPoint ep = new IPEndPoint(addr, port);
+                if (_socket == null) { throw new Exception(ERR_MSG_SOCKET_NOT_UNINITIALIZED); }
+                _socket.BeginConnect(ep, ConnectCb, null);
+            }
+            catch (Exception e) { HoxisDirector.Ins.AffairEntry(C.AFFAIR_CONNECT_ERROR, new Ret(LogLevel.Error, RET_CONNECT_EXCEPTION, e.Message)); }
+        }
+
+        private static void ConnectCb(IAsyncResult ar)
+        {
+            try
+            {
+                _socket.EndConnect(ar);
+                HoxisDirector.Ins.AffairEntry(C.AFFAIR_CONNECT, null);
+                LoopReceive();
+            }
+            catch (Exception e) { HoxisDirector.Ins.AffairEntry(C.AFFAIR_CONNECT_ERROR, new Ret(LogLevel.Error, RET_CONNECT_EXCEPTION, e.Message)); }
         }
 
         /// <summary>
@@ -178,6 +183,8 @@ namespace DacLib.Hoxis.Client
             catch (SocketException e) { OnCloseError(new Ret(LogLevel.Error, RET_CLOSE_EXCEPTION, e.Message)); }
             OnClose();
         }
+
+
 
         #region private functions
 

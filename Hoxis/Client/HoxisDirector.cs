@@ -32,15 +32,20 @@ namespace DacLib.Hoxis.Client
 
         public static int protocolQueueCapacity { get; set; }
         public static short protocolQueueProcessQuantity { get; set; }
+        public static int affairQueueCapacity { get; set; }
+        public static short affairQueueProcessQuantity { get; set; }
         public static float heartbeatInterval { get; set; }
         public bool isActive { get; private set; }
         public event ErrorHandler onResponseError;
         public event ProtocolHandler onProtocolEntry;
         public event ProtocolHandler onProtocolPost;
+        public event NoneForVoid_Handler onAffairConnected;
+        public event RetForVoid_Handler onAffairConnectError;
 
         protected Dictionary<string, ActionArgsHandler> respCbTable;
         private Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
         private FiniteProcessQueue<HoxisProtocol> _protoQueue;
+        private FiniteProcessQueue<KV<int,object>> _affairQueue;
         private RegularTimer _heartbeatTimer;
 
         /// <summary>
@@ -78,6 +83,8 @@ namespace DacLib.Hoxis.Client
         {
             _protoQueue = new FiniteProcessQueue<HoxisProtocol>(protocolQueueCapacity, protocolQueueProcessQuantity);
             _protoQueue.onProcess += ProcessProtocol;
+            _affairQueue = new FiniteProcessQueue<KV<int,object>>(affairQueueCapacity, affairQueueProcessQuantity);
+            _affairQueue.onProcess += ProcessAffair;
             _heartbeatTimer = new RegularTimer(heartbeatInterval, PostHeartbeat);
             isActive = true;
         }
@@ -90,6 +97,8 @@ namespace DacLib.Hoxis.Client
             {
                 // Get protocols from queue and process
                 _protoQueue.ProcessInRound();
+                // Get affairs from queue and process
+                _affairQueue.ProcessInRound();
                 // Update heartbeat timer
                 _heartbeatTimer.Update(Time.deltaTime);
             } 
@@ -184,6 +193,13 @@ namespace DacLib.Hoxis.Client
         }
 
         /// <summary>
+        /// Entrance of affairs
+        /// </summary>
+        /// <param name="affair"></param>
+        public void AffairEntry(KV<int, object> affair) { lock (_affairQueue) _affairQueue.Enqueue(affair); }
+        public void AffairEntry(int code, object state) { AffairEntry(new KV<int, object>(code, state)); }
+
+        /// <summary>
         /// Rapidly send a request protocol
         /// </summary>
         /// <param name="method"></param>
@@ -231,10 +247,25 @@ namespace DacLib.Hoxis.Client
             }
 
         }
+        private void ProcessAffair(object state)
+        {
+            KV<int, object> affair = (KV<int, object>)state;
+            switch (affair.key)
+            {
+                case C.AFFAIR_CONNECT:
+                    OnAffairConnected();
+                    break;
+                case C.AFFAIR_CONNECT_ERROR:
+                    OnAffairConnectError((Ret)affair.val);
+                    break;
+            }
+        }
         private void PostHeartbeat() { Request("RefreshHeartbeat"); }
         private void OnResponseError(string err, string desc) { if (onResponseError == null) return; onResponseError(err, desc); }
         private void OnProtocolEntry(HoxisProtocol proto) { if (onProtocolEntry == null) return; onProtocolEntry(proto); }
         private void OnProtocolPost(HoxisProtocol proto) { if (onProtocolPost == null) return;onProtocolPost(proto); }
+        private void OnAffairConnected() { if (onAffairConnected == null) return; onAffairConnected(); }
+        private void OnAffairConnectError(Ret ret) { if (onAffairConnectError == null) return; onAffairConnectError(ret); }
 
         #endregion
 
