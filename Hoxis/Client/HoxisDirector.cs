@@ -35,6 +35,8 @@ namespace DacLib.Hoxis.Client
         public static float heartbeatInterval { get; set; }
         public bool isActive { get; private set; }
         public event ErrorHandler onResponseError;
+        public event ProtocolHandler onProtocolEntry;
+        public event ProtocolHandler onProtocolPost;
 
         protected Dictionary<string, ActionArgsHandler> respCbTable;
         private Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
@@ -178,6 +180,7 @@ namespace DacLib.Hoxis.Client
             string json = FF.ObjectToJson(proto);
             byte[] data = FF.StringToBytes(json);
             HoxisClient.Send(data);
+            OnProtocolPost(proto);
         }
 
         /// <summary>
@@ -208,6 +211,7 @@ namespace DacLib.Hoxis.Client
         private void ProcessProtocol(object state)
         {
             HoxisProtocol proto = (HoxisProtocol)state;
+            OnProtocolEntry(proto);
             switch (proto.type)
             {
                 case ProtocolType.Response:
@@ -229,6 +233,8 @@ namespace DacLib.Hoxis.Client
         }
         private void PostHeartbeat() { Request("RefreshHeartbeat"); }
         private void OnResponseError(string err, string desc) { if (onResponseError == null) return; onResponseError(err, desc); }
+        private void OnProtocolEntry(HoxisProtocol proto) { if (onProtocolEntry == null) return; onProtocolEntry(proto); }
+        private void OnProtocolPost(HoxisProtocol proto) { if (onProtocolPost == null) return;onProtocolPost(proto); }
 
         #endregion
 

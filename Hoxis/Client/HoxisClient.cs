@@ -167,7 +167,6 @@ namespace DacLib.Hoxis.Client
         /// </summary>
         public static void Close()
         {
-            //HoxisDirector.Ins.onPost -= Send;
             if (_receiveThread != null) _receiveThread.Abort();
             if (_socket == null) return;
             if (!isConnected) return;

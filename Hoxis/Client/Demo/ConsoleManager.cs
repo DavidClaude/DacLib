@@ -14,6 +14,7 @@ namespace DacLib.Hoxis.Client.Demo
     {
         public int logCapacity = 10;
         public GameObject logItemPrefab;
+        public int maxLineCharacter = 100;
 
         //[Header("ProtocolType")]
         //public ProtocolType protoType;
@@ -36,10 +37,10 @@ namespace DacLib.Hoxis.Client.Demo
 
         private GameObject _logPanel;
         private bool _logPanelOn;
-        private Vector3 _logPanelOffPosition = new Vector3(0, 830.5f, 0);
-        private Vector3 _logPanelOnPosition = new Vector3(0, 543.5f, 0);
+        private Vector3 _logPanelOffPosition = new Vector3(0, 731f, 0);
+        private Vector3 _logPanelOnPosition = new Vector3(0, 531f, 0);
         private Queue<GameObject> _logQueue;
-        private Vector3 _logItemOriginalPosition = new Vector3(0, -487.0f, 0);
+        private Vector3 _logItemOriginalPosition = new Vector3(0, -400f, 0);
 
         void Awake()
         {
@@ -54,11 +55,12 @@ namespace DacLib.Hoxis.Client.Demo
             HoxisDirector.Ins.AwakeIns();
             HoxisClient.onInitError += (ret) => { Log(ret.desc, LogLevel.Error); };
             HoxisClient.onConnectError += (ret) => { Log(ret.desc, LogLevel.Error); };
-            HoxisClient.onConnected += () => { Log(FF.StringFormat("Connect to {0}", HoxisClient.serverIP)); };
+            HoxisClient.onConnected += () => { Log(FF.StringFormat("connect to {0}", HoxisClient.serverIP)); };
             HoxisClient.onCloseError += (ret) => { Log(ret.desc, LogLevel.Error); };
-
-            HoxisDirector.Ins.onResponseError += (err, desc) => { Log(FF.StringFormat("response err: {0}, {1}", err, desc), LogLevel.Error); };
             HoxisClient.onNetworkAnomaly += (code, message) => { Log(FF.StringFormat("network anomaly: {0}, {1}", code, message), LogLevel.Error); };
+            HoxisDirector.Ins.onResponseError += (err, desc) => { Log(FF.StringFormat("response err: {0}, {1}", err, desc), LogLevel.Error); };
+            HoxisDirector.Ins.onProtocolEntry += (proto) => { Log(FF.StringFormat("protocol entry: {0}", FF.ObjectToJson(proto))); };
+            HoxisDirector.Ins.onProtocolPost += (proto) => { Log(FF.StringFormat("protocol post: {0}", FF.ObjectToJson(proto))); };
 
             _logPanel.GetComponent<RectTransform>().localPosition = _logPanelOffPosition;
             _logPanelOn = false;
@@ -90,6 +92,11 @@ namespace DacLib.Hoxis.Client.Demo
 
         private void Log(string log, LogLevel level = LogLevel.Info)
         {
+            GameObject item = Instantiate(logItemPrefab, Vector3.zero, Quaternion.identity, _logPanel.transform);
+            item.GetComponent<RectTransform>().localPosition = _logItemOriginalPosition;
+            Text t = item.GetComponent<Text>();
+            t.text = log;
+
             foreach (GameObject i in _logQueue)
             {
                 if (i == null) continue;
@@ -97,14 +104,11 @@ namespace DacLib.Hoxis.Client.Demo
                 i.GetComponent<Text>().color -= new Color(0, 0, 0, 0.065f);
             }
 
-            GameObject item = Instantiate(logItemPrefab, Vector3.zero, Quaternion.identity, _logPanel.transform);
-            item.GetComponent<RectTransform>().localPosition = _logItemOriginalPosition;
-            Text t = item.GetComponent<Text>();
-            t.text = log;
+           
             switch (level)
             {
                 case LogLevel.Info:
-                    t.color = new Color(0, 1, 0, t.color.a);
+                    t.color = new Color(1, 1, 1, t.color.a);
                     break;
                 case LogLevel.Warning:
                     t.color = new Color(1, 1, 0, t.color.a);
