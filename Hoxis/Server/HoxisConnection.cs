@@ -104,7 +104,6 @@ namespace DacLib.Hoxis.Server
         {
             if (_receiveThread.IsAlive) _receiveThread.Abort();
             if (_socket == null) return;
-            //if (!isConnected) return;
             try
             {
                 _socket.Shutdown(SocketShutdown.Both);

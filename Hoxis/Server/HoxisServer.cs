@@ -49,6 +49,12 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public static int remainConn { get { return _connReception.remain; } }
 
+        public static int affairQueueCapacity { get; private set; }
+
+        public static short affairQueueProcessQuantity { get; private set; }
+
+        public static int affairQueueProcessInterval { get; private set; }
+
         /// <summary>
         /// Basic direction of application
         /// </summary>
@@ -58,6 +64,8 @@ namespace DacLib.Hoxis.Server
         private static DebugRecorder _logger;
         private static Thread _acceptThread;
         private static CriticalPreformPool<HoxisConnection> _connReception;
+        private static FiniteProcessQueue<KV<int, object>> _affairQueue;
+        private static Thread _affairThread;
         private static Dictionary<string, HoxisCluster> _clusters;
 
         /// <summary>
@@ -93,6 +101,19 @@ namespace DacLib.Hoxis.Server
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             _connReception = new CriticalPreformPool<HoxisConnection>(maxConn);
             _logger.LogInfo(FF.StringFormat("max connections is {0}", maxConn), "Server");
+
+            // Init affair queue
+            affairQueueCapacity = config.GetInt("server", "affair_queue_capacity", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("affair queue capacity is {0}", affairQueueCapacity), "Server");
+            affairQueueProcessQuantity = config.GetShort("server", "affair_queue_process_quantity", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("affair queue process quantity is {0}", affairQueueProcessQuantity), "Server");
+            _affairQueue = new FiniteProcessQueue<KV<int, object>>(affairQueueCapacity, affairQueueProcessQuantity);
+            _affairQueue.onProcess += ProcessAffair;
+            affairQueueProcessInterval = config.GetInt("server", "affair_queue_process_interval", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("affair queue process interval is {0}ms", affairQueueProcessInterval), "Server");
 
             // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
@@ -140,7 +161,7 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
-        /// Begin accept socket connection within thread
+        /// Begin accepting socket connection within thread
         /// </summary>
         public static void BeginAccept()
         {
@@ -161,12 +182,27 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
+        /// Begin processing affairs within thread
+        /// </summary>
+        public static void BeginProcess()
+        {
+            _affairThread = new Thread(() => {
+                while (true)
+                {
+                    _affairQueue.ProcessInRound();
+                    Thread.Sleep(affairQueueProcessInterval);
+                }
+            });
+        }
+
+        /// <summary>
         /// Stop the service saftly
         /// </summary>
         public static void Quit()
         {
             _logger.End();
             _acceptThread.Abort();
+            _affairThread.Abort();
         }
 
         /// <summary>
@@ -200,35 +236,13 @@ namespace DacLib.Hoxis.Server
         /// Entrance of affairs
         /// </summary>
         /// <param name="affair"></param>
-        public static void AffairEntry(KV<int, object> affair)
-        {
-            switch (affair.key)
-            {
-                case C.AFFAIR_RELEASE_CONNECTION:
-                    Ret ret;
-                    HoxisConnection conn = (HoxisConnection)affair.val;
-                    lock (conn) { _connReception.Release(conn, out ret); }
-                    if (ret.code != 0) { _logger.LogWarning(ret.desc, "Affair"); return; }
-                    break;
-            }
-            _logger.LogInfo(FF.StringFormat("code {0}, processed", affair.key), "Affair", true);
-        }
+        public static void AffairEntry(KV<int, object> affair) { lock (_affairQueue) _affairQueue.Enqueue(affair); }
         public static void AffairEntry(int code, object state) { AffairEntry(new KV<int, object>(code, state)); }
 
-        #region management
 
-        /// <summary>
-        /// Release an user
-        /// Generally called when an user quits, reconnects or stops heartbeats
-        /// </summary>
-        /// <param name="user"></param>
-        private static void ReleaseConnection(HoxisConnection conn)
-        {
-            Ret ret;
-            _connReception.Release(conn, out ret);
-            if (ret.code != 0) { _logger.LogWarning(ret.desc, ""); return; }
-            _logger.LogInfo("released successful", "Server");
-        }
+        //public static void TestRelease(HoxisConnection conn) { Ret ret; lock (conn) _connReception.Release(conn, out ret); }
+
+        #region management
 
         //public static bool ManageCluster(ManageOperation op, HoxisUser sponsor)
         //{
@@ -260,5 +274,22 @@ namespace DacLib.Hoxis.Server
         //}
 
         #endregion
+
+        private static void ProcessAffair(object state)
+        {
+            KV<int, object> affair = (KV<int, object>)state;
+            switch (affair.key)
+            {
+                case C.AFFAIR_RELEASE_CONNECTION:
+                    Ret ret;
+                    HoxisConnection conn = (HoxisConnection)affair.val;
+                    Console.WriteLine("release begin");
+                    Console.WriteLine("releasing"); _connReception.Release(conn, out ret);
+                    if (ret.code != 0) { Console.WriteLine("release error"); _logger.LogWarning(ret.desc, "Affair"); return; }
+                    Console.WriteLine("release end");
+                    break;
+            }
+            _logger.LogInfo(FF.StringFormat("code {0}, processed", affair.key), "Affair", true);
+        }
     }
 }

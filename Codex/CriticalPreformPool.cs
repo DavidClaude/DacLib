@@ -99,6 +99,7 @@ namespace DacLib.Codex
             }
             if (!preform.isOccupied)
             {
+                Console.WriteLine("is unoccupied");
                 ret = new Ret(LogLevel.Info, 0, "already released");
                 return;
             }
