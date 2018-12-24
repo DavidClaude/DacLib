@@ -177,7 +177,7 @@ namespace DacLib.Hoxis.Server
         /// <param name="handleArg"></param>
         /// <param name="methodArg"></param>
         /// <returns></returns>
-        public bool ResponseSuccess(string handleArg, string methodArg) { return Response(handleArg, methodArg, new KVString("code", Consts.RESP_SUCCESS)); }
+        public bool ResponseSuccess(string handleArg, string methodArg) { return Response(handleArg, methodArg, new KVString("code", C.RESP_SUCCESS)); }
         public bool ResponseSuccess(string handleArg, string methodArg, params KVString[] kvs)
         {
             Dictionary<string, string> argsArg = new Dictionary<string, string>();
@@ -227,35 +227,6 @@ namespace DacLib.Hoxis.Server
             ret = Ret.ok;
         }
 
-        ///// <summary>
-        ///// **WITHIN THREAD**
-        ///// Called when remote socket is closed or heartbeat stopped
-        ///// </summary>
-        ///// <param name="code"></param>
-        ///// <param name="desc"></param>
-        //public void ProcessNetworkAnomaly(int code, string desc)
-        //{
-        //    lock (this)
-        //    {
-        //        switch (connectionState)
-        //        {
-        //            case UserConnectionState.None:                              // User hasn't signed in or has been already released, we should release it to avoid repeating being called
-                        
-        //                break;
-        //            case UserConnectionState.Default:
-        //                connectionState = UserConnectionState.None;
-        //                break;
-        //            case UserConnectionState.Active:
-        //                connectionState = UserConnectionState.Disconnected;
-        //                break;
-        //            case UserConnectionState.Disconnected:
-        //                // wait for reconnecting
-        //                break;
-        //        }
-        //        if (DebugRecorder.LogEnable(_logger)) { _logger.LogError(FF.StringFormat("network anomaly: code is {0}, message is {1}", code, desc), "", true); }
-        //    }
-        //}
-
         /// <summary>
         /// New log name of an user
         /// </summary>
@@ -282,6 +253,34 @@ namespace DacLib.Hoxis.Server
             if (user == null) return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
             if (user == this) return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
             return ResponseSuccess(handle, "QueryConnectionStateCb", new KVString("state", user.connectionState.ToString()));
+        }
+
+        private bool ActivateConnectionState(string handle, HoxisProtocolArgs args)
+        {
+            if (connectionState == UserConnectionState.Default)
+            {
+                connectionState = UserConnectionState.Active;
+                return ResponseSuccess(handle, "ActivateConnectionStateCb");
+            }
+            else if (connectionState == UserConnectionState.Active)
+            {
+                return Response(handle, "ActivateConnectionStateCb", new KVString("code", C.RESP_ACTIVATED_ALREADY));
+            }
+            return ResponseError(handle, C.RESP_SET_STATE_UNABLE, FF.StringFormat("current connection state is {0}", connectionState.ToString()));
+        }
+
+        private bool SetDefaultConnectionState(string handle, HoxisProtocolArgs args)
+        {
+            if (connectionState == UserConnectionState.Active)
+            {
+                connectionState = UserConnectionState.Default;
+                return ResponseSuccess(handle, "SetDefaultConnectionStateCb");
+            }
+            else if (connectionState == UserConnectionState.Default)
+            {
+                return Response(handle, "SetDefaultConnectionStateCb", new KVString("code", C.RESP_SET_DEFAULT_ALREADY));
+            }
+            return ResponseError(handle, C.RESP_SET_STATE_UNABLE, FF.StringFormat("current connection state is {0}", connectionState.ToString()));
         }
 
         /// <summary>

@@ -66,6 +66,9 @@ namespace DacLib.Hoxis {
         public const string RESP_NO_USER_INFO = "10002";            // no user information on server
         public const string RESP_HEARTBEAT_UNAVAILABLE = "10003";   // heartbeat has been stopped
         public const string RESP_CHECK_FAILED = "10004";            // request is illegal
+        public const string RESP_ACTIVATED_ALREADY = "10005";       // connection state is active already
+        public const string RESP_SET_DEFAULT_ALREADY = "10006";     // connection state is default already
+        public const string RESP_SET_STATE_UNABLE = "10007";        // unable to activate state, mostly because of incorrect state
 
         // exception codes
         public const int CODE_HEARTBEAT_TIMEOUT = 20001;
