@@ -193,6 +193,8 @@ namespace DacLib.Hoxis.Server
                     Thread.Sleep(affairQueueProcessInterval);
                 }
             });
+            _affairThread.Start();
+            _logger.LogInfo("process begin...", "Server", true);
         }
 
         /// <summary>
@@ -283,13 +285,11 @@ namespace DacLib.Hoxis.Server
                 case C.AFFAIR_RELEASE_CONNECTION:
                     Ret ret;
                     HoxisConnection conn = (HoxisConnection)affair.val;
-                    Console.WriteLine("release begin");
-                    Console.WriteLine("releasing"); _connReception.Release(conn, out ret);
-                    if (ret.code != 0) { Console.WriteLine("release error"); _logger.LogWarning(ret.desc, "Affair"); return; }
-                    Console.WriteLine("release end");
+                    lock (conn) { _connReception.Release(conn, out ret); }
+                    if (ret.code != 0) { _logger.LogWarning(ret.desc, "Affair"); return; }
                     break;
             }
-            _logger.LogInfo(FF.StringFormat("code {0}, processed", affair.key), "Affair", true);
+            _logger.LogInfo(FF.StringFormat("{0} processed", affair.key), "Affair", true);
         }
     }
 }
