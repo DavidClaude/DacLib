@@ -79,10 +79,12 @@ namespace DacLib.Hoxis.Client.Demo
         public void Connect() { HoxisClient.Connect(); }
         public void BeginConnect() { HoxisClient.BeginConnnect(); }
         public void Close() { HoxisClient.Close(); }
-        public void QueryStatus() { HoxisDirector.Ins.Request("QueryConnectionState", new KVString("uid", "123456789")); }
         public void SignIn() { HoxisDirector.Ins.Request("SignIn", new KVString("uid", "123456789")); }
         public void SignOut() { HoxisDirector.Ins.Request("SignOut"); }
+        public void QueryState() { HoxisDirector.Ins.Request("QueryConnectionState", new KVString("uid", "123456789")); }
         public void Reconnect() { HoxisDirector.Ins.Request("Reconnect", new KVString("uid", "123456789")); }
+        public void ActivateState() { HoxisDirector.Ins.Request("ActivateConnectionState"); }
+        public void DefaultState() { HoxisDirector.Ins.Request("SetDefaultConnectionState"); }
         public void ClearLog() { while (_logQueue.Count > 0) { GameObject item = _logQueue.Dequeue(); Destroy(item); } }
         public void SendProtocol()
         {
