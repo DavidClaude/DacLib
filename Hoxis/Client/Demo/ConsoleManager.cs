@@ -117,7 +117,6 @@ namespace DacLib.Hoxis.Client.Demo
                 i.GetComponent<Text>().color -= new Color(0, 0, 0, 0.065f);
             }
 
-
             switch (level)
             {
                 case LogLevel.Info:

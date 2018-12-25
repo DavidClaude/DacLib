@@ -47,6 +47,8 @@ namespace DacLib.Hoxis.Server
                 );
             respTable = new Dictionary<string, ResponseHandler>();
             respTable.Add("QueryConnectionState", QueryConnectionState);
+            respTable.Add("ActivateConnectionState", ActivateConnectionState);
+            respTable.Add("SetDefaultConnectionState", SetDefaultConnectionState);
             respTable.Add("SignIn", SignIn);
             respTable.Add("SignOut", SignOut);
             respTable.Add("Reconnect", Reconnect);
