@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DacLib.Generic;
+using DacLib.Codex;
 using DacLib.Hoxis;
 using DacLib.Hoxis.Client;
 
@@ -42,26 +43,29 @@ namespace DacLib.Hoxis.Client.Demo
         private Vector3 _logPanelOnPosition = new Vector3(0, 531f, 0);
         private Queue<GameObject> _logQueue;
         private Vector3 _logItemOriginalPosition = new Vector3(0, -400f, 0);
+        private FiniteProcessQueue<KV<LogLevel, string>> _logAffairQueue;
 
         void Awake()
         {
             _logPanel = transform.Find("log panel").gameObject;
             _logQueue = new Queue<GameObject>(logCapacity);
+            _logAffairQueue = new FiniteProcessQueue<KV<LogLevel, string>>(32, 16);
+            _logAffairQueue.onProcess += Log;
         }
 
         // Use this for initialization
         void Start()
         {
-            HoxisClient.onInitError += (ret) => { Debug.LogError(ret.desc); Log(ret.desc, LogLevel.Error); };
-            HoxisClient.onConnectError += (ret) => { Log(ret.desc, LogLevel.Error); };
-            HoxisClient.onConnected += () => { Log(FF.StringFormat("connect to {0}", HoxisClient.serverIP)); };
-            HoxisClient.onCloseError += (ret) => { Log(ret.desc, LogLevel.Error); };
-            HoxisClient.onNetworkAnomaly += (code, message) => { Log(FF.StringFormat("network anomaly: {0}, {1}", code, message), LogLevel.Error); };
-            HoxisDirector.Ins.onResponseError += (err, desc) => { Log(FF.StringFormat("response err: {0}, {1}", err, desc), LogLevel.Error); };
-            HoxisDirector.Ins.onProtocolEntry += (proto) => { Log(FF.StringFormat("protocol entry: {0}", FF.ObjectToJson(proto))); };
-            HoxisDirector.Ins.onProtocolPost += (proto) => { Log(FF.StringFormat("protocol post: {0}", FF.ObjectToJson(proto))); };
-            HoxisDirector.Ins.onAffairConnected += () => { Log(FF.StringFormat("connect to {0}", HoxisClient.serverIP)); };
-            HoxisDirector.Ins.onAffairConnectError += (ret) => { Log(ret.desc, LogLevel.Error); };
+            HoxisClient.onInitError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
+            HoxisClient.onConnectError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
+            HoxisClient.onConnected += () => { LogAffairEntry(FF.StringFormat("connect to {0}", HoxisClient.serverIP)); };
+            HoxisClient.onCloseError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
+            HoxisClient.onNetworkAnomaly += (code, message) => { LogAffairEntry(FF.StringFormat("network anomaly: {0}, {1}", code, message), LogLevel.Error); };
+            HoxisDirector.Ins.onResponseError += (err, desc) => { LogAffairEntry(FF.StringFormat("response err: {0}, {1}", err, desc), LogLevel.Error); };
+            HoxisDirector.Ins.onProtocolEntry += (proto) => { LogAffairEntry(FF.StringFormat("protocol entry: {0}", FF.ObjectToJson(proto))); };
+            HoxisDirector.Ins.onProtocolPost += (proto) => { LogAffairEntry(FF.StringFormat("protocol post: {0}", FF.ObjectToJson(proto))); };
+            HoxisDirector.Ins.onAffairConnected += () => { LogAffairEntry(FF.StringFormat("connect to {0}", HoxisClient.serverIP)); };
+            HoxisDirector.Ins.onAffairConnectError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
 
             _logPanel.GetComponent<RectTransform>().localPosition = _logPanelOffPosition;
             _logPanelOn = false;
@@ -74,6 +78,7 @@ namespace DacLib.Hoxis.Client.Demo
         {
             _logPanel.GetComponent<RectTransform>().localPosition = Vector3.Lerp(_logPanel.GetComponent<RectTransform>().localPosition, _logPanelOn ? _logPanelOnPosition : _logPanelOffPosition, 20f * Time.deltaTime);
             if (Input.GetKeyDown(KeyCode.BackQuote)) { _logPanelOn = !_logPanelOn; }
+            _logAffairQueue.ProcessInRound();
         }
 
         public void Connect() { HoxisClient.Connect(); }
@@ -103,8 +108,13 @@ namespace DacLib.Hoxis.Client.Demo
             HoxisDirector.Ins.ProtocolPost(proto);
         }
 
-        private void Log(string log, LogLevel level = LogLevel.Info)
+        public void LogAffairEntry(string log, LogLevel level = LogLevel.Info) { lock (_logAffairQueue) _logAffairQueue.Enqueue(new KV<LogLevel, string>(level, log)); }
+
+        private void Log(object state)
         {
+            KV<LogLevel, string> affair = (KV<LogLevel, string>)state;
+            string log = affair.val;
+            LogLevel level = affair.key;
             GameObject item = Instantiate(logItemPrefab, Vector3.zero, Quaternion.identity, _logPanel.transform);
             item.GetComponent<RectTransform>().localPosition = _logItemOriginalPosition;
             Text t = item.GetComponent<Text>();
