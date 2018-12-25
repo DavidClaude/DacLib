@@ -71,14 +71,14 @@ namespace DacLib.Hoxis {
         public const string RESP_SET_STATE_UNABLE = "10007";        // unable to activate state, mostly because of incorrect state
 
         // exception codes
-        public const int CODE_HEARTBEAT_TIMEOUT = 20001;
+        public const int CODE_HEARTBEAT_TIMEOUT = 20001;            // heartbeat monitor throws timeout
 
         // server affairs
-        public const int AFFAIR_RELEASE_CONNECTION = 30001;
+        public const int AFFAIR_RELEASE_CONNECTION = 30001;         // affair for releasing a connection
 
         // client affairs
-        public const int AFFAIR_CONNECT = 31001;
-        public const int AFFAIR_CONNECT_ERROR = 31002;
+        public const int AFFAIR_CONNECT = 31001;                    // affair for connecting successfully
+        public const int AFFAIR_CONNECT_ERROR = 31002;              // affair for connecting error
     }
     #endregion
 }
