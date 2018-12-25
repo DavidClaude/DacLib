@@ -67,6 +67,8 @@ namespace DacLib.Hoxis.Client
         void Start()
         {
             respCbTable.Add("QueryConnectionStateCb", QueryConnectionStateCb);
+            respCbTable.Add("ActivateConnectionStateCb", ActivateConnectionStateCb);
+            respCbTable.Add("SetDefaultConnectionStateCb", SetDefaultConnectionStateCb);
             respCbTable.Add("SignInCb", SignInCb);
             respCbTable.Add("SignOutCb", SignOutCb);
             respCbTable.Add("ReconnectCb", ReconnectCb);
@@ -276,6 +278,18 @@ namespace DacLib.Hoxis.Client
             Debug.Log("QueryConnectionStateCb code: " + code);
             if (code == C.RESP_SUCCESS)
                 Debug.Log(args["state"]);
+        }
+
+        private void ActivateConnectionStateCb(HoxisProtocolArgs args)
+        {
+            string code = args["code"];
+            Debug.Log("ActivateConnectionStateCb code: " + code);
+        }
+
+        private void SetDefaultConnectionStateCb(HoxisProtocolArgs args)
+        {
+            string code = args["code"];
+            Debug.Log("SetDefaultConnectionStateCb code: " + code);
         }
 
         private void SignInCb(HoxisProtocolArgs args)
