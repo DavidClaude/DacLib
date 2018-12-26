@@ -62,7 +62,6 @@ namespace DacLib.Hoxis.Server
         {
             clientIP = string.Empty;
             user.Reset();
-            _extractor.Initialize();
             Close();
         }
 
@@ -76,10 +75,11 @@ namespace DacLib.Hoxis.Server
             {
                 while (true)
                 {
-                    try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
-                    catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); break; }
+                    try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len);}
+                    catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); Console.WriteLine("receive to anomaly"); break; }
                 }
             });
+            _extractor.Reset();
             _receiveThread.Start();
         }
 
@@ -94,7 +94,7 @@ namespace DacLib.Hoxis.Server
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
             try { _socket.Send(data); }
-            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); }
+            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message);Console.WriteLine("send to anomaly"); }
         }
 
         /// <summary>
@@ -109,10 +109,10 @@ namespace DacLib.Hoxis.Server
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
             }
-            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); }
+            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); Console.WriteLine("close to anomaly"); }
         }
 
-        public void NetworkAnomalyCb(int code, string message)
+        private void NetworkAnomalyCb(int code, string message)
         {
             switch (user.connectionState)
             {

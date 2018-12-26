@@ -170,7 +170,7 @@ namespace DacLib.Hoxis.Server
                 while (true)
                 {
                     Socket socket = _socket.Accept();
-                    _logger.LogInfo(FF.StringAppend("accept new client: ", socket.RemoteEndPoint.ToString()), "Server");
+                    _logger.LogInfo(FF.StringAppend("accept new client: ", socket.RemoteEndPoint.ToString()), "Server", true);
                     Ret ret;
                     HoxisConnection conn = _connReception.Request(socket, out ret);
                     if (ret.code != 0) { _logger.LogWarning(ret.desc, socket.RemoteEndPoint.ToString()); continue; }

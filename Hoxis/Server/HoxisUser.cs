@@ -40,11 +40,7 @@ namespace DacLib.Hoxis.Server
             userID = 0;
             connectionState = UserConnectionState.None;
             realtimeData = HoxisUserRealtimeData.undef;
-            _heartbeatMonitor = new AsyncTimer(heartbeatTimeout, new NoneForVoid_Handler(() =>
-                 {
-                     OnNetworkAmomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket disconnected exceptionally");
-                 })
-                );
+            _heartbeatMonitor = new AsyncTimer(heartbeatTimeout);
             respTable = new Dictionary<string, ResponseHandler>();
             respTable.Add("QueryConnectionState", QueryConnectionState);
             respTable.Add("ActivateConnectionState", ActivateConnectionState);
@@ -56,7 +52,7 @@ namespace DacLib.Hoxis.Server
         }
 
         #region IStatusControllable
-        public void Awake() { _heartbeatMonitor.Begin(); }
+        public void Awake() { _heartbeatMonitor.Begin(new NoneForVoid_Handler(HeartbeatTimeoutCallback)); }
         public void Pause() {
             connectionState = UserConnectionState.Disconnected;
             _heartbeatMonitor.End();
@@ -65,7 +61,7 @@ namespace DacLib.Hoxis.Server
         public void Continue() {
             Ret ret;
             connectionState = UserConnectionState.Active;
-            _heartbeatMonitor.Begin();
+            _heartbeatMonitor.Begin(new NoneForVoid_Handler(HeartbeatTimeoutCallback));
             if (!DebugRecorder.LogEnable(_logger))
             {
                 _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(userID)), out ret);
@@ -236,6 +232,7 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         public static string NewUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
 
+        private void HeartbeatTimeoutCallback() { OnNetworkAmomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket disconnected exceptionally"); }
         private void OnPost(byte[] data) { if (onPost == null) return; onPost(data); }
         private void OnNetworkAmomaly(int code, string message) { if (onNetworkAnomaly == null) return;onNetworkAnomaly(code, message); }
 

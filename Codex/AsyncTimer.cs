@@ -14,31 +14,45 @@ namespace DacLib.Generic
     {
         public int timeout { get; }
         public int time { get; private set; }
-        public bool active { get { if (_thread == null) return false; return _thread.IsAlive; } }
-        public NoneForVoid_Handler timeoutCallback { get; }
+        public bool active { get; private set; }
+
+        private NoneForVoid_Handler _timeoutCb;
         private Thread _thread;
 
-        public AsyncTimer(int timeoutArg, NoneForVoid_Handler timeoutCallbackArg)
+        public AsyncTimer(int timeoutArg)
         {
             if (timeoutArg <= 0) timeout = 5000;
             else timeout = timeoutArg;
-            timeoutCallback = timeoutCallbackArg;
+            time = 0;
+            active = false;
         }
-        public void Begin()
+        public void Begin(NoneForVoid_Handler callback, bool autoEnd = false)
         {
-            if (active) return;
+            _timeoutCb = callback;
+            active = true;
             _thread = new Thread(() =>
             {
-                while (true)
+                while (active)
                 {
-                    Thread.Sleep(200);
-                    time += 200;
-                    if (time > timeout) { timeoutCallback(); Refresh(); }
+                    Thread.Sleep(100);
+                    time += 100;
+                    if (time > timeout) {
+                        _timeoutCb?.Invoke();
+                        if (autoEnd) End();
+                    }
                 }
             });
             _thread.Start();
         }
-        public void Refresh() { lock (this) { time = 0; } }
-        public void End() { if (active) _thread.Abort(); }
+        public void Refresh() { lock (this) time = 0; }
+        public void End()
+        {
+            lock (this)
+            {
+                time = 0;
+                active = false;
+                _timeoutCb = null;
+            }
+        }
     }
 }
