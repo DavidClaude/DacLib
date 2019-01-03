@@ -32,7 +32,7 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Local IP
         /// </summary>
-        public static string ip { get; private set; }
+        public static string localIP { get; private set; }
 
         /// <summary>
         /// Local port
@@ -89,12 +89,12 @@ namespace DacLib.Hoxis.Server
             _logger.LogInfo("read configuration success", "Server");
 
             // Assign ip, port and init the sokcet
-            ip = SF.GetLocalIP(out ret);
+            localIP = SF.GetLocalIP(out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             port = config.GetInt("server", "port", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
-            _logger.LogInfo(FF.StringFormat("ip is {0}, port is {1}", ip, port.ToString()), "Server");
+            _logger.LogInfo(FF.StringFormat("ip is {0}, port is {1}", localIP, port.ToString()), "Server");
 
             // Init connection reception
             maxConn = config.GetInt("server", "max_conn", out ret);
@@ -149,7 +149,7 @@ namespace DacLib.Hoxis.Server
         {
             try
             {
-                IPAddress addr = IPAddress.Parse(ip);
+                IPAddress addr = IPAddress.Parse(localIP);
                 IPEndPoint ep = new IPEndPoint(addr, port);
                 if (_socket == null) { throw new Exception(ERR_MSG_CFG_UNINITIALIZED); }
                 _socket.Bind(ep);
