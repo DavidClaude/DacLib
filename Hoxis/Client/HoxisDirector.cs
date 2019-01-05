@@ -73,8 +73,8 @@ namespace DacLib.Hoxis.Client
             respCbTable.Add("SignOutCb", SignOutCb);
             respCbTable.Add("ReconnectCb", ReconnectCb);
             respCbTable.Add("RefreshHeartbeatCb", RefreshHeartbeatCb);
-            HoxisClient.onConnected += () => { _heartbeatTimer.Start(); };
-            HoxisClient.onClose += () => { _heartbeatTimer.Stop(); };
+            HoxisClient.Ins.onConnected += () => { _heartbeatTimer.Start(); };
+            HoxisClient.Ins.onClose += () => { _heartbeatTimer.Stop(); };
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace DacLib.Hoxis.Client
         {
             string json = FF.ObjectToJson(proto);
             byte[] data = FF.StringToBytes(json);
-            HoxisClient.Send(data);
+            HoxisClient.Ins.Send(data);
             OnProtocolPost(proto);
         }
 

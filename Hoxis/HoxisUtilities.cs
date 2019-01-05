@@ -60,6 +60,9 @@ namespace DacLib.Hoxis {
 
     #region constants
     public class Consts {
+        // Hoxis information
+        public const string VERSION = "0.0.0";
+
         // response codes
         public const string RESP_SUCCESS = "0";                     // response success
         public const string RESP_ILLEGAL_ARGUMENT = "10001";        // argument (in HoxisProtocolArgs) is illegal

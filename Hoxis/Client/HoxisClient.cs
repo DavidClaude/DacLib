@@ -10,13 +10,8 @@ using C = DacLib.Hoxis.Consts;
 
 namespace DacLib.Hoxis.Client
 {
-    public static class HoxisClient
+    public class HoxisClient
     {
-        /// <summary>
-        /// Ver.
-        /// </summary>
-        public const string version = "0.0.0";
-
         #region ret codes
         public const byte RET_CONNECT_EXCEPTION = 1;
         public const byte RET_CLOSE_EXCEPTION = 2;
@@ -24,46 +19,58 @@ namespace DacLib.Hoxis.Client
         #endregion
 
         /// <summary>
+        /// Singleton
+        /// </summary>
+        public static HoxisClient Ins { get; private set; }
+
+        /// <summary>
         /// Hoxis client configuration
         /// </summary>
-        public static TomlConfiguration config { get; private set; }
+        public TomlConfiguration config { get; private set; }
 
         /// <summary>
         /// IP of Hoxis server which is used for synchronization
         /// </summary>
-        public static string serverIP { get; private set; }
+        public string serverIP { get; private set; }
 
         /// <summary>
         /// Port of Hoxis server
         /// </summary>
-        public static int port { get; private set; }
+        public int port { get; private set; }
 
         /// <summary>
         /// Is the client connected ?
         /// </summary>
-        public static bool isConnected { get { return _socket.Connected; } }
+        public bool isConnected { get { return _socket.Connected; } }
 
         /// <summary>
         /// Hoxis client basic direction
         /// </summary>
         public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis/"; } }
 
-        public static event RetForVoid_Handler onInitError;
-        public static event NoneForVoid_Handler onConnected;
-        public static event RetForVoid_Handler onConnectError;
-        public static event NoneForVoid_Handler onClose;
-        public static event RetForVoid_Handler onCloseError;
-        public static event ExceptionHandler onNetworkAnomaly;
+        public event RetForVoid_Handler onInitError;
+        public event NoneForVoid_Handler onConnected;
+        public event RetForVoid_Handler onConnectError;
+        public event NoneForVoid_Handler onClose;
+        public event RetForVoid_Handler onCloseError;
+        public event ExceptionHandler onNetworkAnomaly;
 
-        private static Socket _socket;
-        private static HoxisBytesExtractor _extractor;
-        private static Thread _receiveThread;
+        private Socket _socket;
+        private HoxisBytesExtractor _extractor;
+        private Thread _receiveThread;
+
+        public HoxisClient(bool autoStart)
+        {
+            if (Ins == null) Ins = this;
+            if (autoStart){InitializeConfig();}
+        }
+
 
         /// <summary>
         /// Init the configuration, such as the ip, port, socket
         /// </summary>
         /// <param name="ret"></param>
-        public static void InitializeConfig(string configPath = "")
+        public void InitializeConfig(string configPath = "")
         {
             Ret ret;
             // Read config file
@@ -99,7 +106,7 @@ namespace DacLib.Hoxis.Client
             if (ret.code != 0) { OnInitError(ret); return; }
         }
 
-        public static void Connect()
+        public void Connect()
         {
             try
             {
@@ -113,7 +120,7 @@ namespace DacLib.Hoxis.Client
             catch (Exception e) { OnConnectError(new Ret(LogLevel.Error, RET_CONNECT_EXCEPTION, e.Message)); }
         }
 
-        public static void BeginConnnect()
+        public void BeginConnnect()
         {
             try
             {
@@ -125,7 +132,7 @@ namespace DacLib.Hoxis.Client
             catch (Exception e) { HoxisDirector.Ins.AffairEntry(C.AFFAIR_CONNECT_ERROR, new Ret(LogLevel.Error, RET_CONNECT_EXCEPTION, e.Message)); }
         }
 
-        private static void ConnectCb(IAsyncResult ar)
+        private void ConnectCb(IAsyncResult ar)
         {
             try
             {
@@ -140,7 +147,7 @@ namespace DacLib.Hoxis.Client
         /// **WITHIN THREAD**
         /// Loop receiving data synchronously
         /// </summary>
-        public static void LoopReceive()
+        public void LoopReceive()
         {
             _receiveThread = new Thread(() =>
             {
@@ -157,7 +164,7 @@ namespace DacLib.Hoxis.Client
         /// Send data synchronously
         /// </summary>
         /// <param name="protoData"></param>
-        public static void Send(byte[] protoData)
+        public void Send(byte[] protoData)
         {
             int len = protoData.Length;
             if (len <= 0) return;
@@ -170,7 +177,7 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Close the socket
         /// </summary>
-        public static void Close()
+        public void Close()
         {
             if (_receiveThread != null) _receiveThread.Abort();
             if (_socket == null) return;
@@ -192,14 +199,14 @@ namespace DacLib.Hoxis.Client
         /// Callback of extracting protocol data
         /// </summary>
         /// <param name="data"></param>
-        private static void OnExtract(byte[] data) { HoxisDirector.Ins.ProtocolEntry(data); }
+        private void OnExtract(byte[] data) { HoxisDirector.Ins.ProtocolEntry(data); }
 
-        private static void OnInitError(Ret ret) { if (onInitError == null) return; onInitError(ret); }
-        private static void OnConnected() { if (onConnected == null) return; onConnected(); }
-        private static void OnConnectError(Ret ret) { if (onConnectError == null) return; onConnectError(ret); }
-        private static void OnNetworkAnomaly(int code, string message) { if (onNetworkAnomaly == null) return; onNetworkAnomaly(code, message); }
-        private static void OnClose() { if (onClose == null) return; onClose(); }
-        private static void OnCloseError(Ret ret) { if (onCloseError == null) return; onCloseError(ret); }
+        private void OnInitError(Ret ret) { if (onInitError == null) return; onInitError(ret); }
+        private void OnConnected() { if (onConnected == null) return; onConnected(); }
+        private void OnConnectError(Ret ret) { if (onConnectError == null) return; onConnectError(ret); }
+        private void OnNetworkAnomaly(int code, string message) { if (onNetworkAnomaly == null) return; onNetworkAnomaly(code, message); }
+        private void OnClose() { if (onClose == null) return; onClose(); }
+        private void OnCloseError(Ret ret) { if (onCloseError == null) return; onCloseError(ret); }
         
         #endregion
     }
