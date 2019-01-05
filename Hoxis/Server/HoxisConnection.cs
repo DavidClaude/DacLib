@@ -12,7 +12,6 @@ namespace DacLib.Hoxis.Server
     {
         #region ret codes
         public const byte RET_DISCONNECTED = 1;
-        public const string ERR_MSG_DISCONNECTED = "Socket is disconnected";
         #endregion
 
         #region reusable
@@ -39,9 +38,10 @@ namespace DacLib.Hoxis.Server
 
         private HoxisBytesExtractor _extractor;
         private Socket _socket;
-        private Thread _receiveThread;
+        //private Thread _receiveThread;
 
-        public HoxisConnection(){
+        public HoxisConnection()
+        {
             _extractor = new HoxisBytesExtractor(readBufferSize);
             user = new HoxisUser();
             user.onNetworkAnomaly += NetworkAnomalyCb;
@@ -71,16 +71,12 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public void LoopReceive()
         {
-            _receiveThread = new Thread(() =>
-            {
-                while (true)
-                {
-                    try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len);}
-                    catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); Console.WriteLine("receive to anomaly"); break; }
-                }
-            });
             _extractor.Reset();
-            _receiveThread.Start();
+            while (true)
+            {
+                try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
+                catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); Console.WriteLine("receive to anomaly"); break; }
+            }
         }
 
         /// <summary>
@@ -94,7 +90,7 @@ namespace DacLib.Hoxis.Server
             byte[] header = FormatFunc.IntToBytes(len);
             byte[] data = FormatFunc.BytesConcat(header, protoData);
             try { _socket.Send(data); }
-            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message);Console.WriteLine("send to anomaly"); }
+            catch (SocketException e) { NetworkAnomalyCb(e.ErrorCode, e.Message); Console.WriteLine("send to anomaly"); }
         }
 
         /// <summary>
@@ -102,7 +98,6 @@ namespace DacLib.Hoxis.Server
         /// </summary>
         public void Close()
         {
-            if (_receiveThread.IsAlive) _receiveThread.Abort();
             if (_socket == null) return;
             try
             {
@@ -117,10 +112,10 @@ namespace DacLib.Hoxis.Server
             switch (user.connectionState)
             {
                 case UserConnectionState.None:
-                    HoxisServer.AffairEntry(Consts.AFFAIR_RELEASE_CONNECTION, this);
+                    HoxisServer.Ins.AffairEntry(Consts.AFFAIR_RELEASE_CONNECTION, this);
                     break;
                 case UserConnectionState.Default:
-                    HoxisServer.AffairEntry(Consts.AFFAIR_RELEASE_CONNECTION, this);
+                    HoxisServer.Ins.AffairEntry(Consts.AFFAIR_RELEASE_CONNECTION, this);
                     break;
                 case UserConnectionState.Active:
                     user.Pause();

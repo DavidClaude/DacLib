@@ -13,73 +13,103 @@ using C = DacLib.Hoxis.Consts;
 
 namespace DacLib.Hoxis.Server
 {
-    public static class HoxisServer
+    public class HoxisServer
     {
-        /// <summary>
-        /// Ver.
-        /// </summary>
-        public const string version = "0.0.0";
-
         #region ret codes
         public const string ERR_MSG_CFG_UNINITIALIZED = "configuration file should be initialized first";
         #endregion
 
         /// <summary>
+        /// Singleton
+        /// </summary>
+        public static HoxisServer Ins { get; private set; }
+
+        /// <summary>
+        /// Project served
+        /// </summary>
+        public string project { get; }
+
+        /// <summary>
+        /// Project version
+        /// </summary>
+        public string version { get; }
+
+        /// <summary>
         /// Hoxis server configuration
         /// </summary>
-        public static TomlConfiguration config { get; private set; }
+        public TomlConfiguration config { get; private set; }
 
         /// <summary>
         /// Local IP
         /// </summary>
-        public static string localIP { get; private set; }
+        public string localIP { get; private set; }
 
         /// <summary>
         /// Local port
         /// </summary>
-        public static int port { get; private set; }
+        public int port { get; private set; }
 
         /// <summary>
         /// The max count of user connection
         /// </summary>
-        public static int maxConn { get; private set; }
+        public int maxConn { get; private set; }
 
         /// <summary>
         /// Remain count of connections
         /// </summary>
-        public static int remainConn { get { return _connReception.remain; } }
+        public int remainConn { get { return _connReception.remain; } }
 
-        public static int affairQueueCapacity { get; private set; }
-
-        public static short affairQueueProcessQuantity { get; private set; }
-
-        public static int affairQueueProcessInterval { get; private set; }
+        public int affairQueueCapacity { get; private set; }
+        public short affairQueueProcessQuantity { get; private set; }
+        public int affairQueueProcessInterval { get; private set; }
+        public int heartbeatUpdateInterval { get; private set; }
 
         /// <summary>
         /// Basic direction of application
         /// </summary>
         public static readonly string basicPath = AppDomain.CurrentDomain.BaseDirectory;
 
-        private static Socket _socket;
-        private static DebugRecorder _logger;
-        private static Thread _acceptThread;
-        private static CriticalPreformPool<HoxisConnection> _connReception;
-        private static FiniteProcessQueue<KV<int, object>> _affairQueue;
-        private static Thread _affairThread;
-        private static Dictionary<string, HoxisCluster> _clusters;
+        private Socket _socket;
+        private CriticalPreformPool<HoxisConnection> _connReception;
+        private FiniteProcessQueue<KV<int, object>> _affairQueue;
+        private Dictionary<string, HoxisCluster> _clusters;
+        private Thread _acceptThread;
+        private Thread _affairThread;
+        private Thread _heartbeatThread;
+        private DebugRecorder _logger;
+
+        public HoxisServer(string projectArg, string versionArg, bool autoStart = false)
+        {
+            if (Ins == null) Ins = this;
+
+            Ret ret;
+            project = projectArg;
+            version = versionArg;
+
+            // Init and begin log recording
+            _logger = new DebugRecorder(FF.StringAppend(basicPath, @"logs\server.log"), out ret);
+            if (ret.code != 0) { Quit(); }
+            _logger.Begin();
+            _logger.LogTitle("David.Claude", project, version);
+
+            // Auto start
+            if (autoStart)
+            {
+                InitializeConfig(out ret);
+                if (ret.code != 0) { Quit(); }
+                Listen();
+                BeginAccept();
+                BeginProcess();
+                BeginHeartbeatUpdate();
+            }
+        }
 
         /// <summary>
         /// Init the configuration, such as the ip, port, socket and arguments
         /// </summary>
         /// <param name="configPath"></param>
-        public static void InitializeConfig(string project, out Ret ret, string configPath = "")
+        public void InitializeConfig(out Ret ret, string configPath = "")
         {
-            // Init and begin log recording
-            _logger = new DebugRecorder(FF.StringAppend(basicPath, @"logs\server.log"), out ret);
-            if (ret.code != 0) { Console.WriteLine(ret.desc); return; }
-            _logger.Begin();
-            _logger.LogTitle("David.Claude", version, project);
-
             // Init config
             string path;
             if (configPath != "") { path = configPath; }
@@ -115,6 +145,11 @@ namespace DacLib.Hoxis.Server
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
             _logger.LogInfo(FF.StringFormat("affair queue process interval is {0}ms", affairQueueProcessInterval), "Server");
 
+            // Init heartbeat update
+            heartbeatUpdateInterval = config.GetInt("server", "heartbeat_update_interval", out ret);
+            if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
+            _logger.LogInfo(FF.StringFormat("heartbeat update interval is {0}ms", heartbeatUpdateInterval), "Server");
+
             // Init connection
             HoxisConnection.readBufferSize = config.GetInt("conn", "read_buffer_size", out ret);
             if (ret.code != 0) { _logger.LogFatal(ret.desc, "Server"); return; }
@@ -145,7 +180,7 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Bind and listen
         /// </summary>
-        public static void Listen()
+        public void Listen()
         {
             try
             {
@@ -155,7 +190,7 @@ namespace DacLib.Hoxis.Server
                 _socket.Bind(ep);
                 int count = config.GetInt("socket", "max_client_count");
                 _socket.Listen(count);
-                _logger.LogInfo("listen successful", "Server", true);
+                _logger.LogInfo("listen success", "Server", true);
             }
             catch (Exception e) { _logger.LogError(e.Message, "Server", true); }
         }
@@ -163,7 +198,7 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Begin accepting socket connection within thread
         /// </summary>
-        public static void BeginAccept()
+        public void BeginAccept()
         {
             _acceptThread = new Thread(() =>
             {
@@ -184,13 +219,14 @@ namespace DacLib.Hoxis.Server
         /// <summary>
         /// Begin processing affairs within thread
         /// </summary>
-        public static void BeginProcess()
+        public void BeginProcess()
         {
-            _affairThread = new Thread(() => {
+            _affairThread = new Thread(() =>
+            {
                 while (true)
                 {
-                    _affairQueue.ProcessInRound();
                     Thread.Sleep(affairQueueProcessInterval);
+                    _affairQueue.ProcessInRound();
                 }
             });
             _affairThread.Start();
@@ -198,34 +234,53 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
+        /// Begin heartbeat updating within thread
+        /// </summary>
+        public void BeginHeartbeatUpdate()
+        {
+            _heartbeatThread = new Thread(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(heartbeatUpdateInterval);
+                    List<HoxisConnection> workers = GetWorkingConnections();
+                    lock (workers) { foreach (HoxisConnection w in workers) { w.user.HeartbeartTimerUpdate(heartbeatUpdateInterval); } }
+                }
+            });
+            _heartbeatThread.Start();
+            _logger.LogInfo("heartbeat update begin...", "Server", true);
+        }
+
+        /// <summary>
         /// Stop the service saftly
         /// </summary>
-        public static void Quit()
+        public void Quit()
         {
             _logger.End();
-            _acceptThread.Abort();
-            _affairThread.Abort();
+            if (_acceptThread.IsAlive) { _acceptThread.Abort(); }
+            if (_affairThread.IsAlive) { _affairThread.Abort(); }
+            if (_heartbeatThread.IsAlive) { _heartbeatThread.Abort(); }
         }
 
         /// <summary>
         /// Get all working connections 
         /// </summary>
         /// <returns></returns>
-        public static List<HoxisConnection> GetWorkingConnections() { return _connReception.GetWorkers(); }
+        public List<HoxisConnection> GetWorkingConnections() { return _connReception.GetWorkers(); }
 
         /// <summary>
         ///  Get working user by uid
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static HoxisUser GetUser(long uid)
+        public HoxisUser GetUser(long uid)
         {
             List<HoxisConnection> workers = GetWorkingConnections();
             foreach (HoxisConnection w in workers) { if (w.user.userID == uid && uid > 0) return w.user; }
             return null;
         }
 
-        public static void LogConnectionStatus()
+        public void LogConnectionStatus()
         {
             List<HoxisConnection> conns = _connReception.GetWorkers();
             foreach (HoxisConnection c in conns)
@@ -238,8 +293,8 @@ namespace DacLib.Hoxis.Server
         /// Entrance of affairs
         /// </summary>
         /// <param name="affair"></param>
-        public static void AffairEntry(KV<int, object> affair) { lock (_affairQueue) _affairQueue.Enqueue(affair); }
-        public static void AffairEntry(int code, object state) { AffairEntry(new KV<int, object>(code, state)); }
+        public void AffairEntry(KV<int, object> affair) { lock (_affairQueue) _affairQueue.Enqueue(affair); }
+        public void AffairEntry(int code, object state) { AffairEntry(new KV<int, object>(code, state)); }
 
 
         //public static void TestRelease(HoxisConnection conn) { Ret ret; lock (conn) _connReception.Release(conn, out ret); }
@@ -277,7 +332,7 @@ namespace DacLib.Hoxis.Server
 
         #endregion
 
-        private static void ProcessAffair(object state)
+        private void ProcessAffair(object state)
         {
             KV<int, object> affair = (KV<int, object>)state;
             switch (affair.key)

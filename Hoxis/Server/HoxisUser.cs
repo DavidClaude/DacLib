@@ -27,20 +27,28 @@ namespace DacLib.Hoxis.Server
         /// State the server keeps which describes the connection
         /// </summary>
         public UserConnectionState connectionState { get; private set; }
+        public int heartbeatTimer { get; private set; }
         public HoxisUserRealtimeData realtimeData;
         public event BytesForVoid_Handler onPost;
-        public event ExceptionHandler onNetworkAnomaly; 
+        public event ExceptionHandler onNetworkAnomaly;
         protected Dictionary<string, ResponseHandler> respTable;
 
-        private AsyncTimer _heartbeatMonitor;
+        //private AsyncTimer _heartbeatMonitor;
+
         private DebugRecorder _logger;
+
+        /// <summary>
+        /// New log name of an user
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <returns></returns>
+        public static string NewUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
 
         public HoxisUser()
         {
             userID = 0;
             connectionState = UserConnectionState.None;
             realtimeData = HoxisUserRealtimeData.undef;
-            _heartbeatMonitor = new AsyncTimer(heartbeatTimeout);
             respTable = new Dictionary<string, ResponseHandler>();
             respTable.Add("QueryConnectionState", QueryConnectionState);
             respTable.Add("ActivateConnectionState", ActivateConnectionState);
@@ -52,16 +60,16 @@ namespace DacLib.Hoxis.Server
         }
 
         #region IStatusControllable
-        public void Awake() { _heartbeatMonitor.Begin(new NoneForVoid_Handler(HeartbeatTimeoutCallback)); }
-        public void Pause() {
+        public void Awake() { heartbeatTimer = 0; }
+        public void Pause()
+        {
             connectionState = UserConnectionState.Disconnected;
-            _heartbeatMonitor.End();
             if (DebugRecorder.LogEnable(_logger)) _logger.End();
         }
-        public void Continue() {
+        public void Continue()
+        {
             Ret ret;
             connectionState = UserConnectionState.Active;
-            _heartbeatMonitor.Begin(new NoneForVoid_Handler(HeartbeatTimeoutCallback));
             if (!DebugRecorder.LogEnable(_logger))
             {
                 _logger = new DebugRecorder(FF.StringAppend(HoxisServer.basicPath, @"logs\users\", NewUserLogName(userID)), out ret);
@@ -74,7 +82,7 @@ namespace DacLib.Hoxis.Server
             userID = 0;
             connectionState = UserConnectionState.None;
             realtimeData = HoxisUserRealtimeData.undef;
-            _heartbeatMonitor.End();
+            heartbeatTimer = 0;
         }
         #endregion
 
@@ -101,7 +109,7 @@ namespace DacLib.Hoxis.Server
                             realtimeData.parentTeam.ProtocolBroadcast(proto);
                             break;
                         case ReceiverType.User:
-                            HoxisUser user = HoxisServer.GetUser(proto.receiver.uid);
+                            HoxisUser user = HoxisServer.Ins.GetUser(proto.receiver.uid);
                             // todo send
                             break;
                     }
@@ -226,15 +234,18 @@ namespace DacLib.Hoxis.Server
         }
 
         /// <summary>
-        /// New log name of an user
+        /// Heartbeat timer updates
         /// </summary>
-        /// <param name="uid"></param>
-        /// <returns></returns>
-        public static string NewUserLogName(long uid) { return FF.StringAppend(uid.ToString(), "@", SF.GetTimeStamp().ToString(), ".log"); }
+        /// <param name="interval"></param>
+        public void HeartbeartTimerUpdate(int interval)
+        {
+            if (connectionState == UserConnectionState.None || connectionState == UserConnectionState.Disconnected) return;
+            heartbeatTimer += interval;
+            if (heartbeatTimer > heartbeatTimeout) { OnNetworkAmomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket disconnected exceptionally"); }
+        }
 
-        private void HeartbeatTimeoutCallback() { OnNetworkAmomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket disconnected exceptionally"); }
         private void OnPost(byte[] data) { if (onPost == null) return; onPost(data); }
-        private void OnNetworkAmomaly(int code, string message) { if (onNetworkAnomaly == null) return;onNetworkAnomaly(code, message); }
+        private void OnNetworkAmomaly(int code, string message) { if (onNetworkAnomaly == null) return; onNetworkAnomaly(code, message); }
 
         #region reflection functions: response
 
@@ -248,7 +259,7 @@ namespace DacLib.Hoxis.Server
         {
             long uid = FF.StringToLong(args["uid"]);
             if (uid <= 0) return ResponseError(handle, C.RESP_ILLEGAL_ARGUMENT, FF.StringFormat("illegal argument: {0}", args["uid"]));
-            HoxisUser user = HoxisServer.GetUser(uid);
+            HoxisUser user = HoxisServer.Ins.GetUser(uid);
             if (user == null) return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
             if (user == this) return Response(handle, "QueryConnectionStateCb", new KVString("code", C.RESP_NO_USER_INFO));
             return ResponseSuccess(handle, "QueryConnectionStateCb", new KVString("state", user.connectionState.ToString()));
@@ -320,7 +331,7 @@ namespace DacLib.Hoxis.Server
         private bool Reconnect(string handle, HoxisProtocolArgs args)
         {
             long uid = FF.StringToLong(args["uid"]);
-            List<HoxisConnection> workers = HoxisServer.GetWorkingConnections();
+            List<HoxisConnection> workers = HoxisServer.Ins.GetWorkingConnections();
             foreach (HoxisConnection w in workers)
             {
                 // If already signed in, response the state to let user choose if reconnecting
@@ -332,7 +343,7 @@ namespace DacLib.Hoxis.Server
                     realtimeData = w.user.realtimeData;
                     Continue();
                     if (DebugRecorder.LogEnable(_logger)) _logger.LogInfo("reconnect", "");
-                    HoxisServer.AffairEntry(C.AFFAIR_RELEASE_CONNECTION, w);
+                    HoxisServer.Ins.AffairEntry(C.AFFAIR_RELEASE_CONNECTION, w);
                     return ResponseSuccess(handle, "ReconnectCb");
                 }
             }
@@ -347,22 +358,9 @@ namespace DacLib.Hoxis.Server
         /// <returns></returns>
         private bool RefreshHeartbeat(string handle, HoxisProtocolArgs args)
         {
-            if (_heartbeatMonitor == null) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat monitor is null");
-            if (!_heartbeatMonitor.active) return ResponseError(handle, C.RESP_HEARTBEAT_UNAVAILABLE, "heartbeat monitor is inactive");
-            _heartbeatMonitor.Refresh();
+            heartbeatTimer = 0;
             return ResponseSuccess(handle, "RefreshHeartbeatCb");
         }
-
-        ///// <summary>
-        ///// Called if client requests for reconnecting
-        ///// </summary>
-        ///// <param name="handle"></param>
-        ///// <param name="args"></param>
-        ///// <returns></returns>
-        //private bool GetRealtimeStatus(string handle, HoxisProtocolArgs args)
-        //{
-        //    return false;
-        //}
 
         private bool LoadUserData(string handle, HoxisProtocolArgs args)
         {

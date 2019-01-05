@@ -40,7 +40,7 @@ namespace DacLib.Codex
         /// </summary>
         /// <param name="recorder"></param>
         /// <returns></returns>
-        public static bool LogEnable(DebugRecorder recorder) { if (recorder == null) return false;return recorder.enable; }
+        public static bool LogEnable(DebugRecorder recorder) { if (recorder == null) return false; return recorder.enable; }
 
         public void Begin()
         {
@@ -49,7 +49,7 @@ namespace DacLib.Codex
             enable = true;
         }
         public void Flush() { _stream.Flush(); }
-        public void Dispose() { _writer.Dispose();_stream.Dispose(); }
+        public void Dispose() { _writer.Dispose(); _stream.Dispose(); }
         public void Close() { _writer.Close(); _stream.Close(); }
         public void End()
         {
@@ -78,12 +78,12 @@ namespace DacLib.Codex
         public void LogWarning(string content, string speaker, bool console = false) { LogTag(content, "Warning", speaker, console); }
         public void LogError(string content, string speaker, bool console = false) { LogTag(content, "Error", speaker, console); }
         public void LogFatal(string content, string speaker, bool console = false) { LogTag(content, "Fatal", speaker, console); End(); }
-        public void LogTitle(string copyright, string version, string project)
+        public void LogTitle(string copyright, string project, string version)
         {
             Log("=============== Hoxis Server ===============");
             Log("-- Copyright: " + copyright);
-            Log("-- Version: " + version);
             Log("-- Project: " + project);
+            Log("-- Version: " + version);
             Log("-- IPv4: " + SF.GetLocalIP());
             Log("-- Platform: " + SF.GetOSVersion());
             Log("-- Time: " + SF.GetDateTime().ToString());
