@@ -239,7 +239,7 @@ namespace DacLib.Hoxis.Server
         /// <param name="interval"></param>
         public void HeartbeartTimerUpdate(int interval)
         {
-            if (connectionState == UserConnectionState.None || connectionState == UserConnectionState.Disconnected) return;
+            if (connectionState == UserConnectionState.Disconnected) return;
             heartbeatTimer += interval;
             if (heartbeatTimer > heartbeatTimeout) { OnNetworkAmomaly(C.CODE_HEARTBEAT_TIMEOUT, "remote socket disconnected exceptionally"); }
         }
