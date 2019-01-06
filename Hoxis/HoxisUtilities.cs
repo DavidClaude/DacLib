@@ -80,8 +80,12 @@ namespace DacLib.Hoxis {
         public const int AFFAIR_RELEASE_CONNECTION = 30001;         // affair for releasing a connection
 
         // client affairs
-        public const int AFFAIR_CONNECT = 31001;                    // affair for connecting successfully
-        public const int AFFAIR_CONNECT_ERROR = 31002;              // affair for connecting error
+        public const int AFFAIR_INIT_ERROR = 31001;                 // affair for initializing error
+        public const int AFFAIR_CONNECT = 31002;                    // affair for connecting success
+        public const int AFFAIR_CONNECT_ERROR = 31003;              // affair for connecting error
+        public const int AFFAIR_CLOSE = 31004;                      // affair for closing success
+        public const int AFFAIR_CLOSE_ERROR = 31005;                // affair for closing error
+        public const int AFFAIR_NETWORK_ANOMALY = 31006;                // affair for network anomaly
     }
     #endregion
 }

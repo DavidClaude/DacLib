@@ -39,8 +39,12 @@ namespace DacLib.Hoxis.Client
         public event ErrorHandler onResponseError;
         public event ProtocolHandler onProtocolEntry;
         public event ProtocolHandler onProtocolPost;
+        public event RetForVoid_Handler onAffairInitError;
         public event NoneForVoid_Handler onAffairConnected;
         public event RetForVoid_Handler onAffairConnectError;
+        public event NoneForVoid_Handler onAffairClosed;
+        public event RetForVoid_Handler onAffairClosedError;
+        public event RetForVoid_Handler onAffairNetworkAnomaly;
 
         protected Dictionary<string, ActionArgsHandler> respCbTable;
         private Dictionary<HoxisAgentID, HoxisAgent> _agentSearcher;
@@ -73,8 +77,8 @@ namespace DacLib.Hoxis.Client
             respCbTable.Add("SignOutCb", SignOutCb);
             respCbTable.Add("ReconnectCb", ReconnectCb);
             respCbTable.Add("RefreshHeartbeatCb", RefreshHeartbeatCb);
-            HoxisClient.Ins.onConnected += () => { _heartbeatTimer.Start(); };
-            HoxisClient.Ins.onClose += () => { _heartbeatTimer.Stop(); };
+            onAffairConnected += () => { _heartbeatTimer.Start(); };
+            onAffairClosed += () => { _heartbeatTimer.Stop(); };
         }
 
         /// <summary>
@@ -254,11 +258,23 @@ namespace DacLib.Hoxis.Client
             KV<int, object> affair = (KV<int, object>)state;
             switch (affair.key)
             {
+                case C.AFFAIR_INIT_ERROR:
+                    OnAffairInitError((Ret)affair.val);
+                    break;
                 case C.AFFAIR_CONNECT:
                     OnAffairConnected();
                     break;
                 case C.AFFAIR_CONNECT_ERROR:
                     OnAffairConnectError((Ret)affair.val);
+                    break;
+                case C.AFFAIR_CLOSE:
+                    OnAffairClosed();
+                    break;
+                case C.AFFAIR_CLOSE_ERROR:
+                    OnAffairClosedError((Ret)affair.val);
+                    break;
+                case C.AFFAIR_NETWORK_ANOMALY:
+                    OnAffairNetworkAnomaly((Ret)affair.val);
                     break;
             }
         }
@@ -266,8 +282,12 @@ namespace DacLib.Hoxis.Client
         private void OnResponseError(string err, string desc) { if (onResponseError == null) return; onResponseError(err, desc); }
         private void OnProtocolEntry(HoxisProtocol proto) { if (onProtocolEntry == null) return; onProtocolEntry(proto); }
         private void OnProtocolPost(HoxisProtocol proto) { if (onProtocolPost == null) return;onProtocolPost(proto); }
+        private void OnAffairInitError(Ret ret) { if (onAffairInitError == null) return; onAffairInitError(ret); }
         private void OnAffairConnected() { if (onAffairConnected == null) return; onAffairConnected(); }
         private void OnAffairConnectError(Ret ret) { if (onAffairConnectError == null) return; onAffairConnectError(ret); }
+        private void OnAffairClosed() { if (onAffairClosed == null) return; onAffairClosed(); }
+        private void OnAffairClosedError(Ret ret) { if (onAffairClosedError == null) return; onAffairClosedError(ret); }
+        private void OnAffairNetworkAnomaly(Ret ret) { if (onAffairNetworkAnomaly == null) return; onAffairNetworkAnomaly(ret); }
 
         #endregion
 

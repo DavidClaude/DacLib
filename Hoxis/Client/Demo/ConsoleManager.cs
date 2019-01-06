@@ -58,16 +58,15 @@ namespace DacLib.Hoxis.Client.Demo
         // Use this for initialization
         void Start()
         {
-            HoxisClient.Ins.onInitError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
-            HoxisClient.Ins.onConnectError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
-            HoxisClient.Ins.onConnected += () => { LogAffairEntry(FF.StringFormat("connect to {0}", HoxisClient.Ins.serverIP)); };
-            HoxisClient.Ins.onCloseError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
-            HoxisClient.Ins.onNetworkAnomaly += (code, message) => { LogAffairEntry(FF.StringFormat("network anomaly: {0}, {1}", code, message), LogLevel.Error); };
             HoxisDirector.Ins.onResponseError += (err, desc) => { LogAffairEntry(FF.StringFormat("response err: {0}, {1}", err, desc), LogLevel.Error); };
             HoxisDirector.Ins.onProtocolEntry += (proto) => { LogAffairEntry(FF.StringFormat("protocol entry: {0}", FF.ObjectToJson(proto))); };
             HoxisDirector.Ins.onProtocolPost += (proto) => { LogAffairEntry(FF.StringFormat("protocol post: {0}", FF.ObjectToJson(proto))); };
+            HoxisDirector.Ins.onAffairInitError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
             HoxisDirector.Ins.onAffairConnected += () => { LogAffairEntry(FF.StringFormat("connect to {0}", HoxisClient.Ins.serverIP)); };
             HoxisDirector.Ins.onAffairConnectError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
+            HoxisDirector.Ins.onAffairClosed += () => { LogAffairEntry("close success"); };
+            HoxisDirector.Ins.onAffairClosedError += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
+            HoxisDirector.Ins.onAffairNetworkAnomaly += (ret) => { LogAffairEntry(ret.desc, LogLevel.Error); };
 
             _logPanel.GetComponent<RectTransform>().localPosition = _logPanelOffPosition;
             _logPanelOn = false;
