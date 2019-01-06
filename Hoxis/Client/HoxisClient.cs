@@ -35,13 +35,13 @@ namespace DacLib.Hoxis.Client
         /// <summary>
         /// Is the client connected ?
         /// </summary>
-        public bool isConnected { get { return _socket.Connected; } }
+        public bool isConnected { get { if (_socket == null) return false; return _socket.Connected; } }
 
         /// <summary>
         /// Hoxis client basic direction
         /// </summary>
         public static string basicPath { get { return UnityEngine.Application.dataPath + "/DacLib/Hoxis/"; } }
-        
+
         /// <summary>
         /// Event of network anomaly
         /// </summary>
@@ -54,7 +54,7 @@ namespace DacLib.Hoxis.Client
         public HoxisClient(bool autoStart)
         {
             if (Ins == null) Ins = this;
-            if (autoStart){InitializeConfig();}
+            if (autoStart) { InitializeConfig(); }
         }
 
 
@@ -99,6 +99,7 @@ namespace DacLib.Hoxis.Client
 
         public void Connect()
         {
+            if (isConnected) return;
             try
             {
                 IPAddress addr = IPAddress.Parse(serverIP);
@@ -113,9 +114,11 @@ namespace DacLib.Hoxis.Client
 
         public void BeginConnnect()
         {
+            if (isConnected) return;
             try
             {
-                AsyncCallback cb = new AsyncCallback((ar) => {
+                AsyncCallback cb = new AsyncCallback((ar) =>
+                {
                     _socket.EndConnect(ar);
                     HoxisDirector.Ins.AffairEntry(C.AFFAIR_CONNECT, null);
                     BeginReceive();
@@ -135,7 +138,8 @@ namespace DacLib.Hoxis.Client
         {
             try
             {
-                AsyncCallback cb = new AsyncCallback((ar) => {
+                AsyncCallback cb = new AsyncCallback((ar) =>
+                {
                     if (isConnected)
                     {
                         int len = _socket.EndReceive(ar);
@@ -145,7 +149,8 @@ namespace DacLib.Hoxis.Client
                 });
                 _socket.BeginReceive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None, cb, null);
             }
-            catch (SocketException e) {
+            catch (SocketException e)
+            {
                 OnNetworkAnomaly(e.ErrorCode, e.Message);
                 HoxisDirector.Ins.AffairEntry(C.AFFAIR_NETWORK_ANOMALY, new Ret(LogLevel.Error, 1, e.Message));
             }
@@ -162,7 +167,8 @@ namespace DacLib.Hoxis.Client
                 while (true)
                 {
                     try { int len = _socket.Receive(_extractor.readBytes, _extractor.readCount, _extractor.remainCount, SocketFlags.None); _extractor.Extract(len); }
-                    catch (SocketException e) {
+                    catch (SocketException e)
+                    {
                         OnNetworkAnomaly(e.ErrorCode, e.Message);
                         HoxisDirector.Ins.AffairEntry(C.AFFAIR_NETWORK_ANOMALY, new Ret(LogLevel.Error, 1, e.Message));
                         break;
@@ -192,7 +198,6 @@ namespace DacLib.Hoxis.Client
         public void Close()
         {
             if (_receiveThread != null) _receiveThread.Abort();
-            if (_socket == null) return;
             if (!isConnected) return;
             try
             {
@@ -209,7 +214,7 @@ namespace DacLib.Hoxis.Client
 
         private void OnExtract(byte[] data) { HoxisDirector.Ins.ProtocolEntry(data); }
         private void OnNetworkAnomaly(int code, string message) { if (onNetworkAnomaly == null) return; onNetworkAnomaly(code, message); }
-        
+
         #endregion
     }
 }
