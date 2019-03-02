@@ -67,7 +67,7 @@ namespace DacLib.U3D.Archits.FSM
             // If diagram, is its current node a exitus ?
             if (currentNode.nodeType == NodeType.Diagram)
             {
-                Diagram diagram = (Diagram)currentNode;
+                Diagram diagram = GetDiagram(currentNode);
                 if (diagram.currentNode.nodePort != NodePort.Exitus && diagram.currentNode.nodePort != NodePort.Both) return;
             }
 
