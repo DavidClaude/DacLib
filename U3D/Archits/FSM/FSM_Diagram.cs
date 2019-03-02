@@ -60,14 +60,9 @@ namespace DacLib.U3D.Archits.FSM
             IFSMNodal tar_node = this[nodeName];
             if (tar_node == null) return;
 
-            Console.WriteLine("Target: " + tar_node.name);
-
-
             // Does the transition between current and target exist ?
             Transition transition = GetTransition(currentNode, tar_node);
             if (transition == null) return;
-
-            Console.WriteLine(FF.StringFormat("Transition: from {0} to {1}", currentNode.name, tar_node.name));
 
             // If diagram, is its current node a exitus ?
             if (currentNode.nodeType == NodeType.Diagram)
@@ -76,14 +71,13 @@ namespace DacLib.U3D.Archits.FSM
                 if (diagram.currentNode.nodePort != NodePort.Exitus && diagram.currentNode.nodePort != NodePort.Both) return;
             }
 
+            // If state, deactivate substates which aren't supported by target state
             if (currentNode.nodeType == NodeType.Unit)
             {
-                // Deactivate substates which aren't supported by target state
                 State tar_state = GetState(tar_node);
                 State cur_state = GetState(currentNode);
                 foreach (string ssn in cur_state.substateNames) { if (!tar_state.substateNames.Contains(ssn)) GetSubstate(ssn).SetActive(false); }
             }
-
 
             transition.fromNode.OnExit();
             transition.OnBegin();
@@ -288,14 +282,8 @@ namespace DacLib.U3D.Archits.FSM
 
         public void OnEnter()
         {
-
-            Console.WriteLine(FF.StringFormat("Diagram {0} enters", this.name));
-
             if (entrance == null) return;
             currentNode = entrance;
-
-            Console.WriteLine(FF.StringFormat("Diagram {0} current node is {1}", this.name, currentNode.name));
-
             currentNode.OnEnter();
         }
 
