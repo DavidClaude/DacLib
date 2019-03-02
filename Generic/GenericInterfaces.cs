@@ -13,13 +13,20 @@ namespace DacLib.Generic
     }
 
     /// <summary>
-    /// Enable to be served by specific object, such as CriticalReception
+    /// Include entering/Updating/Exit
     /// </summary>
-    public interface INodal
+    public interface IEUE
     {
         void OnEnter();
-        void OnStay();
+        void OnUpdate();
         void OnExit();
+    }
+
+    public interface IFSMNodal : IEUE
+    {
+        string name { get; }
+        NodeType nodeType { get; }
+        NodePort nodePort { get; set; }
     }
 
     /// <summary>

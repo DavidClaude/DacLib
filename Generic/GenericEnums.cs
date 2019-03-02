@@ -39,4 +39,18 @@ namespace DacLib.Generic
         Append,
         Override
     }
+
+    public enum NodeType
+    {
+        Unit = 0,
+        Diagram
+    }
+
+    public enum NodePort
+    {
+        None = 0,
+        Entrance,
+        Exitus,
+        Both
+    }
 }
