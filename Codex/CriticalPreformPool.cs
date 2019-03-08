@@ -8,10 +8,10 @@ using DacLib.Generic;
 namespace DacLib.Codex
 {
     /// <summary>
-    /// Critical, reusable objects pool
+    /// Critical object pool
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    class CriticalPreformPool<T> where T : class, IReusable, new()
+    class CriticalPreformPool<T> where T : class, ICritical, new()
     {
         #region ret codes
         public const byte RET_NO_UNOCCUPIED_PREFORM = 1;

@@ -2,16 +2,6 @@
 
 namespace DacLib.Generic
 {
-
-    /// <summary>
-    /// Enable to extract and load json data of its information and states
-    /// </summary>
-    public interface IJsonable
-    {
-        string ToJson();
-        void LoadJson(string json);
-    }
-
     /// <summary>
     /// Include entering/Updating/Exit
     /// </summary>
@@ -32,12 +22,18 @@ namespace DacLib.Generic
     /// <summary>
     /// Enable to be put into and out from most kinds of object pool 
     /// </summary>
-    public interface IReusable
+    public interface ICritical
     {
         int localID { get; set; }
         bool isOccupied { get; set; }
         void OnRequest(object state);
         void OnRelease();
+    }
+
+    public interface IReusable
+    {
+        void OnRequest();
+        void OnCollect();
     }
 
     public interface IStatusControllable

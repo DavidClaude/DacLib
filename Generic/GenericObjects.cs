@@ -4,185 +4,113 @@ using System.Collections.Generic;
 
 namespace DacLib.Generic
 {
-    public enum CalcMode
-    {
-        Const,
-        Percentage
-    }
-
-    public class Property : IJsonable
+    public struct Property:IInitializable
     {
         /// <summary>
         /// Current value
         /// </summary>
-        public float val { get; private set; }
-
-        /// <summary>
-        /// Original value
-        /// </summary>
-        /// <value>The original.</value>
-        public float orig { get; }
-
-        /// <summary>
-        /// Minimum value
-        /// </summary>
-        /// <value>The minimum.</value>
-        public float min { get; }
-
-        /// <summary>
-        /// Maximum value
-        /// </summary>
-        /// <value>The max.</value>
-        public float max { get; }
-
-        private Dictionary<string, float> _constTraces = new Dictionary<string, float>();
-        private Dictionary<string, float> _percTraces = new Dictionary<string, float>();
-
-        public Property(float origArg, float minArg = 0.0f, float maxArg = 100.0f)
+        public float value
         {
-            orig = origArg;
+            get
+            {
+                float c = 0f;
+                foreach (float v in constTraces.Values) { c += v; }
+                float p = 0f;
+                foreach (float v in percTraces.Values) { p += v; }
+                float fin = origin + origin * p + c;
+                return MathFunc.Clamp(fin, min, max);
+            }
+        }
+
+        public float origin;
+        public float min;
+        public float max;
+        public Dictionary<string, float> constTraces;
+        public Dictionary<string, float> percTraces;
+
+        public Property(float originArg, float minArg = 0.0f, float maxArg = 100.0f)
+        {
+            origin = originArg;
             min = minArg;
             max = maxArg;
-            Update();
+            constTraces = new Dictionary<string, float>();
+            percTraces = new Dictionary<string, float>();
         }
 
         /// <summary>
-        /// Add one op trace
+        /// Add one trace
         /// </summary>
         /// <param name="name">Name.</param>
         /// <param name="val">Value.</param>
         /// <param name="mode">Mode.</param>
-        public void AddTrace(string name, float valArg, CalcMode mode = CalcMode.Const)
+        public void AddTrace(string name, float valArg, DeltaMode mode = DeltaMode.Const)
         {
             switch (mode)
             {
-                case CalcMode.Const:
-                    if (!_constTraces.ContainsKey(name)) { _constTraces.Add(name, valArg); }
+                case DeltaMode.Const:
+                    if (!constTraces.ContainsKey(name)) { constTraces.Add(name, valArg); }
                     break;
-                case CalcMode.Percentage:
-                    if (!_percTraces.ContainsKey(name)) { _percTraces.Add(name, valArg); }
+                case DeltaMode.Percentage:
+                    if (!percTraces.ContainsKey(name)) { percTraces.Add(name, valArg); }
                     break;
             }
-            Update();
         }
 
         /// <summary>
-        /// Remove one op trace
+        /// Remove one trace
         /// </summary>
         /// <param name="name">Name.</param>
         public void RemoveTrace(string name)
         {
-            if (_constTraces.ContainsKey(name)) { _constTraces.Remove(name); }
-            if (_percTraces.ContainsKey(name)) { _percTraces.Remove(name); }
-            Update();
+            if (constTraces.ContainsKey(name)) { constTraces.Remove(name); }
+            if (percTraces.ContainsKey(name)) { percTraces.Remove(name); }
         }
 
-        /// <summary>
-        /// Initialize
-        /// </summary>
         public void Initialize()
         {
-            _constTraces.Clear();
-            _percTraces.Clear();
-            Update();
-        }
-
-        private void Update()
-        {
-            float c = 0f;
-            foreach (float v in _constTraces.Values) { c += v; }
-            float p = 0f;
-            foreach (float v in _percTraces.Values) { p += v; }
-            float fin = orig + orig * p + c;
-            val = MathFunc.Clamp(fin, min, max);
-        }
-
-        string IJsonable.ToJson()
-        {
-            return FormatFunc.JsonAppend("",
-                new KV<string, object> { key = "_constTraces", val = _constTraces },
-                new KV<string, object> { key = "_percTraces", val = _percTraces }
-                );
-        }
-
-        void IJsonable.LoadJson(string json)
-        {
-            Dictionary<string, object> table = FormatFunc.JsonToTable(json);
-            _constTraces = FormatFunc.JsonToObject<Dictionary<string, float>>(table["_constTraces"].ToString());
-            _percTraces = FormatFunc.JsonToObject<Dictionary<string, float>>(table["_percTraces"].ToString());
-            Update();
+            constTraces.Clear();
+            percTraces.Clear();
         }
     }
 
 
-    public class Indicator : IJsonable
+    public struct Indicator :IInitializable
     {
         /// <summary>
-        /// Curent value
+        /// Current value
         /// </summary>
-        /// <value>The value.</value>
-        public float val { get; private set; }
+        public float value;
+        public float origin;
+        public float min;
+        public float max;
 
-        /// <summary>
-        /// Original value
-        /// </summary>
-        /// <value>The original.</value>
-        public float orig { get; }
-
-        /// <summary>
-        /// Minimum value
-        /// </summary>
-        /// <value>The minimum.</value>
-        public float min { get; }
-
-        /// <summary>
-        /// Maximum value
-        /// </summary>
-        /// <value>The max.</value>
-        public float max { get; }
-
-        public Indicator(float origArg, float minArg = 0.0f, float maxArg = 100.0f)
+        public Indicator(float originArg, float minArg = 0.0f, float maxArg = 100.0f)
         {
-            orig = origArg;
+            origin = originArg;
             min = minArg;
             max = maxArg;
-
-            val = MathFunc.Clamp(orig, min, max);
+            value = MathFunc.Clamp(origin, min, max);
         }
 
-        /// <summary>
-        /// Change the value
-        /// </summary>
-        /// <param name="valArg">Value argument.</param>
-        /// <param name="mode">Mode.</param>
-        public void Change(float valArg, CalcMode mode = CalcMode.Const)
+        
+        public void SetDelta(float valArg, DeltaMode mode = DeltaMode.Const)
         {
-            float fin = val;
+            float fin = value;
             switch (mode)
             {
-                case CalcMode.Const:
+                case DeltaMode.Const:
                     fin += valArg;
                     break;
-                case CalcMode.Percentage:
+                case DeltaMode.Percentage:
                     fin *= (1 + valArg);
                     break;
             }
-            val = MathFunc.Clamp(fin, min, max);
+            value = MathFunc.Clamp(fin, min, max);
         }
 
-        /// <summary>
-        /// Set the value
-        /// </summary>
-        /// <param name="valArg">Value argument.</param>
-        public void Set(float valArg) { val = MathFunc.Clamp(valArg, min, max); }
+        public void SetValue(float valArg) { value = MathFunc.Clamp(valArg, min, max); }
 
-        /// <summary>
-        /// Initialize
-        /// </summary>
-        public void Initialize() { val = MathFunc.Clamp(orig, min, max); }
-
-        string IJsonable.ToJson() { return FormatFunc.JsonAppend("", new KV<string, object> { key = "val", val = val }); }
-        void IJsonable.LoadJson(string json) { Dictionary<string, object> table = FormatFunc.JsonToTable(json); val = MathFunc.Clamp(float.Parse(table["val"].ToString()), min, max); }
+        public void Initialize() { value = MathFunc.Clamp(origin, min, max); }
     }
 
     /// <summary>

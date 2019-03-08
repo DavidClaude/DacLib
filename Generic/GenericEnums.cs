@@ -2,6 +2,12 @@
 
 namespace DacLib.Generic
 {
+    public enum DeltaMode
+    {
+        Const,
+        Percentage
+    }
+
     public enum LogLevel
     {
         /// <summary>

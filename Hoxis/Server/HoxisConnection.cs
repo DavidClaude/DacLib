@@ -8,7 +8,7 @@ using DacLib.Generic;
 
 namespace DacLib.Hoxis.Server
 {
-    public class HoxisConnection : IReusable
+    public class HoxisConnection : ICritical
     {
         #region ret codes
         public const byte RET_DISCONNECTED = 1;
