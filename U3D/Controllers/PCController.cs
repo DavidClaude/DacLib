@@ -16,10 +16,12 @@ namespace DacLib.U3D.Controllers
     public class PCControllerSetting
     {
         public Dictionary<string, CommandItem> commandTable { get; private set; }
+        public Dictionary<string, ExecuteMode> modeTable { get; private set; }
 
         public PCControllerSetting()
         {
             commandTable = new Dictionary<string, CommandItem>();
+            modeTable = new Dictionary<string, ExecuteMode>();
         }
 
         public bool GetCommandOn(string cmd) { return Input.GetKeyDown(commandTable[cmd].keyCode); }
@@ -50,27 +52,26 @@ namespace DacLib.U3D.Controllers
             commandTable[name] = item;
         }
 
-        public void SetItem(string name, KeyCode code, ExecuteMode mode = ExecuteMode.Hold, string category = "", Dictionary<string,string> descs = null)
+        public void SetItem(string name, KeyCode code, string category = "", Dictionary<string,string> descs = null)
         {
             CommandItem item = new CommandItem() { keyCode = code, category = category, funcDescs = descs };
             SetItem(name, item);
         }
 
-        public void SetItem(string name, KeyCode code, ExecuteMode mode = ExecuteMode.Hold, string category = "", params KVString[] descs)
+        public void SetItem(string name, KeyCode code, string category = "", params KVString[] descs)
         {
             Dictionary<string, string> descsDict = new Dictionary<string, string>();
             foreach (KVString kv in descs) { descsDict.Add(kv.key, kv.val); }
-            SetItem(name, code, mode, category, descsDict);
+            SetItem(name, code, category, descsDict);
         }
 
         public void ClearItem(string name) { SetItem(name, KeyCode.None); }
 
         public struct CommandItem
         {
-            public static readonly CommandItem undef = new CommandItem { keyCode = KeyCode.None, executeMode = ExecuteMode.None, category = string.Empty, funcDescs = null};
+            public static readonly CommandItem undef = new CommandItem { keyCode = KeyCode.None, category = string.Empty, funcDescs = null};
 
             public KeyCode keyCode;
-            public ExecuteMode executeMode;
             public string category;
             public Dictionary<string, string> funcDescs;
         }
